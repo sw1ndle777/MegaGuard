@@ -1,0 +1,149 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\utils">
+      <UniqueIdentifier>{6ac919ca-7b43-42b4-8a74-ea194e076748}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\utils">
+      <UniqueIdentifier>{be269221-05e9-4fbb-98b2-0b747dfa122d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\hooks">
+      <UniqueIdentifier>{bc95d2b8-1b2d-4e87-a8cb-4ac5e9322fa2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\hooks\anticheat">
+      <UniqueIdentifier>{3be179c9-a775-485c-b556-5a26d4bcd1a4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\hooks\features">
+      <UniqueIdentifier>{f780e1ac-394e-4296-a19d-fbb20d68aa64}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\hooks\bugfix">
+      <UniqueIdentifier>{5dbd3641-5427-4201-80fa-9f5131b77e4b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\hooks">
+      <UniqueIdentifier>{d57e099c-c42f-453d-9678-32b4be6c14ba}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\protections">
+      <UniqueIdentifier>{3a8427c7-9aed-4e7a-ad2d-16e75586cb37}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\protections\memory">
+      <UniqueIdentifier>{62a68dfa-b7c7-43ea-9d8e-a9c77353b229}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\protections\memory\vectored">
+      <UniqueIdentifier>{c94fb030-d9a3-4d98-bb7c-cf8f4a7a68c7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\protections">
+      <UniqueIdentifier>{458dd57f-bd87-4ee7-b9bf-da5823031013}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\protections\memory">
+      <UniqueIdentifier>{5daae9ff-3c5d-4104-b801-f74ea37d9024}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\protections\memory\vectored">
+      <UniqueIdentifier>{fcd570ff-575b-4624-84a2-3f02116d9d49}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="utils\memory.h">
+      <Filter>Header Files\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\utils.h">
+      <Filter>Header Files\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\xorstr.h">
+      <Filter>Header Files\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="pch.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\autocrypt.hpp">
+      <Filter>Header Files\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\assembler.h">
+      <Filter>Header Files\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\ldasm.h">
+      <Filter>Header Files\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\midhook.h">
+      <Filter>Header Files\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="hooks\features\hideweaponslots.h">
+      <Filter>Header Files\hooks\features</Filter>
+    </ClInclude>
+    <ClInclude Include="hooks\hooks.h">
+      <Filter>Header Files\hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="hooks\bugfix\weaponrestriction_roomsettings.h">
+      <Filter>Header Files\hooks\bugfix</Filter>
+    </ClInclude>
+    <ClInclude Include="hooks\features\custom_tickrate.h">
+      <Filter>Header Files\hooks\features</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\CLog.h">
+      <Filter>Header Files\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="hooks\anticheat\gamemanagers.h">
+      <Filter>Header Files\hooks\anticheat</Filter>
+    </ClInclude>
+    <ClInclude Include="..\deps\simdjson\simdjson.h">
+      <Filter>Header Files\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="protections\memory\vectored\GuardRegions.h">
+      <Filter>Header Files\protections\memory\vectored</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="utils\memory.cpp">
+      <Filter>Source Files\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\utils.cpp">
+      <Filter>Source Files\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="dllmain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="pch.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\assembler.cpp">
+      <Filter>Source Files\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\ldasm.cpp">
+      <Filter>Source Files\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\midhook.cpp">
+      <Filter>Source Files\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="hooks\hooks.cpp">
+      <Filter>Source Files\hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\CLog.cpp">
+      <Filter>Source Files\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\deps\StackWalker\StackWalker.cpp">
+      <Filter>Source Files\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\deps\simdjson\simdjson.cpp">
+      <Filter>Source Files\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="protections\memory\vectored\GuardRegions.cpp">
+      <Filter>Source Files\protections\memory\vectored</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="utils\autocrypt.inl">
+      <Filter>Header Files\utils</Filter>
+    </None>
+  </ItemGroup>
+</Project>

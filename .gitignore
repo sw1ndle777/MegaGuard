@@ -1,0 +1,22 @@
+# Ignore binaries and object files
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.a
+*.pdb
+*.class
+*.log
+*.json
+*.ini
+*.cgd
+*.dip
+
+# Ignore build directories
+bin/
+out/
+Release/
+Debug/
+obj/
+/src/.vs
