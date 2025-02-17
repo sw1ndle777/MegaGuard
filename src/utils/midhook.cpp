@@ -1,8 +1,8 @@
-#include <windows.h>
+#include "../pch.h"
 #include "midhook.h"
 namespace midhook
 {
-	eStatus Hook::Create(uintptr_t address, hookFn func, size_t new_jmp_size)
+	eStatus Hook::Create(uintptr_t address, hookFn func, bool withOrigCode, size_t new_jmp_size)
 	{
 		this->JMP_SIZE = new_jmp_size;
 		if (!address)
@@ -31,7 +31,7 @@ namespace midhook
 
 		Assembler assembler(Arch::kX86);
 
-		genThunk(assembler);
+		genThunk(assembler, withOrigCode);
 
 		DWORD oldprot;
 		VirtualProtect((LPVOID)m_address, m_origCodeSize, PAGE_EXECUTE_READWRITE, &oldprot);
@@ -63,7 +63,7 @@ namespace midhook
 		return SUCCESS;
 	}
 
-	void Hook::genThunk(Assembler& assembler)
+	void Hook::genThunk(Assembler& assembler, bool withOrigCode)
 	{
 		auto& buffer = assembler->code()->textSection()->buffer();
 
@@ -77,10 +77,11 @@ namespace midhook
 		assembler->popfd();
 		assembler->popad();
 
-		// place original code bytes at the end of the thunk
-		for (size_t i = 0; i < m_origCodeSize; i++)
-			assembler->db(m_origCode[i]);
-
+		if (withOrigCode)
+		{
+			for (size_t i = 0; i < m_origCodeSize; i++)
+				assembler->db(m_origCode[i]);
+		}
 		uintptr_t jmpBack = m_address + m_origCodeSize;//m_address - (uintptr_t)(m_newCode) - 0x11;
 
 		

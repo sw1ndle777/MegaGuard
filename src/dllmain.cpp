@@ -7,16 +7,19 @@
 #include <fstream>
 #include <csignal>
 #include <cstring>
-#include <filesystem>
 #include <chrono>
 #include <format>
 #include <Windows.h>
+#if DEBUG_CONSOLE_LOG == 1 || DEBUG_FILE_LOG == 1
+
 #include <DbgHelp.h>
 #pragma comment(lib, "dbghelp.lib")
 //#include <stacktrace> // C++23 stacktrace header
 #include <StackWalker.h>
 
 #include <ranges>
+
+
 
 
 std::string dumpFile;
@@ -295,53 +298,66 @@ std::string GetCurrentTimestamp()
     oss << std::put_time(&localTime, "%Y%m%d_%H%M%S");  // Format: YYYYMMDD_HHMMSS
     return oss.str();
 }
+
+#include <iostream>
+#include <string>
+#include <ctime>
+#include <sstream>
+
+std::string GetDirectory(const std::string& filePath)
+{
+    size_t pos = filePath.find_last_of("/\\");
+    return (pos != std::string::npos) ? filePath.substr(0, pos) : "";
+}
+
+std::string GetFileNameWithoutExtension(const std::string& filePath)
+{
+    size_t start = filePath.find_last_of("/\\");
+    size_t end = filePath.find_last_of(".");
+    if (start == std::string::npos)
+        start = 0;
+    else
+        start += 1;
+    return (end != std::string::npos && end > start) ? filePath.substr(start, end - start) : filePath.substr(start);
+}
+
+std::string GetFileExtension(const std::string& filePath)
+{
+    size_t pos = filePath.find_last_of(".");
+    return (pos != std::string::npos) ? filePath.substr(pos) : "";
+}
+
+std::string CombinePath(const std::string& directory, const std::string& fileName)
+{
+    if (directory.empty())
+        return fileName;
+    char separator = '\\';
+    return directory + separator + fileName;
+}
+
 std::string GenerateCrashLogFilePath(const std::string& baseFileName)
 {
-    std::filesystem::path basePath(baseFileName);
+    std::string directory = GetDirectory(baseFileName);
     std::string timestamp = GetCurrentTimestamp();
+    std::string newFileName = GetFileNameWithoutExtension(baseFileName) + "_" + timestamp + "_crash.log";
 
-    // Create the new file name with the timestamp and new extension
-    std::string newFileName = basePath.stem().string() + "_" + timestamp + "_crash.log";
-
-    // Combine the directory and file name
-    std::filesystem::path fullPath = basePath.parent_path() / newFileName;
-
-    // Normalize the path to use the appropriate directory separator for the platform
-    fullPath = fullPath.make_preferred();  // This will convert slashes to backslashes on Windows
-
-    return fullPath.string();
+    return CombinePath(directory, newFileName);
 }
 std::string GenerateStacktraceJsonFilePath(const std::string& baseFileName)
 {
-    std::filesystem::path basePath(baseFileName);
+    std::string directory = GetDirectory(baseFileName);
     std::string timestamp = GetCurrentTimestamp();
+    std::string newFileName = GetFileNameWithoutExtension(baseFileName) + "_" + timestamp + "_crash_stacktrace.json";
 
-    // Create the new file name with the timestamp and new extension
-    std::string newFileName = basePath.stem().string() + "_" + timestamp + "_crash_stacktrace.json";
-
-    // Combine the directory and file name
-    std::filesystem::path fullPath = basePath.parent_path() / newFileName;
-
-    // Normalize the path to use the appropriate directory separator for the platform
-    fullPath = fullPath.make_preferred();  // This will convert slashes to backslashes on Windows
-
-    return fullPath.string();
+    return CombinePath(directory, newFileName);
 }
 std::string GenerateDumpFilePath(const std::string& baseFileName)
 {
-    std::filesystem::path basePath(baseFileName);
+    std::string directory = GetDirectory(baseFileName);
     std::string timestamp = GetCurrentTimestamp();
+    std::string newFileName = GetFileNameWithoutExtension(baseFileName) + "_" + timestamp + GetFileExtension(baseFileName);
 
-    // Create the new file name with the timestamp
-    std::string newFileName = basePath.stem().string() + "_" + timestamp + basePath.extension().string();
-
-    // Combine the directory and file name
-    std::filesystem::path fullPath = basePath.parent_path() / newFileName;
-
-    // Normalize the path to use the appropriate directory separator for the platform
-    fullPath = fullPath.make_preferred();  // This will convert slashes to backslashes on Windows
-
-    return fullPath.string();
+    return CombinePath(directory, newFileName);
 }
 void set_crashlog_header_message(std::string message)
 {
@@ -428,7 +444,7 @@ public:
     std::vector<uint32_t> printed_bases;
 
     auto has_base(const uintptr_t base) {
-        return std::ranges::find(printed_bases, base) != printed_bases.end();
+        return std::find(printed_bases.begin(), printed_bases.end(), base) != printed_bases.end();
     }
 
 protected:
@@ -567,12 +583,12 @@ static inline void normal_exit() {
     output_thread.join();
 }
 
-
+#endif
 
 
 static void(__fastcall* ogProgFill)(std::uint32_t pInstance, std::uint32_t edx, std::uint32_t a2, std::uint32_t a3) = nullptr;
 static void __fastcall hkProgFill(std::uint32_t pInstance, std::uint32_t edx, std::uint32_t a2, std::uint32_t a3) {
-	MegaGuard::EventLog->Debug(std::source_location::current(), "Was call Progress filler with info a2: %d a3: %d", a2, a3);
+	//MegaGuard::EventLog->Debug(std::source_location::current(), "Was call Progress filler with info a2: %d a3: %d", a2, a3);
 	//std::cout << "Was call Progress filler with info " << a2 << ' ' << a3 << '\n';
 	ogProgFill(pInstance, edx, a2, a3);
 }
@@ -648,7 +664,7 @@ static void __fastcall hkInfoHandler(std::uint32_t infoInstance) {
 		auto zombi_record_instance = _call < std::uint32_t(__thiscall*)(std::uint32_t, std::uint32_t*) >(0x8B4600, (infoInstance + 1712), &zombi_record_valdlg);
 		char* z_count = new char[9];
 		sprintf_s(z_count, sizeof(z_count), "%d", zombi_record);
-        MegaGuard::EventLog->Debug(std::source_location::current(), "Zombi kill: %d Zombi infected: %d", zombi_kill, zombi_infect);
+        //MegaGuard::EventLog->Debug(std::source_location::current(), "Zombi kill: %d Zombi infected: %d", zombi_kill, zombi_infect);
 		//std::cout << "Zombi kill: " << zombi_kill << " Zombi infected: " << zombi_infect << '\n';
 		//std::cout << z_count << '\n';
 		//std::cout << "Should call: " << _rv<std::uint32_t>(_rv<std::uint32_t>(_rv<std::uint32_t>(zombi_record_instance, 0), 0), 216) << '\n';
@@ -684,7 +700,7 @@ static void __fastcall hkInfoOtherHandler(std::uint32_t infoInstance, std::uint3
 	auto zombi_record_instance = _call < std::uint32_t(__thiscall*)(std::uint32_t, std::uint32_t*) >(0x8B4600, (infoInstance + 1712), &zombi_record_valdlg);
 	char* z_count = new char[9];
 	sprintf_s(z_count, sizeof(z_count), "%d", zombi_record);
-	MegaGuard::EventLog->Debug(std::source_location::current(), "Zombi kill: %d Zombi infected: %d", zombi_kill, zombi_infect);
+	//MegaGuard::EventLog->Debug(std::source_location::current(), "Zombi kill: %d Zombi infected: %d", zombi_kill, zombi_infect);
 	//std::cout << "Zombi kill: " << zombi_kill << " Zombi infected: " << zombi_infect << '\n';
 	
 	//std::cout << z_count << '\n';
@@ -731,36 +747,11 @@ namespace memory_protection
     struct PageStateData
     {
         PageState state;
-        DWORD old_protect;
+        ULONG old_protect;
     };
     inline boost::unordered_flat_map<std::uintptr_t, PageStateData> page_info;
     inline std::atomic<bool> running{ true };
     constexpr std::chrono::milliseconds reencrypt_interval{ 100 };
-    constexpr std::size_t max_pages_per_qword = 0x1000 / sizeof(std::uint64_t);
-
-    inline boost::unordered_flat_set<std::uintptr_t> whitelist_pages = {
-        0x00D3B000, 0x00CCF000, 0x00C1A000, 0x00D52000, 0x00C56000, 0x00BD9000, 0x00C4E000, 0x00D89000, 0x00C9D000, 0x00CD8000, 0x00C13000, 0x00E3A000, 0x00DCC000, 0x00BE0000, 0x00BE7000, 0x00D91000, 0x00CC6000, 0x00E43000, 0x00F1B000, 0x00D86000, 0x00CCA000, 0x00CBA000, 0x00C79000, 0x00C30000, 0x00C31000, 0x00C0D000, 0x00DBF000, 0x00C98000, 0x00C97000, 0x00C5B000, 0x00DC9000, 0x00D12000, 0x00C3D000, 0x00D50000, 0x00CAC000, 0x00E3B000, 0x00C94000, 0x00D05000, 0x00EB7000, 0x00D15000, 0x00D10000, 0x00C85000, 0x00C3C000, 0x00C17000, 0x00C77000, 0x00BE1000, 0x00D0F000, 0x00C92000, 0x00DB7000, 0x00E29000, 0x00E23000, 0x00D4A000, 0x00CD0000, 0x00CE1000, 0x00DAC000, 0x00CF5000, 0x00C47000, 0x00BFB000, 0x00E41000, 0x00D18000, 0x00C4A000, 0x00C6B000, 0x00C9F000, 0x00D0A000, 0x00DCF000, 0x00BEC000, 0x00C45000, 0x00EAA000, 0x00D2D000, 0x00D90000, 0x00CF3000, 0x00EA5000, 0x00DE6000, 0x00D1D000, 0x00DA1000, 0x00CE2000, 0x00CAF000, 0x00C3B000, 0x00CD5000, 0x00D61000, 0x00C88000, 0x00E21000, 0x00E3F000, 0x00D8B000, 0x00C37000, 0x00EB3000, 0x00DCB000, 0x00D67000, 0x00EB4000, 0x00CD4000, 0x00D0E000, 0x00EA9000, 0x00C41000, 0x00D94000, 0x00BDC000, 0x00D29000, 0x00D3F000, 0x00D78000, 0x00D25000, 0x00C46000, 0x00DE2000, 0x00E3C000, 0x00D87000, 0x00DE8000, 0x00C36000, 0x00D83000, 0x00D3A000, 0x00D44000, 0x00C59000, 0x00EA6000, 0x00C8B000, 0x00C58000, 0x00E44000, 0x00DA3000, 0x00D49000, 0x00D24000, 0x00C38000, 0x00D27000, 0x00C8F000, 0x00EDB000, 0x00CD7000, 0x00EB5000, 0x00E27000, 0x00DB0000, 0x00C06000, 0x00BE4000, 0x00DD2000, 0x00D9D000, 0x00C55000, 0x00D40000, 0x00E46000, 0x00DD8000, 0x00D64000, 0x00CDD000, 0x00C73000, 0x00DE4000, 0x00DCE000, 0x00D23000, 0x00C48000, 0x00BF1000, 0x00D54000, 0x00D41000, 0x00C76000, 0x00BDF000, 0x00D80000, 0x00D3D000, 0x00C15000, 0x00CA4000, 0x00DA0000, 0x00C2A000, 0x00E1E000, 0x00EB6000, 0x00C18000, 0x00DAE000, 0x00D06000, 0x00CED000, 0x00BF5000, 0x00D6E000, 0x00D36000, 0x00EB1000, 0x00BEA000, 0x00C6D000, 0x00CF9000, 0x00D82000, 0x00E2B000, 0x00D4E000, 0x00D85000, 0x00CE3000, 0x00E42000, 0x00E35000, 0x00CB4000, 0x00C81000, 0x00D48000, 0x00DB8000, 0x00CD3000, 0x00D63000, 0x00C42000, 0x00C3A000, 0x00DC5000, 0x00DE0000, 0x00BFF000, 0x00C72000, 0x00D16000, 0x00EAF000, 0x00D9F000, 0x00E30000, 0x00C8D000, 0x00C7D000, 0x00D99000, 0x00CCD000, 0x00D7D000, 0x00D7A000, 0x00D2E000, 0x00C57000, 0x00C6E000, 0x00DBA000, 0x00CDE000, 0x00CC9000, 0x00C33000, 0x00C6F000, 0x00E1C000, 0x00C25000, 0x00C40000, 0x00C09000, 0x00BF7000, 0x00C6C000, 0x00C9A000, 0x00DE1000, 0x00E4B000, 0x00DC0000, 0x00C50000, 0x00C99000, 0x00D9E000, 0x00DF2000, 0x00C29000, 0x00C7E000, 0x00DB6000, 0x00CCE000, 0x00DC8000, 0x00D62000, 0x00D2A000, 0x00C0B000, 0x00CEF000, 0x00BD8000, 0x00BEF000, 0x00C9E000, 0x00DD6000, 0x00C2C000, 0x00CA0000, 0x00E25000, 0x00C60000, 0x00BEE000, 0x00D4C000, 0x00D43000, 0x00CDC000, 0x00C82000, 0x00CF2000, 0x00E49000, 0x00BD5000, 0x00C7F000, 0x00DEE000, 0x00D26000, 0x00C5E000, 0x00D1F000, 0x00C9B000, 0x00C8E000, 0x00BE3000, 0x00C04000, 0x00CEC000, 0x00D98000, 0x00C1C000, 0x00C5A000, 0x00DF1000, 0x00C22000, 0x00BDE000, 0x00CB8000, 0x00E2E000, 0x00DAD000, 0x00D6A000, 0x00DA4000, 0x00EC3000, 0x00C32000, 0x00D38000, 0x00D8A000, 0x00DF3000, 0x00E2D000, 0x00C74000, 0x00DA8000, 0x00D7E000, 0x00C07000, 0x00E22000, 0x00DDE000, 0x00C2D000, 0x00DC7000, 0x00DDD000, 0x00C69000, 0x00CCB000, 0x00CAE000, 0x00EB0000, 0x00C71000, 0x00C21000, 0x00C0A000, 0x00D95000, 0x00C51000, 0x00DF4000, 0x00C20000, 0x00BF6000, 0x00DCA000, 0x00DD9000, 0x00C28000, 0x00DB3000, 0x00C52000, 0x00C4B000, 0x00BF8000, 0x00DD1000, 0x00CDF000, 0x00C35000, 0x00DB9000, 0x00C67000, 0x00D3E000, 0x00DD3000, 0x00CF6000, 0x00E4A000, 0x00C23000, 0x00EAE000, 0x00C1E000, 0x00DAF000, 0x00C95000, 0x00DA6000, 0x00C63000, 0x00C0E000, 0x00C70000, 0x00C5C000, 0x00E1F000, 0x00DB1000, 0x00C34000, 0x00DEC000, 0x00DED000, 0x00CF1000, 0x00C10000, 0x00C7C000, 0x00E31000, 0x00D28000, 0x00BFA000, 0x00C49000, 0x00C90000, 0x00DD4000, 0x00CEA000, 0x00D8C000, 0x00CA3000, 0x00DDF000, 0x00D6D000, 0x00E40000, 0x00CC3000, 0x00CA2000, 0x00CEB000, 0x00DEB000, 0x00CD6000, 0x00D39000, 0x00C78000, 0x00C93000, 0x00E34000, 0x00D1B000, 0x00D45000, 0x00DC2000, 0x00CFF000, 0x00D92000, 0x00D7B000, 0x00D97000, 0x00D0C000, 0x00DC3000, 0x00EA7000, 0x00E36000, 0x00CAB000, 0x00BE5000, 0x00E20000, 0x00CA6000, 0x00D7F000, 0x00C89000, 0x00C4F000, 0x00C1F000, 0x00C26000, 0x00CB0000, 0x00D9C000, 0x00C7B000, 0x00DCD000, 0x00D35000, 0x00CE4000, 0x00CD2000, 0x00CA1000, 0x00CAA000, 0x00E45000, 0x00C44000, 0x00E37000, 0x00CC8000, 0x00C7A000, 0x00DBB000, 0x00C39000, 0x00D8F000, 0x00C91000, 0x00C1B000, 0x00C66000, 0x00CDB000, 0x00E2C000, 0x00E39000, 0x00D68000, 0x00D9B000, 0x00CC7000, 0x00E1D000, 0x00CF0000, 0x00D11000, 0x00D08000, 0x00D20000, 0x00DD5000, 0x00D13000, 0x00BEB000, 0x00DBD000, 0x00DB4000, 0x00DB2000, 0x00BD6000, 0x00C4C000, 0x00E26000, 0x00C61000, 0x00BF4000, 0x00C4D000, 0x00C2F000, 0x00D2B000, 0x00DD0000, 0x00D9A000, 0x00E4D000, 0x00D53000, 0x00C19000, 0x00E2F000, 0x00BF2000, 0x00DA9000, 0x00CEE000, 0x00C05000, 0x00CFA000, 0x00C2E000, 0x00DDB000, 0x00CE8000, 0x00C2B000, 0x00D14000, 0x00D6B000, 0x00C5D000, 0x00CAD000, 0x00CE5000, 0x00C68000, 0x00D6C000, 0x00EB2000, 0x00C6A000, 0x00D88000, 0x00D21000, 0x00CB9000, 0x00DAB000, 0x00BED000, 0x00E3E000, 0x00DEF000, 0x00D79000, 0x00EC2000, 0x00D17000, 0x00CDA000, 0x00C08000, 0x00C8A000, 0x00BE9000, 0x00C86000, 0x00EAD000, 0x00EA8000, 0x00D8E000, 0x00DF0000, 0x00DB5000, 0x00E28000, 0x00DDC000, 0x00D22000, 0x00D1C000, 0x00D96000, 0x00D19000, 0x00DA5000, 0x00DA7000, 0x00CD1000, 0x00CA5000, 0x00C5F000, 0x00DA2000, 0x00D84000, 0x00CD9000, 0x00D3C000, 0x00DC1000, 0x00DDA000, 0x00C27000, 0x00CE6000, 0x00CA7000, 0x00CA8000, 0x00EAB000, 0x00C3F000, 0x00DC4000, 0x00C8C000, 0x00D69000, 0x00C24000, 0x00BFC000, 0x00E24000, 0x00C80000, 0x00BD4000, 0x00C84000, 0x00C03000, 0x00E12000, 0x00E48000, 0x00CE0000, 0x00D47000, 0x00CCC000, 0x00BD7000, 0x00BE6000, 0x00C43000, 0x00DBC000, 0x00DEA000, 0x00DE9000, 0x00C83000, 0x00D51000, 0x00CA9000, 0x00E38000, 0x00D42000, 0x00C9C000, 0x00BF0000, 0x00D1E000, 0x00C0C000, 0x00C96000, 0x00DD7000, 0x00D2C000, 0x00CBF000, 0x00E33000, 0x00E4C000, 0x00D93000, 0x00D7C000, 0x00D65000, 0x00D60000, 0x00C87000, 0x00D5C000, 0x00DE3000, 0x00C54000, 0x00C65000, 0x00D46000, 0x00C16000, 0x00D1A000, 0x00BDD000, 0x00DE5000, 0x00C75000, 0x00D81000, 0x00E47000, 0x00D07000, 0x00D37000, 0x00D2F000, 0x00C1D000, 0x00D66000, 0x00D4B000, 0x00C3E000, 0x00D31000, 0x00C14000, 0x00CE7000, 0x00D8D000, 0x00E3D000, 0x00DAA000, 0x00EAC000, 0x00E32000, 0x00BDB000, 0x00DE7000, 0x00C64000, 0x00CFD000, 0x00D30000, 0x00DC6000, 0x00BE8000, 0x00C62000, 0x00DBE000, 0x00CE9000
-    };
-    inline std::mutex whitelist_mutex;
-
-    bool is_whitelisted(std::uintptr_t address) 
-    {
-        std::lock_guard<std::mutex> lock(guard_mutex);
-        auto page_addr = address & ~0xFFFuLL; // Align to page boundary
-        return whitelist_pages.contains(page_addr);
-    }
-    void add_to_whitelist(std::uintptr_t address) 
-    {
-        std::lock_guard<std::mutex> lock(guard_mutex);
-        auto page_addr = address & ~0xFFFuLL; // Align to page boundary
-        whitelist_pages.insert(page_addr);
-    }
-    void remove_from_whitelist(std::uintptr_t address) 
-    {
-        std::lock_guard<std::mutex> lock(guard_mutex);
-        auto page_addr = address & ~0xFFFuLL; // Align to page boundary
-        whitelist_pages.erase(page_addr);
-    }
 
     bool section_name_equals(const char* a, const char* b) 
     {
@@ -791,11 +782,12 @@ namespace memory_protection
 
         if (eip >= MegaGuard::Globals::g_GameModuleBase && eip < MegaGuard::Globals::g_GameModuleBase + MegaGuard::Globals::g_GameModuleSize)
             return true;
-
         return false;
     };
+    
     void encrypt_section(PIMAGE_SECTION_HEADER section) 
     {
+        
         auto module_base = reinterpret_cast<std::uintptr_t>(GetModuleHandleW(nullptr));
         const std::size_t page_count = (section->Misc.VirtualSize + 0xFFF) / 0x1000;
         
@@ -806,15 +798,25 @@ namespace memory_protection
 
             if (!find_eip_in_module(page_addr)) continue;
 
+            
+            //ULONG old_protect;
+            //auto page_ptr = reinterpret_cast<PVOID>(page_addr);
+            //SIZE_T page_size = 0x1000;
+            //MegaGuard::CloneNTSyscall<NtProtectVirtualMemory_t>("NtProtectVirtualMemory")(GetCurrentProcess(), &page_ptr, &page_size, PAGE_NOACCESS, &old_protect);
             DWORD old_protect;
             VirtualProtect(reinterpret_cast<LPVOID>(page_addr), 0x1000, PAGE_NOACCESS, &old_protect);
             page_info[page_addr] = { PageState::ENCRYPTED , old_protect };
         }
+        
     }
     LONG NTAPI vectored_handler(PEXCEPTION_POINTERS ex_info) 
     {
         auto ex_code = ex_info->ExceptionRecord->ExceptionCode;
+    #if defined(_M_X64) || defined(__x86_64__)
+        auto retn_addr = static_cast<std::uint64_t>(ex_info->ContextRecord->Rip);
+    #else
         auto retn_addr = static_cast<std::uint32_t>(ex_info->ContextRecord->Eip);
+    #endif
         if (ex_code == EXCEPTION_ACCESS_VIOLATION)
         {
             std::uintptr_t page_addr = ex_info->ExceptionRecord->ExceptionInformation[1] & ~0xFFFuLL;
@@ -825,7 +827,14 @@ namespace memory_protection
                 return EXCEPTION_CONTINUE_SEARCH;
 
             if (!find_eip_in_module(page_addr)) return EXCEPTION_CONTINUE_SEARCH;
+
             page_info[page_addr].state = PageState::HANDLING;
+
+           // ULONG old_protect;
+           // auto page_ptr = reinterpret_cast<PVOID>(page_addr);
+           // SIZE_T page_size = 0x1000;
+           // MegaGuard::CloneNTSyscall<NtProtectVirtualMemory_t>("NtProtectVirtualMemory")(GetCurrentProcess(), &page_ptr, &page_size, page_info[page_addr].old_protect, &old_protect);
+
             DWORD old_protect;
             VirtualProtect(reinterpret_cast<LPVOID>(page_addr), 0x1000, page_info[page_addr].old_protect, &old_protect);
             pending_pages.push_back(page_addr);
@@ -854,8 +863,13 @@ namespace memory_protection
                     continue;
 
                 page_info[page_addr].state = PageState::PENDING_REENCRYPTION;
-                DWORD old_protect;
-                VirtualProtect(reinterpret_cast<LPVOID>(page_addr), 0x1000, PAGE_NOACCESS, &old_protect); 
+
+                //ULONG old_protect;
+                //auto page_ptr = reinterpret_cast<PVOID>(page_addr);
+                //SIZE_T page_size = 0x1000;
+                //MegaGuard::CloneNTSyscall<NtProtectVirtualMemory_t>("NtProtectVirtualMemory")(GetCurrentProcess(), &page_ptr, &page_size, PAGE_NOACCESS, &old_protect);
+               DWORD old_protect;
+               VirtualProtect(reinterpret_cast<LPVOID>(page_addr), 0x1000, PAGE_NOACCESS, &old_protect); 
 
                 page_info[page_addr] = { PageState::ENCRYPTED , old_protect };
                 
@@ -865,12 +879,17 @@ namespace memory_protection
     }
     void initialize_protection(const char* section_name) 
     {
+       
         AddVectoredExceptionHandler(1, vectored_handler);
+        
         encrypt_section(get_section_by_name(section_name));
+       
         //for (int i = 0; i < (std::uint32_t)memory_protection::find_eip_in_module - (std::uint32_t)memory_protection::encrypt_section; i += 0x1)
         //    *(std::uint8_t*)((std::uint32_t)memory_protection::encrypt_section + i) = 0;
         
         std::thread(reencrypt_worker).detach();
+
+        
     }
 }
 
@@ -878,14 +897,19 @@ namespace memory_protection
 //#pragma optimize("", on)
 
 
+//APIENTRY __attribute((__annotate__(("flattening,indirectcall,indirectbr,aliasaccess,boguscfg,linearmba"))))
 
-BOOL APIENTRY DllMain(HMODULE hModule, DWORD dwReason, LPVOID lpReserved)
+
+
+BOOL APIENTRY  DllMain(HMODULE hModule, DWORD dwReason, LPVOID lpReserved)
 {
+    
 	if (dwReason == DLL_PROCESS_ATTACH)
 	{
 		DisableThreadLibraryCalls(hModule);
         //GrdMem::Init();
         MegaGuard::Globals::InitializeDllRegion(hModule);
+    #if DEBUG_CONSOLE_LOG == 1 || DEBUG_FILE_LOG == 1
         dumpFile = "megaguard/crash/megaguard.dmp";
         output_thread = std::thread(crash_handler_thread);
         SetUnhandledExceptionFilter(exception_handler);
@@ -900,7 +924,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD dwReason, LPVOID lpReserved)
         _set_purecall_handler(terminator);
         _set_invalid_parameter_handler(&invalid_parameter_handler);
         std::atexit(normal_exit);
-        
+    #endif
 
 	#if DEBUG_CONSOLE_LOG == 1 || DEBUG_FILE_LOG == 1
 		MegaGuard::EventLog->Initialize("megaguard/debug.log", false);
@@ -932,12 +956,6 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD dwReason, LPVOID lpReserved)
 
         
 		MegaGuard::HooksMgr::InitializeAllHooks();
-        MegaGuard::EventLog->Debug(std::source_location::current(), "MegaGuard::Globals::g_AntiCheatModuleBase: 0x{:08X}", MegaGuard::Globals::g_AntiCheatModuleBase);
-        MegaGuard::EventLog->Debug(std::source_location::current(), "MegaGuard::Globals::g_AntiCheatModuleSize: 0x{:08X}", MegaGuard::Globals::g_AntiCheatModuleSize);
-
-        MegaGuard::EventLog->Debug(std::source_location::current(), "MegaGuard::Globals::g_GameModuleBase: 0x{:08X}", MegaGuard::Globals::g_GameModuleBase);
-        MegaGuard::EventLog->Debug(std::source_location::current(), "MegaGuard::Globals::g_GameModuleSize: 0x{:08X}", MegaGuard::Globals::g_GameModuleSize);
-
         memory_protection::initialize_protection(".text");
         
 
@@ -947,6 +965,5 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD dwReason, LPVOID lpReserved)
 	{
 		MegaGuard::HooksMgr::RemoveAllHooks();
 	}
-
 	return FALSE;
 }

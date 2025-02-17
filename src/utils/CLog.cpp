@@ -6,25 +6,21 @@ namespace MegaGuard
     void CLog::Initialize(const std::string& Path, bool removeExisting)
     {
 
-        std::filesystem::path logFilePath(Path);
+        std::string logDirectory = GetParentDirectory(Path);
 
-        // Extract the directory part of the file path
-        std::filesystem::path logDirectory = logFilePath.parent_path();
-
-
-        if (!std::filesystem::exists(logDirectory))
+        if (!DirectoryExists(logDirectory))
         {
-            std::error_code ec;
-            if (!std::filesystem::create_directories(logDirectory, ec))
+            if (!CreateDirectoryRecursive(logDirectory))
             {
-                std::cerr << "Failed to create directory: " << logDirectory << ", error: " << ec.message() << std::endl;
+                std::cerr << "Failed to create directory: " << logDirectory << std::endl;
+                return;
             }
         }
 
         if (removeExisting)
         {
-            if (std::filesystem::exists(logFilePath))
-                std::filesystem::remove(logFilePath);
+            if (FileExists(Path))
+                remove(Path.c_str());
         }
 
         File.open(Path, std::ofstream::out | std::ofstream::trunc);
@@ -33,10 +29,8 @@ namespace MegaGuard
         {
             throw std::runtime_error("Could not open file: " + Path);
         }
-        logThread.emplace([this]
-        {
-            ProcessQueue();
-        });
+
+        logThread = std::make_unique<std::thread>(&CLog::ProcessQueue, this);
     }
 
     void CLog::Write(const std::string& Text)
@@ -47,7 +41,7 @@ namespace MegaGuard
         char buffer[80];
         std::strftime(buffer, sizeof(buffer), "[%d-%m-%Y %H:%M:%S]", std::localtime(&time));
 
-        const std::string Output = std::format("{} {}", buffer, Text);
+        const std::string Output = fmt::format("{} {}", buffer, Text);
 
         //std::scoped_lock lock(WriteMutex);
         File << Output << std::endl;
@@ -74,7 +68,7 @@ namespace MegaGuard
         vsprintf(buffer, format, arglist);
         va_end(arglist);
 
-        Write(std::format("[INFO] {}", buffer));
+        Write(fmt::format("[INFO] {}", buffer));
     }
 
     void CLog::Warning(const char* format, ...)
@@ -86,7 +80,7 @@ namespace MegaGuard
         vsprintf(buffer, format, arglist);
         va_end(arglist);
 
-        Write(std::format("[WARNING] {}", buffer));
+        Write(fmt::format("[WARNING] {}", buffer));
     }
 
     void CLog::Error(const char* format, ...)
@@ -98,7 +92,7 @@ namespace MegaGuard
         vsprintf(buffer, format, arglist);
         va_end(arglist);
 
-        Write(std::format("[ERROR] {}", buffer));
+        Write(fmt::format("[ERROR] {}", buffer));
     }
 
     void CLog::Verbose(const char* format, ...)
@@ -110,7 +104,7 @@ namespace MegaGuard
         vsprintf(buffer, format, arglist);
         va_end(arglist);
 
-        Write(std::format("[VERBOSE] {}", buffer));
+        Write(fmt::format("[VERBOSE] {}", buffer));
     }
 
     std::unique_ptr<CLog> EventLog = std::make_unique<CLog>();

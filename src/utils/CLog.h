@@ -44,13 +44,13 @@ namespace MegaGuard
             if (File.is_open())  File.close();
         }
         template <typename... Args>
-        void Debug(std::source_location source_location, std::string_view format, Args&&... args)
+        void Debug(nostd::source_location source_location, std::string_view format, Args&&... args)
         {
             const auto file_name = extractFileName(source_location.file_name());
             std::string function_name = extractFunctionName(source_location.function_name());
 
-            std::string source_debug_info = std::format("({}:{}) {}() ", file_name, source_location.line(), function_name);
-            std::string formattedMessage = std::vformat(format, std::make_format_args(args...));
+            std::string source_debug_info = fmt::format("({}:{}) {}() ", file_name, source_location.line(), function_name);
+            std::string formattedMessage = fmt::vformat(format, fmt::make_format_args(args...));
 
             {
                 std::unique_lock<std::mutex> lock(queueMutex);
@@ -75,19 +75,63 @@ namespace MegaGuard
                     Write(logEntry);
                 #endif
                 #if DEBUG_CONSOLE_LOG == 1
-                    std::printf("%s\n", logEntry.c_str());
+                    fmt::printf("%s\n", logEntry.c_str());
                 #endif
 
                     lock.lock();
                 }
             }
         }
+
+        bool DirectoryExists(const std::string& path)
+        {
+            DWORD ftyp = GetFileAttributesA(path.c_str());
+            return (ftyp != INVALID_FILE_ATTRIBUTES && (ftyp & FILE_ATTRIBUTE_DIRECTORY));
+        }
+
+        bool FileExists(const std::string& path)
+        {
+            std::ifstream file(path);
+            return file.good();
+        }
+
+        std::string GetParentDirectory(const std::string& filepath)
+        {
+            size_t found = filepath.find_last_of("/\\");
+            return (found != std::string::npos) ? filepath.substr(0, found) : "";
+        }
+
+        bool CreateDirectoryRecursive(const std::string& path)
+        {
+            if (path.empty())
+                return false;
+
+            std::string tempPath;
+            std::istringstream pathStream(path);
+            std::string segment;
+            while (std::getline(pathStream, segment, '\\'))
+            {
+                if (!tempPath.empty())
+                    tempPath += "\\";
+                tempPath += segment;
+
+                if (!DirectoryExists(tempPath))
+                {
+                    if (_mkdir(tempPath.c_str()) != 0 && errno != EEXIST)
+                    {
+                        std::cerr << "Failed to create directory: " << tempPath << " Error: " << strerror(errno) << std::endl;
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
     private:
 
         std::queue<std::string> logQueue;
         std::mutex queueMutex;
         std::condition_variable cv;
-        std::optional<std::jthread> logThread;
+        std::unique_ptr<std::thread> logThread;
         std::atomic<bool> stopLogging;
 
         std::mutex WriteMutex;

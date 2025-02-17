@@ -13,16 +13,13 @@
 #error Unsupported platform
 #endif
 
-
-
 #define DEBUG_CONSOLE_LOG 0
 #define DEBUG_FILE_LOG 0
-
-
-
 #include <iostream>
 #include <string>
+#include <sstream>
 #include <string_view>
+#include <fmt/format.h>
 #include <cstdint>
 #include <cstddef>
 #include <utility>
@@ -38,18 +35,23 @@
 #include <functional>
 #include <psapi.h>
 #include <cstdarg>
-#include <filesystem>
 #include <shared_mutex>
-#include <source_location>
+#include <source_location/source_location.hpp>
 #include <ctime>
 #include <chrono>
 #include <regex>
 #include <format>
 #include <queue>
+#include <direct.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <tchar.h>
+#include <new>
 
 
-#include "utils/autocrypt.hpp"
-#include "utils/autocrypt.inl"
+
+#pragma comment(lib, "version.lib") // for "VerQueryValue"
+
 #include "utils/utils.h"
 #include "utils/xorstr.h"
 #include "utils/memory.h"
@@ -60,10 +62,192 @@
 
 #include <boost/unordered/unordered_flat_set.hpp>
 #include <boost/unordered/unordered_flat_map.hpp>
+#if DEBUG_CONSOLE_LOG == 1 || DEBUG_FILE_LOG == 1
 #include <simdjson.h>
+#endif
 #include <polyhook2/IHook.hpp>
 #include <polyhook2/Detour/NatDetour.hpp>
-#include "protections/memory/vectored/GuardRegions.h"
+
+
+using NtProtectVirtualMemory_t = NTSTATUS(NTAPI*) (
+	HANDLE  ProcessHandle,
+	PVOID* BaseAddress,
+	PSIZE_T RegionSize,
+	ULONG   NewProtect,
+	PULONG  OldProtect
+	);
+
+
+namespace MegaGuard
+{
+	class MemoryPool
+	{
+	public:
+		void* alloc(std::size_t size)
+		{
+			void* ptr = VirtualAlloc(nullptr, size, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+			if (ptr)
+			{
+				std::lock_guard<std::mutex> lock(poolMutex);
+				allocations.insert(ptr);
+			}
+			return ptr;
+		}
+
+		void free(void* ptr)
+		{
+			if (ptr)
+			{
+				std::lock_guard<std::mutex> lock(poolMutex);
+				if (allocations.erase(ptr)) VirtualFree(ptr, 0, MEM_RELEASE);
+			}
+		}
+
+		~MemoryPool()
+		{
+			std::lock_guard<std::mutex> lock(poolMutex);
+			for (auto ptr : allocations)
+				VirtualFree(ptr, 0, MEM_RELEASE);
+
+			allocations.clear();
+		}
+
+	private:
+		boost::unordered_flat_set<void*> allocations;
+		std::mutex poolMutex;
+	};
+	static MemoryPool memory_exec_pool;
+
+	class CacheLibrary
+	{
+	public:
+		explicit CacheLibrary(const std::string& libraryName)
+		{
+			std::lock_guard<std::mutex> lock(cacheMutex);
+
+			auto it = libraryCache.find(libraryName);
+			if (it != libraryCache.end())
+			{
+				moduleHandle = it->second;
+				rawData = cachedRawData[libraryName];
+			}
+			else
+			{
+				moduleHandle = LoadLibraryA(libraryName.c_str());
+				if (moduleHandle)
+				{
+					libraryCache[libraryName] = moduleHandle;
+					rawData = read_raw_data(libraryName);
+					cachedRawData[libraryName] = rawData;
+				}
+			}
+		}
+
+		~CacheLibrary() {}
+
+		template <typename T>
+		T get_proc_address(const std::string& procName) const
+		{
+			if (!moduleHandle) return reinterpret_cast<T>(-1);
+
+			auto procAddress = GetProcAddress(moduleHandle, procName.c_str());
+			if (!procAddress) return reinterpret_cast<T>(-1);
+			return reinterpret_cast<T>(procAddress);
+		}
+
+		auto data() const { return rawData.data(); }
+		auto module() const { return moduleHandle; }
+
+	private:
+		HMODULE moduleHandle = nullptr;
+		std::vector<std::uint8_t> rawData;
+
+	    boost::unordered_flat_map<std::string, HMODULE> libraryCache;
+		boost::unordered_flat_map<std::string, std::vector<std::uint8_t>> cachedRawData;
+		std::mutex cacheMutex;
+		std::vector<std::uint8_t> read_raw_data(const std::string& libraryName)
+		{
+			char systemDir[MAX_PATH];
+			GetSystemDirectoryA(systemDir, MAX_PATH);
+
+			std::string filePath = std::string(systemDir) + "\\" + libraryName;
+
+			std::ifstream file(filePath, std::ios::binary);
+			if (!file)
+				return std::vector<std::uint8_t>{};
+
+			return std::vector<std::uint8_t>((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+		}
+	};
+
+	static std::uintptr_t CloneNTSyscall(uintptr_t base, uintptr_t offset)
+	{
+		static CacheLibrary ntdll("ntdll.dll");
+		auto const* dos = (IMAGE_DOS_HEADER*)ntdll.data();
+		auto const* nt = (IMAGE_NT_HEADERS*)(ntdll.data() + dos->e_lfanew);
+		auto const* sections = (const IMAGE_SECTION_HEADER*)(nt + 1);
+
+		auto funcOffset = offset;
+		funcOffset -= base;
+		funcOffset -= nt->OptionalHeader.BaseOfCode;
+		std::uint8_t blob[0x1000]{};
+		ZydisDecoder decoder{};
+		ZydisDecodedInstruction insn{};
+		ZydisDecodedOperand ops[ZYDIS_MAX_OPERAND_COUNT]{};
+
+		for (std::size_t i = 0; i < nt->FileHeader.NumberOfSections; i++)
+		{
+			if (auto const& section = sections[i]; section.VirtualAddress > funcOffset || funcOffset > section.VirtualAddress + section.Misc.VirtualSize)
+				continue;
+
+			auto ntOffset = sections[0].PointerToRawData + funcOffset;
+			auto const* buffer = ntdll.data() + ntOffset;
+			ZydisDecoderInit(&decoder, ZYDIS_MACHINE_MODE_LEGACY_32, ZYDIS_STACK_WIDTH_32);
+
+			ZyanUSize codeOffset = 0;
+			while (ZYAN_SUCCESS(ZydisDecoderDecodeFull(&decoder, buffer + codeOffset, sizeof(blob) - codeOffset, &insn, ops)))
+			{
+				std::memcpy(blob + codeOffset, buffer + codeOffset, insn.length);
+				if (auto const& op = ops[1]; (op.type == ZYDIS_OPERAND_TYPE_MEMORY || op.type == ZYDIS_OPERAND_TYPE_IMMEDIATE))
+				{
+					if (op.imm.value.u > nt->OptionalHeader.ImageBase && op.imm.value.u < nt->OptionalHeader.ImageBase + nt->OptionalHeader.SizeOfImage)
+					{
+						auto opOffset = insn.length + sizeof(std::uint32_t);
+						auto& m = *reinterpret_cast<std::uint32_t*>(blob + codeOffset + opOffset);
+						m += base;
+						m -= nt->OptionalHeader.ImageBase;
+					}
+				}
+
+				codeOffset += insn.length;
+				if (insn.mnemonic == ZYDIS_MNEMONIC_RET || insn.mnemonic == ZYDIS_MNEMONIC_IRET)
+					break;
+			}
+
+			auto* finalBlob = memory_exec_pool.alloc(codeOffset);
+			std::memcpy(finalBlob, blob, codeOffset);
+
+			std::unique_ptr<void, std::function<void(void*)>> autoFree(finalBlob, [](void* ptr)
+			{
+				memory_exec_pool.free(ptr);
+			});
+
+			return (std::uintptr_t)finalBlob;
+		}
+		return 0;
+	}
+
+	template <typename T>
+	static auto CloneNTSyscall(const std::string& name)
+	{
+		static CacheLibrary ntdll("ntdll.dll");
+		auto func = ntdll.get_proc_address<T>(name);
+		if (auto f2 = (T)CloneNTSyscall((uintptr_t)ntdll.module(), (uintptr_t)func))
+			func = f2;
+
+		return func;
+	}
+}
 
 class pointer_encryption
 {
@@ -203,6 +387,8 @@ public:
 
 		auto newValueAddress = reinterpret_cast<std::uintptr_t>(newValue);
 		DWORD oldProtect;
+		
+
 		if (!VirtualProtect(m_targetAddress, start_offset + sizeof(std::uintptr_t), PAGE_EXECUTE_READWRITE, &oldProtect)) return false;
 		m_originalBytes.resize(sizeof(std::uintptr_t));
 		std::memcpy(m_originalBytes.data(), m_targetAddress, m_originalBytes.size());
@@ -227,7 +413,51 @@ private:
 	std::vector<std::uint8_t> m_originalBytes;
 };
 
+class PatchBytes
+{
+public:
+	PatchBytes() = default;
 
+	bool Patch(std::uintptr_t targetAddress, const void* newBytes, std::size_t size, std::uint32_t startOffs = 0)
+	{
+		if (!targetAddress || !newBytes || size == 0) return false;
+
+		m_targetAddress = reinterpret_cast<void*>(targetAddress + startOffs);
+		m_patchSize = size;
+
+		DWORD oldProtect;
+		if (!VirtualProtect(m_targetAddress, size, PAGE_EXECUTE_READWRITE, &oldProtect)) return false;
+		m_originalBytes.resize(size);
+		std::memcpy(m_originalBytes.data(), m_targetAddress, size);
+		std::memcpy(m_targetAddress, newBytes, size);
+
+		VirtualProtect(m_targetAddress, size, oldProtect, &oldProtect);
+		return true;
+	}
+
+	bool Patch(std::uintptr_t targetAddress, const char* newBytes, std::size_t size, std::uint32_t startOffs = 0)
+	{
+		return Patch(targetAddress, static_cast<const void*>(newBytes), size, startOffs);
+	}
+
+	bool Unpatch()
+	{
+		if (!m_targetAddress || m_originalBytes.empty()) return false;
+
+		DWORD oldProtect;
+		if (!VirtualProtect(m_targetAddress, m_patchSize, PAGE_EXECUTE_READWRITE, &oldProtect)) return false;
+
+		std::memcpy(m_targetAddress, m_originalBytes.data(), m_patchSize);
+
+		VirtualProtect(m_targetAddress, m_patchSize, oldProtect, &oldProtect);
+		return true;
+	}
+
+private:
+	void* m_targetAddress = nullptr;
+	std::vector<std::uint8_t> m_originalBytes;
+	std::size_t m_patchSize = 0;
+};
 /*
 template <typename T>
 void PatchMemory(BYTE* targetAddress, T* newValue)
@@ -270,69 +500,75 @@ namespace MegaGuard
 		{
 			namespace Features
 			{
-				inline std::uintptr_t HideWeaponSlot = 0x005CEAC9;
-				inline std::uintptr_t Tickrate_Frametime1 = 0x00A542CB;
-				inline std::uintptr_t Tickrate_Frametime2 = 0x00A54800;
-				inline std::uintptr_t Tickrate_Frametime3 = 0x00A54AD0;
-				inline std::uintptr_t Tickrate_Frametime4 = 0x00A54CF5;
+				inline const std::uintptr_t HideWeaponSlot = 0x005CEAC9;
+				inline const std::uintptr_t Tickrate_Frametime1 = 0x00A542CB;
+				inline const std::uintptr_t Tickrate_Frametime2 = 0x00A54800;
+				inline const std::uintptr_t Tickrate_Frametime3 = 0x00A54AD0;
+				inline const std::uintptr_t Tickrate_Frametime4 = 0x00A54CF5;
 
-				inline std::uintptr_t Tickrate_RotDamp1 = 0x00A541F6;
-				inline std::uintptr_t Tickrate_RotDamp2 = 0x00A54A6C;
-				inline std::uintptr_t Tickrate_RotDamp3 = 0x00A54C91;
+				inline const std::uintptr_t Tickrate_RotDamp1 = 0x00A541F6;
+				inline const std::uintptr_t Tickrate_RotDamp2 = 0x00A54A6C;
+				inline const std::uintptr_t Tickrate_RotDamp3 = 0x00A54C91;
 
-				inline std::uintptr_t Tickrate_MinRotSpeed1 = 0x00A54205;
-				inline std::uintptr_t Tickrate_MinRotSpeed2 = 0x00A54214;
-				inline std::uintptr_t Tickrate_MinRotSpeed3 = 0x00A54A84;
-				inline std::uintptr_t Tickrate_MinRotSpeed4 = 0x00A54A93;
-				inline std::uintptr_t Tickrate_MinRotSpeed5 = 0x00A54CA9;
-				inline std::uintptr_t Tickrate_MinRotSpeed6 = 0x00A54CB8;
+				inline const std::uintptr_t Tickrate_MinRotSpeed1 = 0x00A54205;
+				inline const std::uintptr_t Tickrate_MinRotSpeed2 = 0x00A54214;
+				inline const std::uintptr_t Tickrate_MinRotSpeed3 = 0x00A54A84;
+				inline const std::uintptr_t Tickrate_MinRotSpeed4 = 0x00A54A93;
+				inline const std::uintptr_t Tickrate_MinRotSpeed5 = 0x00A54CA9;
+				inline const std::uintptr_t Tickrate_MinRotSpeed6 = 0x00A54CB8;
 
-				inline std::uintptr_t Tickrate_RotThreeshold1 = 0x00A541F0;
-				inline std::uintptr_t Tickrate_RotThreeshold2 = 0x00A542DD;
-				inline std::uintptr_t Tickrate_RotThreeshold3 = 0x00A547D3;//don't use
-				inline std::uintptr_t Tickrate_RotThreeshold4 = 0x00A54A66;
-				inline std::uintptr_t Tickrate_RotThreeshold5 = 0x00A54AE2;
-				inline std::uintptr_t Tickrate_RotThreeshold6 = 0x00A54C8B;
-				inline std::uintptr_t Tickrate_RotThreeshold7 = 0x00A54D07;
+				inline const std::uintptr_t Tickrate_RotThreeshold1 = 0x00A541F0;
+				inline const std::uintptr_t Tickrate_RotThreeshold2 = 0x00A542DD;
+				inline const std::uintptr_t Tickrate_RotThreeshold3 = 0x00A547D3;//don't use
+				inline const std::uintptr_t Tickrate_RotThreeshold4 = 0x00A54A66;
+				inline const std::uintptr_t Tickrate_RotThreeshold5 = 0x00A54AE2;
+				inline const std::uintptr_t Tickrate_RotThreeshold6 = 0x00A54C8B;
+				inline const std::uintptr_t Tickrate_RotThreeshold7 = 0x00A54D07;
 
-				inline std::uintptr_t Tickrate_RotThreesholdLimit = 0x00A54E87;
+				inline const std::uintptr_t Tickrate_RotThreesholdLimit = 0x00A54E87;
 
-				inline std::uintptr_t Tickrate_MaxRotSpeed1 = 0x00A54222;
-				inline std::uintptr_t Tickrate_MaxRotSpeed2 = 0x00A54231;
-				inline std::uintptr_t Tickrate_MaxRotSpeed3 = 0x00A54AA7;
-				inline std::uintptr_t Tickrate_MaxRotSpeed4 = 0x00A54AB6;
-				inline std::uintptr_t Tickrate_MaxRotSpeed5 = 0x00A54CCC;
-				inline std::uintptr_t Tickrate_MaxRotSpeed6 = 0x00A54CDB;
+				inline const std::uintptr_t Tickrate_MaxRotSpeed1 = 0x00A54222;
+				inline const std::uintptr_t Tickrate_MaxRotSpeed2 = 0x00A54231;
+				inline const std::uintptr_t Tickrate_MaxRotSpeed3 = 0x00A54AA7;
+				inline const std::uintptr_t Tickrate_MaxRotSpeed4 = 0x00A54AB6;
+				inline const std::uintptr_t Tickrate_MaxRotSpeed5 = 0x00A54CCC;
+				inline const std::uintptr_t Tickrate_MaxRotSpeed6 = 0x00A54CDB;
 
-				inline std::uintptr_t Tickrate_DelayReq1 = 0x009007AF;
-				inline std::uintptr_t Tickrate_DelayReq2 = 0x009007E9;
-				inline std::uintptr_t Tickrate_DelayReq3 = 0x00920935;
-				inline std::uintptr_t Tickrate_DelayReq4 = 0x00920957;
-				inline std::uintptr_t Tickrate_DelayReq5 = 0x009573EA;
-				inline std::uintptr_t Tickrate_DelayReq6 = 0x0095780A;
-				inline std::uintptr_t Tickrate_DelayReq7 = 0x00957829;
-				inline std::uintptr_t Tickrate_DelayReq8 = 0x009579DC;
-				inline std::uintptr_t Tickrate_DelayReq9 = 0x00957B63;
-				inline std::uintptr_t Tickrate_DelayReq10 = 0x00957B7B;
-				inline std::uintptr_t Tickrate_DelayReq11 = 0x009581AA;
-				inline std::uintptr_t Tickrate_DelayReq12 = 0x009586CA;
-				inline std::uintptr_t Tickrate_DelayReq13 = 0x009586E9;
-				inline std::uintptr_t Tickrate_DelayReq14 = 0x0095888C;
-				inline std::uintptr_t Tickrate_DelayReq15 = 0x00958A13;
-				inline std::uintptr_t Tickrate_DelayReq16 = 0x00958A2B;
-				inline std::uintptr_t Tickrate_DelayReq17 = 0x00958FFC;
-				inline std::uintptr_t Tickrate_DelayReq18 = 0x0095932D;
-				inline std::uintptr_t Tickrate_DelayReq19 = 0x00959345;
-				inline std::uintptr_t Tickrate_DelayReq20 = 0x0095B55B;
-				inline std::uintptr_t Tickrate_DelayReq21 = 0x0095B57D;
+				inline const std::uintptr_t Tickrate_DelayReq1 = 0x009007AF;
+				inline const std::uintptr_t Tickrate_DelayReq2 = 0x009007E9;
+				inline const std::uintptr_t Tickrate_DelayReq3 = 0x00920935;
+				inline const std::uintptr_t Tickrate_DelayReq4 = 0x00920957;
+				inline const std::uintptr_t Tickrate_DelayReq5 = 0x009573EA;
+				inline const std::uintptr_t Tickrate_DelayReq6 = 0x0095780A;
+				inline const std::uintptr_t Tickrate_DelayReq7 = 0x00957829;
+				inline const std::uintptr_t Tickrate_DelayReq8 = 0x009579DC;
+				inline const std::uintptr_t Tickrate_DelayReq9 = 0x00957B63;
+				inline const std::uintptr_t Tickrate_DelayReq10 = 0x00957B7B;
+				inline const std::uintptr_t Tickrate_DelayReq11 = 0x009581AA;
+				inline const std::uintptr_t Tickrate_DelayReq12 = 0x009586CA;
+				inline const std::uintptr_t Tickrate_DelayReq13 = 0x009586E9;
+				inline const std::uintptr_t Tickrate_DelayReq14 = 0x0095888C;
+				inline const std::uintptr_t Tickrate_DelayReq15 = 0x00958A13;
+				inline const std::uintptr_t Tickrate_DelayReq16 = 0x00958A2B;
+				inline const std::uintptr_t Tickrate_DelayReq17 = 0x00958FFC;
+				inline const std::uintptr_t Tickrate_DelayReq18 = 0x0095932D;
+				inline const std::uintptr_t Tickrate_DelayReq19 = 0x00959345;
+				inline const std::uintptr_t Tickrate_DelayReq20 = 0x0095B55B;
+				inline const std::uintptr_t Tickrate_DelayReq21 = 0x0095B57D;
 
-				inline std::uintptr_t Tickrate_MinDistance1 = 0x009007C1;
-				inline std::uintptr_t Tickrate_MinDistance2 = 0x009577F0;
-				inline std::uintptr_t Tickrate_MinDistance3 = 0x00957B4C;
-				inline std::uintptr_t Tickrate_MinDistance4 = 0x009586B0;
-				inline std::uintptr_t Tickrate_MinDistance5 = 0x009589FC;
-				inline std::uintptr_t Tickrate_MinDistance6 = 0x00959316;
-				inline std::uintptr_t Tickrate_MinDistance7 = 0x0095B541;
+				inline const std::uintptr_t Tickrate_MinDistance1 = 0x009007C1;
+				inline const std::uintptr_t Tickrate_MinDistance2 = 0x009577F0;
+				inline const std::uintptr_t Tickrate_MinDistance3 = 0x00957B4C;
+				inline const std::uintptr_t Tickrate_MinDistance4 = 0x009586B0;
+				inline const std::uintptr_t Tickrate_MinDistance5 = 0x009589FC;
+				inline const std::uintptr_t Tickrate_MinDistance6 = 0x00959316;
+				inline const std::uintptr_t Tickrate_MinDistance7 = 0x0095B541;
+
+				inline const std::uintptr_t VoiceSpecialTypeA = 0x006BD95B;
+				inline const std::uintptr_t VoiceSpecialTypeB = 0x006BD9A3;
+				inline const std::uintptr_t VoiceSpecialTypeC = 0x006BD9EB;
+				inline const std::uintptr_t VoiceSpecialTypeD = 0x006BDA33;
+				inline const std::uintptr_t VoiceSpecialTypeE = 0x006BDA78;
 
 
 			}
@@ -341,6 +577,7 @@ namespace MegaGuard
 			    inline std::uint64_t RoomCreateDialogHandler = 0x006918C0, original_RoomCreateDialogHandler = 0;
 				inline std::uint64_t RoomSettingsDialogHandler = 0x0066B3F0, original_RoomSettingsDialogHandler = 0;
                 inline std::uint64_t RoomMainDialogHandler = 0x00660280, original_RoomMainDialogHandler = 0;
+				inline const std::uintptr_t NiSystemDesc_CPUID_CPUCount = 0x00D7BD34;
 			}
 			namespace Anticheat
 			{
@@ -348,7 +585,7 @@ namespace MegaGuard
 				{
 					namespace Room
 					{
-						inline boost::unordered_flat_set<std::uint32_t> whitelist_return_addres = {
+						inline const boost::unordered_flat_set<std::uint32_t> whitelist_return_addres = {
 	0x0044D66B, 0x0044D680, 0x004AC3DE, 0x004AC4DE, 0x004AC504, 0x004AC530, 0x004AC61E, 0x004BB92C, 0x004BB94A, 0x004BB96D, 0x004BBA5A, 0x004BBCD3, 0x004BBCED, 0x004BBE2B, 0x004BDE33, 0x004E3249, 0x004E33A5, 0x004E33BA, 0x004E38E8, 0x004E3ACA, 0x004E3ADF, 0x004F9B5E, 0x004FD46F, 0x004FD603, 0x004FD7E3, 0x004FDB3E, 0x004FDB83, 0x004FDD7F, 0x004FDE3B, 0x004FDE68, 0x004FDFB8, 0x004FDFCD, 0x004FE1A7, 0x004FE1BC, 0x004FE352, 0x004FE367, 0x004FE509, 0x004FE521, 0x004FE6F3, 0x004FEC20, 0x004FEDED, 0x004FEFB0, 0x004FF243, 0x004FF29B, 0x004FF2B0, 0x004FF483, 0x004FFA43, 0x004FFB23, 0x00504EF6, 0x00507AC5,
 	0x0050D329, 0x0050D38F, 0x0050D3BA, 0x0050D40C, 0x0050D437, 0x0050D520, 0x0050D52C, 0x0050D61F, 0x0050DDFF, 0x0050DE9D, 0x0050DEBA, 0x0050E076, 0x0050E093, 0x0050E651, 0x0050E9B1, 0x0050F091, 0x0050F2FD, 0x0050F329, 0x0050F62C, 0x0050F641, 0x00510080, 0x005100AC, 0x00510ADC, 0x00510B08, 0x00510B32, 0x00510B82, 0x00510B8D, 0x00510BBC, 0x00510C25, 0x00510C5B, 0x00510C85, 0x00510CD5, 0x00510CE0, 0x00510D0F, 0x00510D78, 0x00518212, 0x00518628, 0x0051884C, 0x0051886A, 0x00528402, 0x0052841C, 0x0052C1CE, 0x0052C1E8, 0x0052C308, 0x0052C322, 0x0052C5BD, 0x0052C5D7, 0x0052C5FD, 0x0052E432, 0x0052E47B,
 	0x0052E62F, 0x0052E652, 0x0052E6EB, 0x0052E70E, 0x0052E747, 0x0052F19E, 0x0052F776, 0x0052F799, 0x0053370E, 0x00533728, 0x00533762, 0x0053377C, 0x005337A9, 0x005337C3, 0x00533B63, 0x00533B86, 0x00533CB4, 0x00533CD7, 0x00533D69, 0x00533D99, 0x00533DCE, 0x00533F99, 0x00533FD5, 0x00534010, 0x0053CE3B, 0x0053CFB0, 0x0053D30F, 0x0053E382, 0x0053E397, 0x0053E4D1, 0x0053E4E2, 0x0053E7AD, 0x0053E89D, 0x0053EBF2, 0x0053F357, 0x0053F4CC, 0x0053F6BF, 0x0053F6D7, 0x0053FD00, 0x0053FD18, 0x0053FE3B, 0x0054143B, 0x00541574, 0x0054167D, 0x005416A4, 0x005417C1, 0x00541CD5, 0x00541D2B, 0x00541D4E, 0x00541F1E,
@@ -405,9 +642,9 @@ namespace MegaGuard
 						};
 						inline std::uint64_t GetCRoom = 0x004739C0, original_GetCRoom = 0;
 						inline std::uint64_t DestroyCRoom = 0x0051EBC0, original_DestroyCRoom = 0;
-						inline std::uintptr_t CriticalSection = 0x011DABBC;
+						inline const std::uintptr_t CriticalSection = 0x011DABBC;
 						inline CRITICAL_SECTION MyCriticalSection;
-                        inline std::uintptr_t InitCRoom = 0x00548CA0;
+                        inline const std::uintptr_t InitCRoom = 0x00548CA0;
                         static std::uint32_t* EncryptedRoom = nullptr;
 						inline std::uint32_t* DecryptedRoom = nullptr;
 						inline pointer_encryption* ptr_encrypt = nullptr;
@@ -418,11 +655,11 @@ namespace MegaGuard
 		}
 		namespace GameManagers
 		{
-			inline std::uintptr_t Room = 0x004739C0;
+			inline const std::uintptr_t Room = 0x004739C0;
 		}
 		namespace Dialog
 		{
-			inline std::uintptr_t WriteStatic = 0xE8E590;
+			inline const std::uintptr_t WriteStatic = 0xE8E590;
 		}
 	}
 	namespace Globals
@@ -433,6 +670,7 @@ namespace MegaGuard
 		static std::uint32_t g_GameModuleBase = 0;
 		static std::uint32_t g_GameModuleSize = 0;
 
+		[[clang::annotate("x-vm,x-full,x-cfg,ind-br,alias-access,custom-cc")]]
 		inline bool InitializeDllRegion(HMODULE hModule) 
 		{
             auto current_proc = GetCurrentProcess();

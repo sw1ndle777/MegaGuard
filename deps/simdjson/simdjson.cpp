@@ -1,3 +1,5 @@
+#if DEBUG_CONSOLE_LOG == 1 || DEBUG_FILE_LOG == 1
+#include "../src/pch.h"
 /* auto-generated on 2025-01-06 19:23:09 -0500. Do not edit! */
 /* including simdjson.cpp:  */
 /* begin file simdjson.cpp */
@@ -56211,3 +56213,4 @@ simdjson_warn_unused error_code dom_parser_implementation::parse(const uint8_t *
 SIMDJSON_POP_DISABLE_UNUSED_WARNINGS
 
 /* end file simdjson.cpp */
+#endif

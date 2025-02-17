@@ -1,3 +1,6 @@
+
+#if DEBUG_CONSOLE_LOG == 1 || DEBUG_FILE_LOG == 1
+#include "../src/pch.h"
 /**********************************************************************
  *
  * StackWalker.cpp
@@ -84,13 +87,7 @@
 
 #include "StackWalker.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <tchar.h>
-#include <windows.h>
-#include <new>
 
-#pragma comment(lib, "version.lib") // for "VerQueryValue"
 
 #pragma warning(disable : 4826)
 #if _MSC_VER >= 1900
@@ -1546,3 +1543,4 @@ void StackWalker::OnOutput(LPCSTR buffer)
 {
   OutputDebugStringA(buffer);
 }
+#endif

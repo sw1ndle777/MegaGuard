@@ -21,14 +21,14 @@
   <ItemGroup>
     <ClInclude Include="..\deps\simdjson\simdjson.h" />
     <ClInclude Include="hooks\anticheat\gamemanagers.h" />
+    <ClInclude Include="hooks\bugfix\intel_hyperthreading.h" />
     <ClInclude Include="hooks\bugfix\weaponrestriction_roomsettings.h" />
     <ClInclude Include="hooks\features\custom_tickrate.h" />
     <ClInclude Include="hooks\features\hideweaponslots.h" />
+    <ClInclude Include="hooks\features\voice_types_all.h" />
     <ClInclude Include="hooks\hooks.h" />
     <ClInclude Include="pch.h" />
-    <ClInclude Include="protections\memory\vectored\GuardRegions.h" />
     <ClInclude Include="utils\assembler.h" />
-    <ClInclude Include="utils\autocrypt.hpp" />
     <ClInclude Include="utils\CLog.h" />
     <ClInclude Include="utils\ldasm.h" />
     <ClInclude Include="utils\memory.h" />
@@ -42,16 +42,12 @@
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="hooks\hooks.cpp" />
     <ClCompile Include="pch.cpp" />
-    <ClCompile Include="protections\memory\vectored\GuardRegions.cpp" />
     <ClCompile Include="utils\assembler.cpp" />
     <ClCompile Include="utils\CLog.cpp" />
     <ClCompile Include="utils\ldasm.cpp" />
     <ClCompile Include="utils\memory.cpp" />
     <ClCompile Include="utils\midhook.cpp" />
     <ClCompile Include="utils\utils.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="utils\autocrypt.inl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
@@ -70,9 +66,10 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <PlatformToolset>ClangCL</PlatformToolset>
+    <WholeProgramOptimization>false</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
+    <LLVMToolsVersion>777</LLVMToolsVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -131,19 +128,23 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;ASMJIT_STATIC;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <DebugInformationFormat>None</DebugInformationFormat>
+      <AdditionalOptions>-mllvm -ind-call -mllvm -const-obfus -mllvm -string-obfus -mllvm -bcf -mllvm -bcf_loop=3 -mllvm -bcf_prob=40 %(AdditionalOptions)</AdditionalOptions>
+      <Optimization>MaxSpeed</Optimization>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>asmjit.lib;asmtk.lib;Zycore.lib;Zydis.lib;PolyHook_2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>asmjit.lib;asmtk.lib;Zycore.lib;Zydis.lib;PolyHook_2.lib;fmt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">

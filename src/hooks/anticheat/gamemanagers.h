@@ -6,9 +6,12 @@ namespace MegaGuard
         namespace AntiCheat
         {
             using namespace MegaGuard::Addresses::Hooks::Anticheat::GameManagers;
+            
             std::uint32_t* __cdecl GetGRoom()
             {
-                auto return_address = reinterpret_cast<std::uint32_t>(_ReturnAddress());
+                
+                //auto return_address = reinterpret_cast<std::uint32_t>(_ReturnAddress());
+                auto return_address = reinterpret_cast<std::uint32_t>(__builtin_return_address(0));
                 if (Room::EncryptedRoom)
                 {
                     if (Room::whitelist_return_addres.contains(return_address))
@@ -19,19 +22,22 @@ namespace MegaGuard
                             return Room::ptr_encrypt ? Room::ptr_encrypt->process<std::uint32_t*>(Room::EncryptedRoom) : nullptr;
                         else
                         {
-                            //MegaGuard::EventLog->Debug(std::source_location::current(), "call GetGRoom() from non whitelisted 0x{:08X}", return_address);
-                            return Room::ptr_encrypt ? Room::ptr_encrypt->process<std::uint32_t*>(Room::EncryptedRoom) : nullptr;
+                            MegaGuard::EventLog->Debug(nostd::source_location::current(), "call GetGRoom() from non whitelisted 0x{:08X}", return_address);
+                            return nullptr;
                         } 
                     }
                 }
+                
+
                 EnterCriticalSection(&MegaGuard::Addresses::Hooks::Anticheat::GameManagers::Room::MyCriticalSection);
 
                 try
                 {
+                    
                     if (!Room::EncryptedRoom)
                     {
-                        //GrdMem* buffer = new GrdMem(2208);
-                        //std::uint32_t* room_allocated_memory = new (buffer->Data()) std::uint32_t[552];
+                        
+                        
                         std::uint32_t* room_allocated_memory = new (std::nothrow) std::uint32_t[552];
                         if (!room_allocated_memory)
                         {
@@ -42,10 +48,13 @@ namespace MegaGuard
                             Room::ptr_encrypt = new pointer_encryption();
                         Room::DecryptedRoom = _call<std::uint32_t * (__thiscall*)(void*)>(
                             Room::InitCRoom, room_allocated_memory);
+                        
                         Room::EncryptedRoom = Room::ptr_encrypt->process<std::uint32_t*>(Room::DecryptedRoom);
+                        
                         //MegaGuard::EventLog->Debug(std::source_location::current(), "Room::DecryptedRoom: 0x{:08X}", reinterpret_cast<std::uint32_t>(Room::DecryptedRoom));
                         //MegaGuard::EventLog->Debug(std::source_location::current(), "Room::EncryptedRoom: 0x{:08X}", reinterpret_cast<std::uint32_t>(Room::EncryptedRoom));
                     }
+                   
                 }
                 catch (...)
                 {
@@ -53,7 +62,11 @@ namespace MegaGuard
                     throw;
                 }
                 LeaveCriticalSection(&MegaGuard::Addresses::Hooks::Anticheat::GameManagers::Room::MyCriticalSection);
+               
                 return Room::ptr_encrypt ? Room::ptr_encrypt->process<std::uint32_t*>(Room::EncryptedRoom) : nullptr;
+                
+
+                
             }
             void __cdecl DestroyCRoom()
             {

@@ -40,17 +40,8 @@
     <Filter Include="Header Files\protections\memory">
       <UniqueIdentifier>{62a68dfa-b7c7-43ea-9d8e-a9c77353b229}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\protections\memory\vectored">
-      <UniqueIdentifier>{c94fb030-d9a3-4d98-bb7c-cf8f4a7a68c7}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\protections">
       <UniqueIdentifier>{458dd57f-bd87-4ee7-b9bf-da5823031013}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\protections\memory">
-      <UniqueIdentifier>{5daae9ff-3c5d-4104-b801-f74ea37d9024}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\protections\memory\vectored">
-      <UniqueIdentifier>{fcd570ff-575b-4624-84a2-3f02116d9d49}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -65,9 +56,6 @@
     </ClInclude>
     <ClInclude Include="pch.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="utils\autocrypt.hpp">
-      <Filter>Header Files\utils</Filter>
     </ClInclude>
     <ClInclude Include="utils\assembler.h">
       <Filter>Header Files\utils</Filter>
@@ -99,8 +87,11 @@
     <ClInclude Include="..\deps\simdjson\simdjson.h">
       <Filter>Header Files\utils</Filter>
     </ClInclude>
-    <ClInclude Include="protections\memory\vectored\GuardRegions.h">
-      <Filter>Header Files\protections\memory\vectored</Filter>
+    <ClInclude Include="hooks\features\voice_types_all.h">
+      <Filter>Header Files\hooks\features</Filter>
+    </ClInclude>
+    <ClInclude Include="hooks\bugfix\intel_hyperthreading.h">
+      <Filter>Header Files\hooks\bugfix</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -137,13 +128,5 @@
     <ClCompile Include="..\deps\simdjson\simdjson.cpp">
       <Filter>Source Files\utils</Filter>
     </ClCompile>
-    <ClCompile Include="protections\memory\vectored\GuardRegions.cpp">
-      <Filter>Source Files\protections\memory\vectored</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="utils\autocrypt.inl">
-      <Filter>Header Files\utils</Filter>
-    </None>
   </ItemGroup>
 </Project>

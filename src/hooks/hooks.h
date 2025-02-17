@@ -69,12 +69,19 @@ namespace MegaGuard
             extern SwapAddressPatch Tickrate_MinDistance5;
             extern SwapAddressPatch Tickrate_MinDistance6;
             extern SwapAddressPatch Tickrate_MinDistance7;
+
+            extern PatchBytes VoiceSpecialTypeA;
+            extern PatchBytes VoiceSpecialTypeB;
+            extern PatchBytes VoiceSpecialTypeC;
+            extern PatchBytes VoiceSpecialTypeD;
+            extern PatchBytes VoiceSpecialTypeE;
         }
         namespace BugFixes
         {
             extern std::unique_ptr<PLH::NatDetour> FixWeaponSelectDetour;
             extern std::unique_ptr<PLH::NatDetour> FixWeaponSelectDetour_Setting;
             extern std::unique_ptr<PLH::NatDetour> FixWeaponSelectDetour_Main;
+            extern midhook::Hook NiSystemDesc_CPUID_CPUCount;
         }
         namespace AntiCheat
         {

@@ -48,7 +48,7 @@ namespace midhook
 		/// <param name="address">target memory address</param>
 		/// <param name="func">function pointer to hook</param>
 		/// <returns></returns>
-		eStatus Create(uintptr_t address, hookFn func, size_t new_jmp_size = 5);
+		eStatus Create(uintptr_t address, hookFn func, bool withOrigCode = true, size_t new_jmp_size = 5);
 		eStatus Remove();
 
 	private:
@@ -56,7 +56,7 @@ namespace midhook
 		/// Generates thunk to and from hook
 		/// </summary>
 		/// <param name="assembler">assembler object</param>
-		void genThunk(Assembler& assembler);
+		void genThunk(Assembler& assembler, bool withOrigCode);
 
 		/// <summary>
 		/// Copies old code bytes before patching

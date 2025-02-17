@@ -1,8 +1,10 @@
 #include "../pch.h"
 #include "features/hideweaponslots.h"
 #include "features/custom_tickrate.h"
+#include "features/voice_types_all.h"
 
 #include "bugfix/weaponrestriction_roomsettings.h"
+#include "bugfix/intel_hyperthreading.h"
 
 #include "anticheat/gamemanagers.h"
 
@@ -76,12 +78,19 @@ namespace MegaGuard
             SwapAddressPatch Tickrate_MinDistance5;
             SwapAddressPatch Tickrate_MinDistance6;
             SwapAddressPatch Tickrate_MinDistance7;
+
+            PatchBytes VoiceSpecialTypeA;
+            PatchBytes VoiceSpecialTypeB;
+            PatchBytes VoiceSpecialTypeC;
+            PatchBytes VoiceSpecialTypeD;
+            PatchBytes VoiceSpecialTypeE;
         }
         namespace BugFixes
         {
             std::unique_ptr<PLH::NatDetour> FixWeaponSelectDetour;
             std::unique_ptr<PLH::NatDetour> FixWeaponSelectDetour_Setting;
             std::unique_ptr<PLH::NatDetour> FixWeaponSelectDetour_Main;
+            midhook::Hook NiSystemDesc_CPUID_CPUCount;
         }
         namespace AntiCheat
         {
@@ -98,9 +107,11 @@ namespace MegaGuard
         {
             Features::HideWeaponSlot.Create(MegaGuard::Addresses::Hooks::Features::HideWeaponSlot, Features::HideWeaponSlots);
             Features::CustomTickratePatch();
+            Features::CustomVoiceTypesPatch();
         }
         inline void InitBugFixesHooks()
         {
+           // BugFixes::NiSystemDesc_CPUID_CPUCount.Create(MegaGuard::Addresses::Hooks::Bugfixes::NiSystemDesc_CPUID_CPUCount, BugFixes::CPUID_CPUCount, false);
             
             BugFixes::FixWeaponSelectDetour = std::make_unique<PLH::NatDetour>(
                 MegaGuard::Addresses::Hooks::Bugfixes::RoomCreateDialogHandler, 
@@ -147,6 +158,7 @@ namespace MegaGuard
         {
             Features::HideWeaponSlot.Remove();
             Features::CustomTickrateUnpatch();
+            Features::CustomVoiceTypesUnpatch();
             
 
         }
@@ -163,18 +175,24 @@ namespace MegaGuard
             DeleteCriticalSection(&MegaGuard::Addresses::Hooks::Anticheat::GameManagers::Room::MyCriticalSection);
         }
 
-
+        [[clang::annotate("x-vm,x-full,x-cfg,ind-br,alias-access,custom-cc")]]
         inline void InitializeAllHooks()
         {
+            
+            //VMProtectBeginUltra("InitializeAllHooks_vmp");
             InitFeaturesHooks();
             InitBugFixesHooks();
             InitAntiCheatHooks();
+           // VMProtectEnd();
         }
+        [[clang::annotate("x-vm,x-full,x-cfg,ind-br,alias-access,custom-cc")]]
         inline void RemoveAllHooks()
         {
+            //VMProtectBeginUltra("RemoveAllHooks_vmp");
             RemoveFeaturesHooks();
             RemoveBugFixesHooks();
             RemoveAntiCheatHooks();
+            //VMProtectEnd();
         }
     }
 }
