@@ -43,12 +43,18 @@
     <Filter Include="Source Files\protections">
       <UniqueIdentifier>{458dd57f-bd87-4ee7-b9bf-da5823031013}</UniqueIdentifier>
     </Filter>
+    <Filter Include="deps">
+      <UniqueIdentifier>{b95b3d15-fc14-44fe-a30c-38c5b032df44}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="deps\minhook">
+      <UniqueIdentifier>{7a2d9b4a-675f-466a-8516-217cc971304d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="deps\minhook\hde">
+      <UniqueIdentifier>{e8b70205-1d1b-444c-b67e-7d1466c76aa5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="utils\memory.h">
-      <Filter>Header Files\utils</Filter>
-    </ClInclude>
-    <ClInclude Include="utils\utils.h">
       <Filter>Header Files\utils</Filter>
     </ClInclude>
     <ClInclude Include="utils\xorstr.h">
@@ -87,18 +93,57 @@
     <ClInclude Include="..\deps\simdjson\simdjson.h">
       <Filter>Header Files\utils</Filter>
     </ClInclude>
-    <ClInclude Include="hooks\features\voice_types_all.h">
+    <ClInclude Include="hooks\features\spectate_pov.h">
       <Filter>Header Files\hooks\features</Filter>
     </ClInclude>
-    <ClInclude Include="hooks\bugfix\intel_hyperthreading.h">
+    <ClInclude Include="hooks\bugfix\screenshot_bug.h">
       <Filter>Header Files\hooks\bugfix</Filter>
+    </ClInclude>
+    <ClInclude Include="..\deps\StackWalker\StackWalker.h">
+      <Filter>Header Files\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\deps\minhook\buffer.h">
+      <Filter>deps\minhook</Filter>
+    </ClInclude>
+    <ClInclude Include="..\deps\minhook\minhook.h">
+      <Filter>deps\minhook</Filter>
+    </ClInclude>
+    <ClInclude Include="..\deps\minhook\trampoline.h">
+      <Filter>deps\minhook</Filter>
+    </ClInclude>
+    <ClInclude Include="..\deps\minhook\hde\hde32.h">
+      <Filter>deps\minhook\hde</Filter>
+    </ClInclude>
+    <ClInclude Include="..\deps\minhook\hde\hde64.h">
+      <Filter>deps\minhook\hde</Filter>
+    </ClInclude>
+    <ClInclude Include="..\deps\minhook\hde\pstdint.h">
+      <Filter>deps\minhook\hde</Filter>
+    </ClInclude>
+    <ClInclude Include="..\deps\minhook\hde\table32.h">
+      <Filter>deps\minhook\hde</Filter>
+    </ClInclude>
+    <ClInclude Include="..\deps\minhook\hde\table64.h">
+      <Filter>deps\minhook\hde</Filter>
+    </ClInclude>
+    <ClInclude Include="hooks\features\custom_nationindex.h">
+      <Filter>Header Files\hooks\features</Filter>
+    </ClInclude>
+    <ClInclude Include="hooks\anticheat\ccrypt.h">
+      <Filter>Header Files\hooks\anticheat</Filter>
+    </ClInclude>
+    <ClInclude Include="hooks\anticheat\heartbeat.h">
+      <Filter>Header Files\hooks\anticheat</Filter>
+    </ClInclude>
+    <ClInclude Include="hooks\features\pcbang.h">
+      <Filter>Header Files\hooks\features</Filter>
+    </ClInclude>
+    <ClInclude Include="Splash.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="utils\memory.cpp">
-      <Filter>Source Files\utils</Filter>
-    </ClCompile>
-    <ClCompile Include="utils\utils.cpp">
       <Filter>Source Files\utils</Filter>
     </ClCompile>
     <ClCompile Include="dllmain.cpp">
@@ -127,6 +172,24 @@
     </ClCompile>
     <ClCompile Include="..\deps\simdjson\simdjson.cpp">
       <Filter>Source Files\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\deps\minhook\buffer.c">
+      <Filter>deps\minhook</Filter>
+    </ClCompile>
+    <ClCompile Include="..\deps\minhook\hook.c">
+      <Filter>deps\minhook</Filter>
+    </ClCompile>
+    <ClCompile Include="..\deps\minhook\trampoline.c">
+      <Filter>deps\minhook</Filter>
+    </ClCompile>
+    <ClCompile Include="..\deps\minhook\hde\hde32.c">
+      <Filter>deps\minhook\hde</Filter>
+    </ClCompile>
+    <ClCompile Include="..\deps\minhook\hde\hde64.c">
+      <Filter>deps\minhook\hde</Filter>
+    </ClCompile>
+    <ClCompile Include="Splash.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

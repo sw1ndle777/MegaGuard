@@ -3,6 +3,77 @@ namespace MegaGuard
 {
     namespace HooksMgr
     {
+        class CDetourHook
+        {
+        public:
+            CDetourHook() = default;
+            template <class T, class Fn>
+            explicit CDetourHook(T pFunction, Fn pDetour)
+                : pBaseFn(reinterpret_cast<void*>(pFunction)), pReplaceFn(reinterpret_cast<void*>(pDetour)) {
+            }
+            template <class T, class Fn>
+            bool Create(T pFunction, Fn pDetour)
+            {
+                pBaseFn = reinterpret_cast<void*>(pFunction);
+
+                if (pBaseFn == nullptr) return false;
+                    
+                pReplaceFn = reinterpret_cast<void*>(pDetour);
+
+                if (pReplaceFn == nullptr)  return false;
+                   
+                const MH_STATUS status = MH_CreateHook(pBaseFn, pReplaceFn, &pOriginalFn);
+
+                //if (status != MH_OK) throw std::runtime_error(std::format("failed to create hook function, status: {}\nbase function -> {:#08X}", MH_StatusToString(status), reinterpret_cast<std::uintptr_t>(pBaseFn)));
+  
+                if (!this->Replace())  return false;
+                   
+                return true;
+            }
+            bool Replace()
+            {
+                if (pBaseFn == nullptr || bIsHooked) return false;
+                    
+                const MH_STATUS status = MH_EnableHook(pBaseFn);
+
+                //if (status != MH_OK) throw std::runtime_error(std::format("failed to enable hook function, status: {}\nbase function -> {:#08X} address", MH_StatusToString(status), reinterpret_cast<std::uintptr_t>(pBaseFn)));
+                    
+                bIsHooked = true;
+                return true;
+            }
+            bool Remove()
+            {
+                if (!this->Restore()) return false;
+                    
+                const MH_STATUS status = MH_RemoveHook(pBaseFn);
+
+                //if (status != MH_OK) throw std::runtime_error(std::format("failed to remove hook, status: {}\n base function -> {:#08X} address", MH_StatusToString(status), reinterpret_cast<std::uintptr_t>(pBaseFn)));
+                    
+                return true;
+            }
+
+            bool Restore()
+            {
+                if (!bIsHooked) return false;
+                    
+                const MH_STATUS status = MH_DisableHook(pBaseFn);
+
+                //if (status != MH_OK) throw std::runtime_error(std::format("failed to restore hook, status: {}\n base function -> {:#08X} address", MH_StatusToString(status), reinterpret_cast<std::uintptr_t>(pBaseFn)));
+
+                bIsHooked = false;
+                return true;
+            }
+            template <typename Fn>
+            Fn GetOriginal() { return static_cast<Fn>(pOriginalFn); }
+            inline bool IsHooked() const { return bIsHooked; }
+
+        private:
+            bool bIsHooked = false;
+            void* pBaseFn = nullptr;
+            void* pReplaceFn = nullptr;
+            void* pOriginalFn = nullptr;
+        };
+
         namespace Features
         {
             extern midhook::Hook HideWeaponSlot;
@@ -62,6 +133,27 @@ namespace MegaGuard
             extern SwapAddressPatch Tickrate_DelayReq20;
             extern SwapAddressPatch Tickrate_DelayReq21;
 
+            extern SwapAddressPatch Tickrate_DelayAnims1;
+            extern SwapAddressPatch Tickrate_DelayAnims2;
+            extern SwapAddressPatch Tickrate_DelayAnims3;
+            extern SwapAddressPatch Tickrate_DelayAnims4;
+            extern SwapAddressPatch Tickrate_DelayAnims5;
+            extern SwapAddressPatch Tickrate_DelayAnims6;
+            extern SwapAddressPatch Tickrate_DelayAnims7;
+            extern SwapAddressPatch Tickrate_DelayAnims8;
+            extern SwapAddressPatch Tickrate_DelayAnims9;
+            extern SwapAddressPatch Tickrate_DelayAnims10;
+            extern SwapAddressPatch Tickrate_DelayAnims11;
+            extern SwapAddressPatch Tickrate_DelayAnims12;
+            extern SwapAddressPatch Tickrate_DelayAnims13;
+            extern SwapAddressPatch Tickrate_DelayAnims14;
+            extern SwapAddressPatch Tickrate_DelayAnims15;
+            extern SwapAddressPatch Tickrate_DelayAnims16;
+            extern SwapAddressPatch Tickrate_DelayAnims17;
+            extern SwapAddressPatch Tickrate_DelayAnims18;
+
+
+
             extern SwapAddressPatch Tickrate_MinDistance1;
             extern SwapAddressPatch Tickrate_MinDistance2;
             extern SwapAddressPatch Tickrate_MinDistance3;
@@ -70,30 +162,78 @@ namespace MegaGuard
             extern SwapAddressPatch Tickrate_MinDistance6;
             extern SwapAddressPatch Tickrate_MinDistance7;
 
-            extern PatchBytes VoiceSpecialTypeA;
-            extern PatchBytes VoiceSpecialTypeB;
-            extern PatchBytes VoiceSpecialTypeC;
-            extern PatchBytes VoiceSpecialTypeD;
-            extern PatchBytes VoiceSpecialTypeE;
+			extern PatchBytes Rot1_PatchBytes;
+            extern PatchBytes Rot2_PatchBytes;
+            extern PatchBytes Rot3_PatchBytes;
+
+            extern CDetourHook NationIndex;
+            extern CDetourHook WindowTitle;
+            extern CDetourHook SpectatePov;
+			extern CDetourHook DrawDebugInfo;
+
+            extern CDetourHook CommonAgoraDlgInit;
+            extern CDetourHook CommonAgoraDlgConstruct;
         }
         namespace BugFixes
         {
-            extern std::unique_ptr<PLH::NatDetour> FixWeaponSelectDetour;
-            extern std::unique_ptr<PLH::NatDetour> FixWeaponSelectDetour_Setting;
-            extern std::unique_ptr<PLH::NatDetour> FixWeaponSelectDetour_Main;
-            extern midhook::Hook NiSystemDesc_CPUID_CPUCount;
+            extern CDetourHook FixWeaponSelectDetour;
+            extern CDetourHook FixWeaponSelectDetour_Setting;
+            extern CDetourHook FixWeaponSelectDetour_Main;
+            extern CDetourHook Screeshot_bug;
+            extern CDetourHook Screenshot2_bug;
+            extern PatchBytes SetDateTimeShit;
         }
         namespace AntiCheat
         {
-            //extern std::uint32_t* __cdecl GetGRoom();
-            //extern void __cdecl DestroyCRoom();
             namespace GameManagers
             {
                 namespace Room
                 {
-                    extern std::unique_ptr<PLH::NatDetour> Get;
-                    extern std::unique_ptr<PLH::NatDetour> Destroy;
+                    extern CDetourHook Get;
+                    extern CDetourHook Destroy;
                 }
+                namespace UnitContainer
+                {
+                    extern CDetourHook Get;
+                    extern CDetourHook Destroy;
+                }
+                namespace UnitMgr
+                {
+                    extern CDetourHook Get;
+                    extern CDetourHook Destroy;
+                }
+                namespace NetMgr
+                {
+                    extern CDetourHook Get;
+                    extern CDetourHook Destroy;
+                }
+                namespace Dynamics
+                {
+                    extern CDetourHook Get;
+                    extern CDetourHook Destroy;
+                }
+                namespace World
+                {
+                    extern CDetourHook Get;
+                    extern CDetourHook Destroy;
+                }
+            }
+            namespace InitDefaultSettings
+            {
+                extern CDetourHook Init;
+            }
+            namespace Crypto
+            {
+                namespace RC5
+                {
+                    extern CDetourHook KeySetup;
+                }
+                namespace RC6
+                {
+                    extern CDetourHook KeySetup;
+                }
+                extern CDetourHook Encrypt;
+                extern CDetourHook Decrypt;
             }
         }
         extern void InitFeaturesHooks();

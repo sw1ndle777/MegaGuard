@@ -12,6 +12,7 @@
 *.ini
 *.cgd
 *.dip
+*.db
 
 # Ignore build directories
 bin/
@@ -20,3 +21,4 @@ Release/
 Debug/
 obj/
 /src/.vs
+.vs

@@ -149,7 +149,7 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
 
 			// Avoid using memcpy to reduce the footprint.
 #ifndef _MSC_VER
-			memcpy(instBuf, (LPBYTE)pOldInst, copySize);
+			nocrt_memcpy(instBuf, (LPBYTE)pOldInst, copySize);
 #else
 			__movsb(instBuf, (LPBYTE)pOldInst, copySize);
 #endif
@@ -274,7 +274,7 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
 
 		// Avoid using memcpy to reduce the footprint.
 #ifndef _MSC_VER
-		memcpy((LPBYTE)ct->pTrampoline + newPos, pCopySrc, copySize);
+		nocrt_memcpy((LPBYTE)ct->pTrampoline + newPos, pCopySrc, copySize);
 #else
 		__movsb((LPBYTE)ct->pTrampoline + newPos, pCopySrc, copySize);
 #endif
@@ -308,7 +308,7 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
 	jmp.address = (ULONG_PTR)ct->pDetour;
 
 	ct->pRelay = (LPBYTE)ct->pTrampoline + newPos;
-	memcpy(ct->pRelay, &jmp, sizeof(jmp));
+	nocrt_memcpy(ct->pRelay, &jmp, sizeof(jmp));
 #endif
 
 	return TRUE;

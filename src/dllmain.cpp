@@ -1,14 +1,12 @@
 #include "pch.h"
 
-#define PRINTD(_Format,...) printf(_Format,__VA_ARGS__)
-
 #include <iostream>
 #include <string>
 #include <fstream>
 #include <csignal>
 #include <cstring>
 #include <chrono>
-#include <format>
+//#include <format>
 #include <Windows.h>
 #if DEBUG_CONSOLE_LOG == 1 || DEBUG_FILE_LOG == 1
 
@@ -23,21 +21,22 @@
 
 
 std::string dumpFile;
+
+static std::atomic<bool> g_isFinal = false;
+static std::atomic<bool> g_isFinalStep = false;
+static std::atomic<bool> g_isClosing = false;
+static _EXCEPTION_POINTERS* g_p{};
+constexpr size_t g_crashStackSize = 1024 * 1024 * 1;
+static char* g_crashStack{};
+DWORD g_crashThread{};
+DWORD g_traceThread{};
+
 static std::string stackwalker_backtrace_json;
-//static std::stacktrace trace;
 static std::string header_message;
 static int crash_signal = 0; // 0 is not a valid signal id
 static std::mutex mut;
 static std::condition_variable cv;
 static std::thread output_thread;
-enum class program_status
-{
-    running = 0,
-    crashed = 1,
-    ending = 2,
-    normal_exit = 3,
-};
-static std::atomic<program_status> status = program_status::running;
 
 static void json_pretty_print(std::ostream& os, const simdjson::dom::element& element, std::string* indent = nullptr)
 {
@@ -122,169 +121,6 @@ static void json_pretty_print(std::ostream& os, const simdjson::dom::element& el
     }
 }
 
-/*
-static void json_pretty_print(std::ostream& os, const Json::Value& jv, std::string* indent = nullptr)
-{
-    std::string indent_;
-    if (!indent)
-        indent = &indent_;
-
-    switch (jv.type())
-    {
-        case Json::objectValue:
-        { // Handle JSON object
-            os << "{\n";
-            indent->append(4, ' ');
-            bool first = true;
-            for (const auto& key : jv.getMemberNames())
-            {
-                if (!first)
-                {
-                    os << ",\n";
-                }
-                first = false;
-                os << *indent << "\"" << key << "\" : ";
-                json_pretty_print(os, jv[key], indent);
-            }
-            os << "\n";
-            indent->resize(indent->size() - 4);
-            os << *indent << "}";
-            break;
-        }
-
-        case Json::arrayValue:
-        { // Handle JSON array
-            os << "[\n";
-            indent->append(4, ' ');
-            bool first = true;
-            for (const auto& item : jv)
-            {
-                if (!first)
-                {
-                    os << ",\n";
-                }
-                first = false;
-                os << *indent;
-                json_pretty_print(os, item, indent);
-            }
-            os << "\n";
-            indent->resize(indent->size() - 4);
-            os << *indent << "]";
-            break;
-        }
-
-        case Json::stringValue:
-        { // Handle string values
-            os << "\"" << jv.asString() << "\"";
-            break;
-        }
-
-        case Json::uintValue: // Handle unsigned integers
-            os << "0x" << std::hex << jv.asUInt64() << std::dec;
-            break;
-
-        case Json::intValue: // Handle signed integers
-            os << "0x" << std::hex << jv.asInt64() << std::dec;
-            break;
-
-        case Json::realValue: // Handle double/float
-            os << jv.asDouble();
-            break;
-
-        case Json::booleanValue: // Handle booleans
-            os << (jv.asBool() ? "true" : "false");
-            break;
-
-        case Json::nullValue: // Handle null values
-            os << "null";
-            break;
-    }
-
-    if (indent->empty())
-    {
-        os << "\n"; // Final newline after complete JSON
-    }
-}
-*/
-
-
-/*
-template <typename T>
-void glaze_pretty_print(std::ostream& os, const T& value, std::string* indent = nullptr)
-{
-    std::string indent_;
-    if (!indent)
-        indent = &indent_;
-
-    if constexpr (glz::is_object<T>::value)
-    {
-        os << "{\n";
-        indent->append(4, ' ');
-        bool first = true;
-
-        glz::for_each(value, [&](auto&& member, auto&& name) {
-            if (!first)
-            {
-                os << ",\n";
-            }
-            first = false;
-            os << *indent << "\"" << name << "\" : ";
-            glaze_pretty_print(os, member, indent);
-        });
-
-        os << "\n";
-        indent->resize(indent->size() - 4);
-        os << *indent << "}";
-    }
-    else if constexpr (glz::is_array<T>::value)
-    {
-        os << "[\n";
-        indent->append(4, ' ');
-        bool first = true;
-
-        for (const auto& item : value)
-        {
-            if (!first)
-            {
-                os << ",\n";
-            }
-            first = false;
-            os << *indent;
-            glaze_pretty_print(os, item, indent);
-        }
-
-        os << "\n";
-        indent->resize(indent->size() - 4);
-        os << *indent << "]";
-    }
-    else if constexpr (std::is_same_v<T, std::string>)
-    {
-        os << "\"" << value << "\"";
-    }
-    else if constexpr (std::is_integral_v<T>)
-    {
-        os << "0x" << std::hex << value << std::dec;
-    }
-    else if constexpr (std::is_floating_point_v<T>)
-    {
-        os << value;
-    }
-    else if constexpr (std::is_same_v<T, bool>)
-    {
-        os << (value ? "true" : "false");
-    }
-    else
-    {
-        os << "null"; // Handle unsupported or unknown types as null
-    }
-
-    if (indent->empty())
-    {
-        os << "\n"; // Final newline after complete JSON
-    }
-}
-*/
-
 std::string GetCurrentTimestamp()
 {
     auto now = std::chrono::system_clock::now();
@@ -299,8 +135,7 @@ std::string GetCurrentTimestamp()
     return oss.str();
 }
 
-#include <iostream>
-#include <string>
+
 #include <ctime>
 #include <sstream>
 
@@ -359,17 +194,8 @@ std::string GenerateDumpFilePath(const std::string& baseFileName)
 
     return CombinePath(directory, newFileName);
 }
-void set_crashlog_header_message(std::string message)
-{
-    std::unique_lock<std::mutex> lk(mut);
-    if (status != program_status::running) return;
-    header_message = message;
-}
-std::string get_crashlog_header_message()
-{
-    std::unique_lock<std::mutex> lk(mut);
-    return header_message;
-}
+
+
 static const char* try_get_signal_name(int signal) {
     switch (signal)
     {
@@ -391,46 +217,28 @@ static const char* try_get_signal_name(int signal) {
 
 static void output_crash_log()
 {
-    //auto path = GenerateCrashLogFilePath(dumpFile);
+    auto path = GenerateCrashLogFilePath(dumpFile);
     auto json_path = GenerateStacktraceJsonFilePath(dumpFile);
-    //std::ofstream log(path);
-    //if (!header_message.empty()) log << header_message << std::endl;
-    //if (crash_signal != 0)
-    //{
-    //    log << "Received signal " << crash_signal << " " << try_get_signal_name(crash_signal) << std::endl;
-    //}
+    std::ofstream log(path);
+    if (!header_message.empty()) log << header_message << std::endl;
+    if (crash_signal != 0)
+    {
+        log << "Received signal " << crash_signal << " " << try_get_signal_name(crash_signal) << std::endl;
+    }
 
-    //log << trace;
-    //log.close();
+    log.close();
     std::ofstream stacktraceLog(json_path);
     stacktraceLog << stackwalker_backtrace_json;
     stacktraceLog.close();
 }
 
-static void crash_handler_thread()
-{
-    //wait for the program to crash or exit normally
-    std::unique_lock<std::mutex> lk(mut);
-    cv.wait(lk, [] { return status != program_status::running; });
-    lk.unlock();
-
-    //if it crashed, output the crash log
-    if (status == program_status::crashed)
-    {
-        output_crash_log();
-    }
-
-    //alert the crashing thread we're done with the crash log so it can finish crashing
-    status = program_status::ending;
-    cv.notify_one();
-}
 
 struct CallstackEntryJson
 {
-    uint32_t frame;
-    uint64_t offset;
+    std::uint32_t frame;
+    std::uint64_t offset;
     std::string moduleName;
-    std::optional<uint64_t> base;
+    std::optional<std::uint64_t> base;
 };
 
 
@@ -440,10 +248,10 @@ public:
     XStackWalker() : StackWalker() {}
 
     std::ostringstream backtrace; // JSON will be built as a string
-    uint32_t frame{};
-    std::vector<uint32_t> printed_bases;
+    std::uint32_t frame{};
+    std::vector<std::uint32_t> printed_bases;
 
-    auto has_base(const uintptr_t base) {
+    auto has_base(const std::uintptr_t base) {
         return std::find(printed_bases.begin(), printed_bases.end(), base) != printed_bases.end();
     }
 
@@ -455,10 +263,9 @@ protected:
         if (frame >= 10) return;
 
         std::string moduleName = entry.moduleName;
-        uintptr_t offset = entry.offset;
-        uintptr_t base = entry.baseOfImage;
+        std::uintptr_t offset = entry.offset;
+        std::uintptr_t base = entry.baseOfImage;
 
-        // Start building JSON entry
         if (frame == 0)
         {
             backtrace << "[\n";
@@ -510,77 +317,176 @@ static void save_to_file(const std::string& fileName, const std::string& data)
     }
 }
 
-
-static inline void crash_handler()
+void NotifyAndTerminate(const wchar_t* message, const wchar_t* title)
 {
-    //if we crashed during a crash... ignore lol
-    if (status != program_status::running) return;
-    
+    //if (!g_isClosing.exchange(true))
+        MessageBoxW(0, message, title, MB_SYSTEMMODAL | MB_ICONERROR);
+
+}
+
+[[gnu::noinline, clang::optnone]] void on_exception_final()
+{
+    const auto threadId = GetCurrentThreadId();
+    const auto* p = g_p;
+    const auto thread = GetCurrentThread();
+
+    ClipCursor(NULL);
+    ShowCursor(1);
+
     XStackWalker sw;
-    sw.ShowCallstack();
+    sw.ShowCallstack(thread, p->ContextRecord);
 
-    std::stringstream ss;
 
-    simdjson::dom::parser parser;
-    simdjson::dom::element backtraceElement;
+    std::string backtrace;
+    g_traceThread = 1;
+    std::thread([&]
+        {
+            g_traceThread = GetCurrentThreadId();
+            const auto* rc = p->ContextRecord;
 
-    auto error = parser.parse(sw.get_backtrace()).get(backtraceElement);
-    json_pretty_print(ss, backtraceElement);
 
-    stackwalker_backtrace_json = ss.str();
-    
-    //save the stacktrace
-    //trace = std::stacktrace::current();
+            std::ostringstream json;
 
-    //resume the monitoring thread
-    status = program_status::crashed;
-    cv.notify_one();
+            json << "{\n";
+            json << "  \"code\": " << static_cast<uint64_t>(p->ExceptionRecord->ExceptionCode) << ",\n";
+            json << "  \"address\": " << reinterpret_cast<uint64_t>(p->ExceptionRecord->ExceptionAddress) << ",\n";
+            json << "  \"stacktrace_ida\": \"" << sw.backtrace.str() << "\",\n";
+            json << "  \"context\": {\n";
 
-    //wait for the crash log to finish writing
-    std::unique_lock<std::mutex> lk(mut);
-    cv.wait(lk, [] { return status != program_status::crashed; });
+            json << "    \"ebp\": " << rc->Ebp << ",\n";
+            json << "    \"eax\": " << rc->Eax << ",\n";
+            json << "    \"ecx\": " << rc->Ecx << ",\n";
+            json << "    \"edx\": " << rc->Edx << ",\n";
+            json << "    \"ebx\": " << rc->Ebx << ",\n";
+            json << "    \"esi\": " << rc->Esi << ",\n";
+            json << "    \"edi\": " << rc->Edi << "\n";
+
+            json << "  }\n";
+            json << "}";
+
+
+            if (static bool saved = false; !saved)
+            {
+                const auto dmpFile = GenerateStacktraceJsonFilePath(dumpFile);
+                simdjson::padded_string padded_json = simdjson::padded_string(json.str());
+                simdjson::dom::parser parser;
+                simdjson::dom::element doc;
+
+                auto error = parser.parse(padded_json).get(doc);
+                std::stringstream ss;
+                json_pretty_print(ss, doc);
+				MegaGuard::EventLog->Debug(nostd::source_location::current(), "Stacktrace: %s", ss.str().c_str());
+                save_to_file(dmpFile, ss.str());
+
+                std::string dumpFilePathWithTimestamp = GenerateDumpFilePath(dumpFile);
+
+                HANDLE hFile = CreateFileA(dumpFilePathWithTimestamp.c_str(), GENERIC_WRITE | GENERIC_READ, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+
+                if (hFile != INVALID_HANDLE_VALUE)
+                {
+                    MINIDUMP_EXCEPTION_INFORMATION dumpInfo;
+                    dumpInfo.ExceptionPointers = g_p;
+                    dumpInfo.ThreadId = GetCurrentThreadId();
+                    dumpInfo.ClientPointers = TRUE;
+
+                    MINIDUMP_TYPE dumpType = (MINIDUMP_TYPE)(MiniDumpNormal | MiniDumpWithDataSegs | MiniDumpWithIndirectlyReferencedMemory);
+                    MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), hFile, dumpType, &dumpInfo, nullptr, nullptr);
+                    CloseHandle(hFile);
+                }
+
+                saved = true;
+            }
+            Sleep(1000);
+
+            g_traceThread = 0;
+        }).detach();
+
+    while (g_traceThread) Sleep(1);
+    NotifyAndTerminate(L"Encountered an error, exiting now.", L"[MVO] Crashed #1");
 }
 
-static inline void signal_handler(int signal) {
-    crash_signal = signal;
-    crash_handler();
-    RaiseException(EXCEPTION_BREAKPOINT, 0, 1, (ULONG_PTR*)&signal);
-    //std::quick_exit(1);
-}
-static inline void terminator() {
-    crash_handler();
-    //std::quick_exit(1);
-}
-__declspec(noinline) static LONG WINAPI exception_handler(EXCEPTION_POINTERS* exceptionInfo)
+[[gnu::noinline, clang::optnone]] LONG __stdcall on_exception(_EXCEPTION_POINTERS* _p)
 {
-    crash_handler();
-    std::string dumpFilePathWithTimestamp = GenerateDumpFilePath(dumpFile);
 
-    HANDLE hFile = CreateFileA(dumpFilePathWithTimestamp.c_str(), GENERIC_WRITE | GENERIC_READ, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+    g_p = _p;
 
-    if (hFile != INVALID_HANDLE_VALUE)
+   
+
+
+    if (!g_isFinal)
     {
-        MINIDUMP_EXCEPTION_INFORMATION dumpInfo;
-        dumpInfo.ExceptionPointers = exceptionInfo;
-        dumpInfo.ThreadId = GetCurrentThreadId();
-        dumpInfo.ClientPointers = TRUE;
+        switch (auto const* record = g_p->ExceptionRecord; record->ExceptionCode)
+        {
+        case EXCEPTION_PRIV_INSTRUCTION:
+        case EXCEPTION_ACCESS_VIOLATION:
+        case EXCEPTION_DATATYPE_MISALIGNMENT:
+        case EXCEPTION_BREAKPOINT:
+        case EXCEPTION_SINGLE_STEP:
+        case EXCEPTION_ARRAY_BOUNDS_EXCEEDED:
+        case EXCEPTION_FLT_DENORMAL_OPERAND:
+        case EXCEPTION_FLT_DIVIDE_BY_ZERO:
+        case EXCEPTION_FLT_INEXACT_RESULT:
+        case EXCEPTION_FLT_INVALID_OPERATION:
+        case EXCEPTION_FLT_OVERFLOW:
+        case EXCEPTION_FLT_STACK_CHECK:
+        case EXCEPTION_FLT_UNDERFLOW:
+        case EXCEPTION_INT_DIVIDE_BY_ZERO:
+        case EXCEPTION_INT_OVERFLOW:
+        case EXCEPTION_IN_PAGE_ERROR:
+        case EXCEPTION_ILLEGAL_INSTRUCTION:
+        case EXCEPTION_NONCONTINUABLE_EXCEPTION:
+        case EXCEPTION_STACK_OVERFLOW:
+        case EXCEPTION_INVALID_DISPOSITION:
+        case EXCEPTION_GUARD_PAGE:
+        case EXCEPTION_INVALID_HANDLE:
+            g_isFinal = true;
+            break;
 
-        MINIDUMP_TYPE dumpType = (MINIDUMP_TYPE)(MiniDumpNormal | MiniDumpWithDataSegs | MiniDumpWithIndirectlyReferencedMemory);
-        MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), hFile, dumpType, &dumpInfo, nullptr, nullptr);
-        CloseHandle(hFile);
+        default:
+            return EXCEPTION_CONTINUE_SEARCH;
+        }
     }
-    return EXCEPTION_CONTINUE_SEARCH;
-}
-static void __cdecl invalid_parameter_handler(const wchar_t*, const wchar_t*, const wchar_t*, unsigned int, uintptr_t) {
-    crash_handler();
-    abort();
+
+    auto threadId = GetCurrentThreadId();
+
+    if (g_isFinalStep.exchange(true))
+    {
+        if (g_traceThread == threadId)
+        {
+            g_traceThread = {};
+        }
+
+        if (g_crashThread == threadId)
+        {
+            std::fprintf(stderr, "DOUBLE FAULT!\r\n\r\n");
+            while (true) {
+                Sleep(100);
+            }
+            NotifyAndTerminate(L"Encountered a fatal error, exiting now.", L"[MVO] Crashed #2");
+        }
+
+        SuspendThread(GetCurrentThread());
+    }
+    g_crashThread = threadId;
+
+    auto targetAddr = &g_crashStack[sizeof(g_crashStack)];
+    __asm {
+        mov esp, targetAddr;
+        jmp on_exception_final;
+    }
 }
 
-//callback needed during a normal exit to shut down the thread
-static inline void normal_exit() {
-    status = program_status::normal_exit;
-    cv.notify_one();
-    output_thread.join();
+[[gnu::noinline, clang::optnone]] static LONG __stdcall on_final_exception(_EXCEPTION_POINTERS* p) {
+    g_isFinal = true;
+    on_exception(p);
+    NotifyAndTerminate(L"Encountered a fatal error, exiting now.", L"[MVO] Crashed #3");
+    return 0;
+}
+
+void InitializeExceptionHandlers() {
+    g_crashStack = new char[g_crashStackSize];
+    AddVectoredExceptionHandler(TRUE, on_exception);
+    SetUnhandledExceptionFilter(on_final_exception);
 }
 
 #endif
@@ -734,6 +640,7 @@ namespace Random
     }
 }
 
+/*
 //#pragma optimize("", off)
 #pragma section(".mg", execute, read, write)
 #pragma comment(linker,"/SECTION:.mg,ERW")
@@ -895,11 +802,96 @@ namespace memory_protection
 
 #pragma code_seg(pop, ".mg")
 //#pragma optimize("", on)
+*/
+
+typedef NTSTATUS(WINAPI* NtCreateThreadEx_t)(
+    OUT PHANDLE ThreadHandle,
+    IN ACCESS_MASK DesiredAccess,
+    IN PVOID ObjectAttributes,
+    IN HANDLE ProcessHandle,
+    IN PVOID StartRoutine,
+    IN PVOID Argument,
+    IN ULONG CreateFlags,
+    IN SIZE_T ZeroBits,
+    IN SIZE_T StackSize,
+    IN SIZE_T MaximumStackSize,
+    IN PVOID AttributeList
+    );
+
+typedef NTSTATUS(WINAPI* NtClose_t)(HANDLE Handle);
+typedef NTSTATUS(WINAPI* NtSetInformationThread_t)(
+    HANDLE ThreadHandle,
+    THREAD_INFORMATION_CLASS ThreadInformationClass,
+    PVOID ThreadInformation,
+    ULONG ThreadInformationLength
+    );
 
 
 //APIENTRY __attribute((__annotate__(("flattening,indirectcall,indirectbr,aliasaccess,boguscfg,linearmba"))))
 
 
+DWORD WINAPI HiddenThreadRoutine(LPVOID lpParam) 
+{
+    /*
+    MegaGuard::add_return_adresses(MegaGuard::Globals::g_GameModuleBase,
+        MegaGuard::Globals::g_GameModuleSize,
+        MegaGuard::Addresses::Hooks::Anticheat::GameManagers::NetMgr::Get.get(),
+        MegaGuard::Addresses::Hooks::Anticheat::GameManagers::NetMgr::whitelist_return_addres);
+        */
+
+    MegaGuard::add_return_adresses(MegaGuard::Globals::g_GameModuleBase,
+        MegaGuard::Globals::g_GameModuleSize,
+        MegaGuard::Addresses::Hooks::Anticheat::GameManagers::Room::Get.get(),
+        MegaGuard::Addresses::Hooks::Anticheat::GameManagers::Room::whitelist_return_addres);
+
+    MegaGuard::add_return_adresses(MegaGuard::Globals::g_GameModuleBase,
+        MegaGuard::Globals::g_GameModuleSize,
+        MegaGuard::Addresses::Hooks::Anticheat::GameManagers::UnitContainer::Get.get(),
+        MegaGuard::Addresses::Hooks::Anticheat::GameManagers::UnitContainer::whitelist_return_addres);
+
+    MegaGuard::add_return_adresses(MegaGuard::Globals::g_GameModuleBase,
+        MegaGuard::Globals::g_GameModuleSize,
+        MegaGuard::Addresses::Hooks::Anticheat::GameManagers::UnitMgr::Get.get(),
+        MegaGuard::Addresses::Hooks::Anticheat::GameManagers::UnitMgr::whitelist_return_addres);
+
+    MegaGuard::add_return_adresses(MegaGuard::Globals::g_GameModuleBase,
+        MegaGuard::Globals::g_GameModuleSize,
+        MegaGuard::Addresses::Hooks::Anticheat::GameManagers::Dynamics::Get.get(),
+        MegaGuard::Addresses::Hooks::Anticheat::GameManagers::Dynamics::whitelist_return_addres);
+    
+
+    MegaGuard::Splash::InitializeSplash();
+
+    return 0;
+}
+
+
+void start_thread()
+{
+    static auto fnNtCreateThreadEx = MegaGuard::CloneNTSyscall<NtCreateThreadEx_t>("NtCreateThreadEx");
+    static auto fnNtClose = MegaGuard::CloneNTSyscall<NtClose_t>("NtClose");
+    static auto fnNtSetInformationThread = MegaGuard::CloneNTSyscall<NtSetInformationThread_t>("NtSetInformationThread");
+    HANDLE hThread = NULL;
+    NTSTATUS status = fnNtCreateThreadEx(
+        &hThread,                     // Thread handle
+        THREAD_ALL_ACCESS,             // Desired access
+        NULL,                          // ObjectAttributes
+        (HANDLE)-1,           // Target process handle
+        (PVOID)HiddenThreadRoutine,    // Thread start address
+        NULL,                          // Thread argument
+        FALSE,                         // Create suspended
+        0, 0, 0, NULL                  // Other parameters
+    );
+
+    if (NT_SUCCESS(status))
+    {
+        if (hThread)
+        {
+            status = fnNtSetInformationThread(hThread, (THREAD_INFORMATION_CLASS)0x11, NULL, 0);
+            fnNtClose(hThread);
+        }
+    }
+}
 
 BOOL APIENTRY  DllMain(HMODULE hModule, DWORD dwReason, LPVOID lpReserved)
 {
@@ -907,63 +899,72 @@ BOOL APIENTRY  DllMain(HMODULE hModule, DWORD dwReason, LPVOID lpReserved)
 	if (dwReason == DLL_PROCESS_ATTACH)
 	{
 		DisableThreadLibraryCalls(hModule);
-        //GrdMem::Init();
         MegaGuard::Globals::InitializeDllRegion(hModule);
-    #if DEBUG_CONSOLE_LOG == 1 || DEBUG_FILE_LOG == 1
-        dumpFile = "megaguard/crash/megaguard.dmp";
-        output_thread = std::thread(crash_handler_thread);
-        SetUnhandledExceptionFilter(exception_handler);
-        std::signal(SIGABRT, signal_handler);
-        std::signal(SIGSEGV, signal_handler);
-        std::signal(SIGILL, signal_handler);
-        std::signal(SIGTERM, signal_handler);
-        std::signal(SIGFPE, signal_handler);
-        std::signal(SIGINT, signal_handler);
-        std::set_terminate(terminator);
-        _set_abort_behavior(0, _WRITE_ABORT_MSG | _CALL_REPORTFAULT);
-        _set_purecall_handler(terminator);
-        _set_invalid_parameter_handler(&invalid_parameter_handler);
-        std::atexit(normal_exit);
-    #endif
+        start_thread();
+        //ActiveBreach_launch();
 
-	#if DEBUG_CONSOLE_LOG == 1 || DEBUG_FILE_LOG == 1
-		MegaGuard::EventLog->Initialize("megaguard/debug.log", false);
-	#endif
+		//auto handle = GetProcessHandleByName_NTDLL(L"notepad++.exe");
+		//TerminateProcess(handle, 0);
 
-	#if DEBUG_CONSOLE_LOG == 1
-		if (!AllocConsole())
-			throw std::runtime_error("Failed to allocate console.");
-
-		if (!std::freopen("CONOUT$", "w", stdout))
-			throw std::runtime_error("Failed to redirect stdout.");
-		if (!std::freopen("CONIN$", "r", stdin))
-			throw std::runtime_error("Failed to redirect stdin.");
-
-		HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
-		if (hOut == INVALID_HANDLE_VALUE)
-			throw std::runtime_error("Failed to get standard output handle.");
-
-		DWORD dwMode = 0;
-		if (!GetConsoleMode(hOut, &dwMode))
-			throw std::runtime_error("Failed to get console mode.");
-
-		dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-		if (!SetConsoleMode(hOut, dwMode))
-			throw std::runtime_error("Failed to set console mode for virtual terminal processing.");
-
-		std::ios::sync_with_stdio(true);
-	#endif
-
+        //GrdMem::Init();
         
-		MegaGuard::HooksMgr::InitializeAllHooks();
-        memory_protection::initialize_protection(".text");
+#if DEBUG_CONSOLE_LOG == 1 || DEBUG_FILE_LOG == 1
+        dumpFile = "megaguard/crash/megaguard.dmp";
+        //output_thread = std::thread(crash_handler_thread);
+        InitializeExceptionHandlers();
+
+#endif
+
+#if DEBUG_CONSOLE_LOG == 1 || DEBUG_FILE_LOG == 1
+        MegaGuard::EventLog->Initialize("megaguard/debug.log", false);
+#endif
+
+#if DEBUG_CONSOLE_LOG == 1
+        if (!AllocConsole())
+            throw std::runtime_error("Failed to allocate console.");
+
+        if (!std::freopen("CONOUT$", "w", stdout))
+            throw std::runtime_error("Failed to redirect stdout.");
+        if (!std::freopen("CONIN$", "r", stdin))
+            throw std::runtime_error("Failed to redirect stdin.");
+
+        HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+        if (hOut == INVALID_HANDLE_VALUE)
+            throw std::runtime_error("Failed to get standard output handle.");
+
+        DWORD dwMode = 0;
+        if (!GetConsoleMode(hOut, &dwMode))
+            throw std::runtime_error("Failed to get console mode.");
+
+        dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+        if (!SetConsoleMode(hOut, dwMode))
+            throw std::runtime_error("Failed to set console mode for virtual terminal processing.");
+
+        std::ios::sync_with_stdio(true);
+#endif
+        
+        auto nation_index = _rv<std::uint32_t>(MegaGuard::Addresses::Features::NationIndex.get());
+        if (nation_index == 20)
+        {
+            MegaGuard::Addresses::Features::NationIndexIsRom = true;
+            _wv<std::uint32_t>(MegaGuard::Addresses::Features::NationIndex.get(), 0, 0);
+        }
+        else
+        {
+            MegaGuard::Addresses::Features::NationIndexIsRom = false;
+            _wv<std::uint32_t>(MegaGuard::Addresses::Features::NationIndex.get(), 0, 3);
+        }
+       
+        MegaGuard::HooksMgr::InitializeAllHooks();
+        
+        //memory_protection::initialize_protection(".text");
         
 
 		return TRUE;
 	}
 	else if (dwReason == DLL_PROCESS_DETACH)
 	{
-		MegaGuard::HooksMgr::RemoveAllHooks();
+		//MegaGuard::HooksMgr::RemoveAllHooks();
 	}
 	return FALSE;
 }

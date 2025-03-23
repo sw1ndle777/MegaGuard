@@ -607,7 +607,7 @@ unsigned int ldasm(void* code, ldasm_data* ld, uint32_t is64)
         return 0;
 
     /* init output data */
-    memset(ld, 0, sizeof(ldasm_data));
+    nocrt_memset(ld, 0, sizeof(ldasm_data));
 
     /* phase 1: parse prefixies */
     while (cflags(*p) & OP_PREFIX) {

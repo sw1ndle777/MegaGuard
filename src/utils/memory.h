@@ -37,22 +37,6 @@ public:
  */
 namespace Memory
 {
-	/* checks is we have given section in given address */
-	bool			GetSectionInfo(std::uintptr_t uBaseAddress, const std::string& szSectionName, std::uintptr_t& uSectionStart, std::uintptr_t& uSectionSize);
-
-	// Check
-	/* can we read/readwrite given memory region */
-	bool			IsValidReadPtr(void* uAddress);
-	bool			IsValidWritePtr(void* uAddress);
-
-	/* returns vector filled with given value */
-	template <typename T, std::size_t S>
-	std::vector<T> GetFilledVector(const T& fill)
-	{
-		std::vector<T> vecTemp(S);
-		std::fill(vecTemp.begin(), vecTemp.begin() + S, fill);
-		return vecTemp;
-	}
 	template <typename T = void*>
 	constexpr T GetVFunc(void* thisptr, std::size_t nIndex)
 	{

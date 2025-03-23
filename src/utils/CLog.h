@@ -7,12 +7,6 @@ namespace MegaGuard
     public:
         void Initialize(const std::string& Path, bool removeExisting = false);
         void Write(const std::string& Text);
-        void Add(const char* format, ...);
-
-        void Info(const char* format, ...);
-        void Warning(const char* format, ...);
-        void Error(const char* format, ...);
-        void Verbose(const char* format, ...);
 
         std::string extractFunctionName(const std::string& str)
         {
@@ -46,6 +40,7 @@ namespace MegaGuard
         template <typename... Args>
         void Debug(nostd::source_location source_location, std::string_view format, Args&&... args)
         {
+#if DEBUG_CONSOLE_LOG == 1 || DEBUG_FILE_LOG == 1
             const auto file_name = extractFileName(source_location.file_name());
             std::string function_name = extractFunctionName(source_location.function_name());
 
@@ -57,10 +52,12 @@ namespace MegaGuard
                 logQueue.push(source_debug_info + formattedMessage);
             }
             cv.notify_one();
+#endif
         }
 
         void ProcessQueue()
         {
+#if DEBUG_CONSOLE_LOG == 1 || DEBUG_FILE_LOG == 1
             while (!stopLogging)
             {
                 std::unique_lock<std::mutex> lock(queueMutex);
@@ -75,12 +72,13 @@ namespace MegaGuard
                     Write(logEntry);
                 #endif
                 #if DEBUG_CONSOLE_LOG == 1
-                    fmt::printf("%s\n", logEntry.c_str());
+                    fmt::print("{}\n", logEntry.c_str());
                 #endif
 
                     lock.lock();
                 }
             }
+#endif
         }
 
         bool DirectoryExists(const std::string& path)
@@ -103,8 +101,11 @@ namespace MegaGuard
 
         bool CreateDirectoryRecursive(const std::string& path)
         {
+
             if (path.empty())
                 return false;
+
+#if DEBUG_CONSOLE_LOG == 1 || DEBUG_FILE_LOG == 1
 
             std::string tempPath;
             std::istringstream pathStream(path);
@@ -124,6 +125,7 @@ namespace MegaGuard
                     }
                 }
             }
+#endif
             return true;
         }
     private:

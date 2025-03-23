@@ -95,7 +95,7 @@ namespace midhook
 		assembler->popfd();
 		assembler->popad();
 
-		memcpy(m_newCode, buffer.data(), buffer.size());
+		nocrt_memcpy(m_newCode, buffer.data(), buffer.size());
 	}
 
 	void Hook::CopyOldCode(uint8_t* ptr)
@@ -115,7 +115,7 @@ namespace midhook
 				|| (len == 3 && src[ld.opcd_offset] == 0xC2))
 				break;
 
-			memcpy(original, src, len);
+			nocrt_memcpy(original, src, len);
 
 			// instruction has relative offset
 			if (ld.flags & F_RELATIVE)
@@ -124,8 +124,8 @@ namespace midhook
 				uint32_t ofst = (ld.disp_offset != 0 ? ld.disp_offset : ld.imm_offset);
 				uint32_t sz = ld.disp_size != 0 ? ld.disp_size : ld.imm_size;
 
-				memcpy(&delta, src + ofst, sz);
-				memcpy(src + ofst, &delta, sz);
+				nocrt_memcpy(&delta, src + ofst, sz);
+				nocrt_memcpy(src + ofst, &delta, sz);
 			}
 
 			src += len;

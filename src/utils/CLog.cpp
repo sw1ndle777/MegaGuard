@@ -5,7 +5,7 @@ namespace MegaGuard
 
     void CLog::Initialize(const std::string& Path, bool removeExisting)
     {
-
+#if DEBUG_CONSOLE_LOG == 1 || DEBUG_FILE_LOG == 1
         std::string logDirectory = GetParentDirectory(Path);
 
         if (!DirectoryExists(logDirectory))
@@ -31,10 +31,12 @@ namespace MegaGuard
         }
 
         logThread = std::make_unique<std::thread>(&CLog::ProcessQueue, this);
+#endif
     }
 
     void CLog::Write(const std::string& Text)
     {
+#if DEBUG_CONSOLE_LOG == 1 || DEBUG_FILE_LOG == 1
         auto now = std::chrono::system_clock::now();
         auto time = std::chrono::system_clock::to_time_t(now);
 
@@ -45,66 +47,7 @@ namespace MegaGuard
 
         //std::scoped_lock lock(WriteMutex);
         File << Output << std::endl;
-    }
-
-    void CLog::Add(const char* format, ...)
-    {
-        char buffer[8192] = { 0 };
-        va_list arglist;
-
-        va_start(arglist, format);
-        vsprintf(buffer, format, arglist);
-        va_end(arglist);
-
-        Write(buffer);
-    }
-
-    void CLog::Info(const char* format, ...)
-    {
-        char buffer[8192] = { 0 };
-        va_list arglist;
-
-        va_start(arglist, format);
-        vsprintf(buffer, format, arglist);
-        va_end(arglist);
-
-        Write(fmt::format("[INFO] {}", buffer));
-    }
-
-    void CLog::Warning(const char* format, ...)
-    {
-        char buffer[8192] = { 0 };
-        va_list arglist;
-
-        va_start(arglist, format);
-        vsprintf(buffer, format, arglist);
-        va_end(arglist);
-
-        Write(fmt::format("[WARNING] {}", buffer));
-    }
-
-    void CLog::Error(const char* format, ...)
-    {
-        char buffer[8192] = { 0 };
-        va_list arglist;
-
-        va_start(arglist, format);
-        vsprintf(buffer, format, arglist);
-        va_end(arglist);
-
-        Write(fmt::format("[ERROR] {}", buffer));
-    }
-
-    void CLog::Verbose(const char* format, ...)
-    {
-        char buffer[8192] = { 0 };
-        va_list arglist;
-
-        va_start(arglist, format);
-        vsprintf(buffer, format, arglist);
-        va_end(arglist);
-
-        Write(fmt::format("[VERBOSE] {}", buffer));
+#endif
     }
 
     std::unique_ptr<CLog> EventLog = std::make_unique<CLog>();

@@ -34,6 +34,28 @@
 #include "buffer.h"
 #include "trampoline.h"
 
+
+static void* nocrt_memcpy(void* dst, const void* src, size_t num)
+{
+	if (num % sizeof(long) == 0)
+	{
+		num /= sizeof(long);
+		unsigned long* pdst32 = (unsigned long*)(dst);
+		const unsigned long* psrc32 = (const unsigned long*)(src);
+
+		while (num--) *(pdst32++) = *(psrc32++);
+	}
+	else
+	{
+		unsigned char* pdst = (unsigned char*)(dst);
+		const unsigned char* psrc = (const unsigned char*)(src);
+
+		while (num--) *(pdst++) = *(psrc++);
+	}
+
+	return dst;
+}
+
 #ifndef ARRAYSIZE
 #define ARRAYSIZE(A) (sizeof(A)/sizeof((A)[0]))
 #endif
@@ -380,9 +402,9 @@ static MH_STATUS EnableHookLL(UINT pos, BOOL enable)
 	else
 	{
 		if (pHook->patchAbove)
-			memcpy(pPatchTarget, pHook->backup, sizeof(JMP_REL) + sizeof(JMP_REL_SHORT));
+			nocrt_memcpy(pPatchTarget, pHook->backup, sizeof(JMP_REL) + sizeof(JMP_REL_SHORT));
 		else
-			memcpy(pPatchTarget, pHook->backup, sizeof(JMP_REL));
+			nocrt_memcpy(pPatchTarget, pHook->backup, sizeof(JMP_REL));
 	}
 
 	VirtualProtect(pPatchTarget, patchSize, oldProtect, &oldProtect);
@@ -569,21 +591,21 @@ MH_STATUS WINAPI MH_CreateHook(LPVOID pTarget, LPVOID pDetour, LPVOID * ppOrigin
 							pHook->isEnabled = FALSE;
 							pHook->queueEnable = FALSE;
 							pHook->nIP = ct.nIP;
-							memcpy(pHook->oldIPs, ct.oldIPs, ARRAYSIZE(ct.oldIPs));
-							memcpy(pHook->newIPs, ct.newIPs, ARRAYSIZE(ct.newIPs));
+							nocrt_memcpy(pHook->oldIPs, ct.oldIPs, ARRAYSIZE(ct.oldIPs));
+							nocrt_memcpy(pHook->newIPs, ct.newIPs, ARRAYSIZE(ct.newIPs));
 
 							// Back up the target function.
 
 							if (ct.patchAbove)
 							{
-								memcpy(
+								nocrt_memcpy(
 									pHook->backup,
 									(LPBYTE)pTarget - sizeof(JMP_REL),
 									sizeof(JMP_REL) + sizeof(JMP_REL_SHORT));
 							}
 							else
 							{
-								memcpy(pHook->backup, pTarget, sizeof(JMP_REL));
+								nocrt_memcpy(pHook->backup, pTarget, sizeof(JMP_REL));
 							}
 
 							if (ppOriginal != NULL)
