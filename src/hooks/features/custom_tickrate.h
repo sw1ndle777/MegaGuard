@@ -17,13 +17,14 @@ namespace MegaGuard
                 Features::Tickrate_RotDamp2.Patch(MegaGuard::Addresses::Hooks::Features::Tickrate_RotDamp2.get(), &CustomTickrate::rotation_damping);
                 Features::Tickrate_RotDamp3.Patch(MegaGuard::Addresses::Hooks::Features::Tickrate_RotDamp3.get(), &CustomTickrate::rotation_damping);
 
+               
                 Features::Tickrate_MinRotSpeed1.Patch(MegaGuard::Addresses::Hooks::Features::Tickrate_MinRotSpeed1.get(), &CustomTickrate::minimum_rotation_speed);
                 Features::Tickrate_MinRotSpeed2.Patch(MegaGuard::Addresses::Hooks::Features::Tickrate_MinRotSpeed2.get(), &CustomTickrate::minimum_rotation_speed);
                 Features::Tickrate_MinRotSpeed3.Patch(MegaGuard::Addresses::Hooks::Features::Tickrate_MinRotSpeed3.get(), &CustomTickrate::minimum_rotation_speed);
                 Features::Tickrate_MinRotSpeed4.Patch(MegaGuard::Addresses::Hooks::Features::Tickrate_MinRotSpeed4.get(), &CustomTickrate::minimum_rotation_speed);
                 Features::Tickrate_MinRotSpeed5.Patch(MegaGuard::Addresses::Hooks::Features::Tickrate_MinRotSpeed5.get(), &CustomTickrate::minimum_rotation_speed);
                 Features::Tickrate_MinRotSpeed6.Patch(MegaGuard::Addresses::Hooks::Features::Tickrate_MinRotSpeed6.get(), &CustomTickrate::minimum_rotation_speed);
-
+                
                 Features::Tickrate_RotThreeshold1.Patch(MegaGuard::Addresses::Hooks::Features::Tickrate_RotThreeshold1.get(), &CustomTickrate::rotation_threeshold);
                 Features::Tickrate_RotThreeshold2.Patch(MegaGuard::Addresses::Hooks::Features::Tickrate_RotThreeshold2.get(), &CustomTickrate::rotation_threeshold);
                 //Features::Tickrate_RotThreeshold3.Patch(MegaGuard::Addresses::Hooks::Features::Tickrate_RotThreeshold3, &CustomTickrate::rotation_threeshold); //don't use
@@ -34,12 +35,14 @@ namespace MegaGuard
 
                 Features::Tickrate_RotThreesholdLimit.Patch(MegaGuard::Addresses::Hooks::Features::Tickrate_RotThreesholdLimit.get(), &CustomTickrate::rotation_threeshold_limit);
 
+                
                 Features::Tickrate_MaxRotSpeed1.Patch(MegaGuard::Addresses::Hooks::Features::Tickrate_MaxRotSpeed1.get(), &CustomTickrate::maximum_rotation_speed);
                 Features::Tickrate_MaxRotSpeed2.Patch(MegaGuard::Addresses::Hooks::Features::Tickrate_MaxRotSpeed2.get(), &CustomTickrate::maximum_rotation_speed);
                 Features::Tickrate_MaxRotSpeed3.Patch(MegaGuard::Addresses::Hooks::Features::Tickrate_MaxRotSpeed3.get(), &CustomTickrate::maximum_rotation_speed);
                 Features::Tickrate_MaxRotSpeed4.Patch(MegaGuard::Addresses::Hooks::Features::Tickrate_MaxRotSpeed4.get(), &CustomTickrate::maximum_rotation_speed);
                 Features::Tickrate_MaxRotSpeed5.Patch(MegaGuard::Addresses::Hooks::Features::Tickrate_MaxRotSpeed5.get(), &CustomTickrate::maximum_rotation_speed);
                 Features::Tickrate_MaxRotSpeed6.Patch(MegaGuard::Addresses::Hooks::Features::Tickrate_MaxRotSpeed6.get(), &CustomTickrate::maximum_rotation_speed);
+                
 
                 Features::Tickrate_DelayReq1.Patch(MegaGuard::Addresses::Hooks::Features::Tickrate_DelayReq1.get(), &CustomTickrate::hardcoded_tickrate);
                 Features::Tickrate_DelayReq2.Patch(MegaGuard::Addresses::Hooks::Features::Tickrate_DelayReq2.get(), &CustomTickrate::hardcoded_tickrate);

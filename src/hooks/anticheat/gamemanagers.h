@@ -116,6 +116,7 @@ namespace MegaGuard
                         if (!UnitContainer::ptr_encrypt)
                             UnitContainer::ptr_encrypt = new pointer_encryption();
                         UnitContainer::Decrypted = _call<std::uint32_t * (__thiscall*)(void*)>(UnitContainer::Init.get(), allocated_memory);
+                        MegaGuard::EventLog->Debug(nostd::source_location::current(), "CUnitContainer::Decrypted: 0x{:08X}", reinterpret_cast<std::uint32_t>(UnitContainer::Decrypted));
                         UnitContainer::Encrypted = UnitContainer::ptr_encrypt->process<std::uint32_t*>(UnitContainer::Decrypted);
                     }
                 }
@@ -237,7 +238,7 @@ namespace MegaGuard
                 {
                     if (!NetMgr::Encrypted)
                     {
-                        std::uint32_t* allocated_memory = new (std::nothrow) std::uint32_t[5368];
+                        std::uint32_t* allocated_memory = new (std::nothrow) std::uint32_t[0x1538]; // old 0x14F8 aka last 0x14F4 offset now 0x1538 because i added uint8_t auth_token[64]
                         if (!allocated_memory)
                         {
                             LeaveCriticalSection(&MegaGuard::Addresses::Hooks::Anticheat::GameManagers::NetMgr::MyCriticalSection);
@@ -247,6 +248,7 @@ namespace MegaGuard
                             NetMgr::ptr_encrypt = new pointer_encryption();
 
                         NetMgr::Decrypted = _call<std::uint32_t * (__thiscall*)(void*)>(NetMgr::Init.get(), allocated_memory);
+                        MegaGuard::EventLog->Debug(nostd::source_location::current(), "CNetMgr::Decrypted: 0x{:08X}", reinterpret_cast<std::uint32_t>(NetMgr::Decrypted));
                         NetMgr::Encrypted = NetMgr::ptr_encrypt->process<std::uint32_t*>(NetMgr::Decrypted);
                     }
                 }

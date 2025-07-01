@@ -14,7 +14,7 @@
 #endif
 
 #define DEBUG_CONSOLE_LOG 0
-#define DEBUG_FILE_LOG 0
+#define DEBUG_FILE_LOG 1
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -74,71 +74,6 @@
 #include <Zydis/Zydis.h>
 #include <gdiplus.h>
 #include "Splash.h"
-
-
-using NtProtectVirtualMemory_t = NTSTATUS(NTAPI*) (
-	HANDLE  ProcessHandle,
-	PVOID* BaseAddress,
-	PSIZE_T RegionSize,
-	ULONG   NewProtect,
-	PULONG  OldProtect
-	);
-
-
-typedef NTSTATUS(NTAPI* NtProtectVirtualMemory_t)(
-	HANDLE ProcessHandle,
-	PVOID* BaseAddress,
-	PSIZE_T RegionSize,
-	ULONG NewProtect,
-	PULONG OldProtect
-	);
-
-typedef NTSTATUS(NTAPI* NtQueryVirtualMemory_t)(
-	HANDLE ProcessHandle,
-	PVOID BaseAddress,
-	INT MemoryInformationClass,
-	PVOID MemoryInformation,
-	SIZE_T MemoryInformationLength,
-	PSIZE_T ReturnLength
-	);
-
-typedef NTSTATUS(NTAPI* LdrGetDllHandle_t)(
-	PWSTR PathToFile,
-	PVOID Reserved,
-	PUNICODE_STRING ModuleFileName,
-	PHANDLE DllHandle
-	);
-
-typedef HANDLE(NTAPI* NtGetCurrentProcess_t)(void);
-typedef HMODULE(NTAPI* NtGetModuleHandleA_t)(LPCSTR lpModuleName);
-
-#pragma pack(push, 1)
-
-union SCommandHeader
-{
-	struct
-	{
-		uint32_t bugus : 4;// >> 0
-		uint32_t mission : 2; // >> 4
-		uint32_t order : 10; // >> 6
-		uint32_t extra : 8; // >> 16
-		uint32_t option : 8; // >> 24
-	};
-	uint32_t data;
-
-	SCommandHeader()
-	{
-		memset(this, 0, sizeof(SCommandHeader));
-	}
-
-	SCommandHeader(uint32_t data)
-	{
-		memset(this, 0, sizeof(SCommandHeader));
-		this->data = data;
-	}
-};
-
-#pragma pack(pop)
 
 inline void* nocrt_memset(void* ptr, int value, std::size_t num) 
 {
@@ -228,6 +163,766 @@ public:
 		return *this;
 	}
 };
+
+using NtProtectVirtualMemory_t = NTSTATUS(NTAPI*) (
+	HANDLE  ProcessHandle,
+	PVOID* BaseAddress,
+	PSIZE_T RegionSize,
+	ULONG   NewProtect,
+	PULONG  OldProtect
+	);
+
+
+typedef NTSTATUS(NTAPI* NtProtectVirtualMemory_t)(
+	HANDLE ProcessHandle,
+	PVOID* BaseAddress,
+	PSIZE_T RegionSize,
+	ULONG NewProtect,
+	PULONG OldProtect
+	);
+
+typedef NTSTATUS(NTAPI* NtQueryVirtualMemory_t)(
+	HANDLE ProcessHandle,
+	PVOID BaseAddress,
+	INT MemoryInformationClass,
+	PVOID MemoryInformation,
+	SIZE_T MemoryInformationLength,
+	PSIZE_T ReturnLength
+	);
+
+typedef NTSTATUS(NTAPI* LdrGetDllHandle_t)(
+	PWSTR PathToFile,
+	PVOID Reserved,
+	PUNICODE_STRING ModuleFileName,
+	PHANDLE DllHandle
+	);
+
+typedef HANDLE(NTAPI* NtGetCurrentProcess_t)(void);
+typedef HMODULE(NTAPI* NtGetModuleHandleA_t)(LPCSTR lpModuleName);
+
+#pragma pack(push, 1)
+
+union STcpPacketHeader
+{
+
+	struct
+	{
+		uint32_t bogus : 4;
+		uint32_t sessionId : 14;
+		uint32_t size : 11;
+		uint32_t crypt : 3;
+	};
+
+	uint32_t data;
+
+	STcpPacketHeader()
+	{
+		nocrt_memset(this, 0, sizeof(STcpPacketHeader));
+	}
+
+	STcpPacketHeader(uint32_t data)
+	{
+		nocrt_memset(this, 0, sizeof(STcpPacketHeader));
+		this->data = data;
+	}
+};
+
+union SCommandHeader
+{
+	struct
+	{
+		uint32_t bogus : 4;// >> 0
+		uint32_t mission : 2; // >> 4
+		uint32_t order : 10; // >> 6
+		uint32_t extra : 8; // >> 16
+		uint32_t option : 8; // >> 24
+	};
+	uint32_t data;
+
+	SCommandHeader()
+	{
+		nocrt_memset(this, 0, sizeof(SCommandHeader));
+		this->bogus = ((int)((double)rand() * 254.0f / 32768.0f) + 1) & 0xF;
+	}
+
+	SCommandHeader(uint32_t data)
+	{
+		nocrt_memset(this, 0, sizeof(SCommandHeader));
+		this->data = data;
+	}
+};
+
+#pragma pack(pop)
+
+#pragma pack(push, 1)
+
+union UniqueId
+{
+	struct
+	{
+		uint32_t session : 16;
+		uint32_t server : 15;
+		uint32_t unknown : 1;
+	};
+	uint32_t data;
+
+	UniqueId()
+	{
+		nocrt_memset(this, 0, sizeof(UniqueId));
+	}
+
+	UniqueId(uint32_t data)
+	{
+		nocrt_memset(this, 0, sizeof(UniqueId));
+		this->data = data;
+	}
+	UniqueId(uint16_t session, uint16_t server)
+	{
+		nocrt_memset(this, 0, sizeof(UniqueId));
+		this->session = session;
+		this->server = server & 0x7FFF;
+		this->unknown = 0; 
+	}
+};
+
+#pragma pack(pop)
+
+enum NAT_TYPE : __int32
+{
+	NAT_NONE = 0x0,
+	NAT_FIREWALL = 0x1,
+	NAT_FULL_CONE = 0x2,
+	NAT_RESTRICTED = 0x3,
+	NAT_PORT_RESTRICTED = 0x4,
+	NAT_SYMMETRIC = 0x5,
+	NAT_MAX = 0x6,
+};
+
+struct CStreamBuffer
+{
+	char *m_acBuffer;
+	size_t m_stMax;
+	size_t m_stSize;
+};
+
+
+struct CMutex
+{
+	CRITICAL_SECTION m_tMutex;
+};
+
+struct CLocker : CMutex
+{
+};
+
+struct CRawSocket_vtbl
+{
+	struct CTcpSocket* (__thiscall *DestructDelete)(struct CTcpSocket* this_, char deleteFlag);
+	int (__thiscall *Create)(struct CTcpSocket *instance);
+	bool (__thiscall *Disconnect)(struct CTcpSocket *instance);
+	bool (__thiscall *Connect)(struct CTcpSocket *instance, const char* szAddr_, u_short iPort_);
+	int(__thiscall* Read)(struct CTcpSocket* instance, char* buf, int len);
+	int(__thiscall* Send)(struct CTcpSocket* instance, char* buf, int len);
+	int(__thiscall* SendTrust)(struct CTcpSocket* instance, char* buf, int len);
+	bool (__thiscall *SendQueue)(struct CTcpSocket *instance);
+	void (__thiscall *ClearSendQueue)(struct CTcpSocket *instance);
+	void* sub_E0D4F0;
+	void* sub_E13BB0;
+	SOCKET (__thiscall* SendBlock)(struct CTcpSocket* instance, char* Src, int len);
+};
+
+struct CRawSocket
+{
+	CRawSocket_vtbl *_vptr_CRawSocket;
+	char pad[4];
+	sockaddr_in m_saLocalAddr_in;
+	sockaddr_in m_saPublicAddr_in;
+	sockaddr_in m_saRemoteAddr_in;
+	int m_slSize;
+	SOCKET m_skSocket;
+	CLocker m_kLocker;
+	DWORD m_TickMs;
+	NAT_TYPE m_eNatType;
+	unsigned __int64 m_uliTick;
+	bool m_bConnected;
+	bool m_bIdk1;
+	bool m_bIdk2;
+	bool m_bIdk3;
+	DWORD dword006c;
+	DWORD dword0070;
+	DWORD dword0074;
+	DWORD dword0078;
+	DWORD m_iNetworkState;
+};
+
+struct CAllocator_CTpcPacketBuffer
+{
+	int (__stdcall **_vptr_CAllocator)();
+	struct CTcpPacketBuffer *m_NextOfPool;
+};
+
+struct CTcpPacketBuffer : CAllocator_CTpcPacketBuffer
+{
+	char m_acBuffer[1440];
+	size_t m_stFrontOffset;
+	size_t m_stRearOffset;
+	size_t m_stSize;
+};
+
+struct std_deque_CTcpPacketBuffer
+{
+	CTcpPacketBuffer **_map;
+	size_t _size;
+	size_t _capacity;
+};
+
+
+struct CBlockQueue
+{
+	std_deque_CTcpPacketBuffer m_kDeque;
+};
+
+struct CTcpSocket : CRawSocket
+{
+	INT m_iRecvFlags;
+	INT m_iSendFlags;
+	CBlockQueue m_kBlockQueue;
+};
+
+
+struct CCommand
+{
+	SCommandHeader m_tHeader;
+	char m_acData[1424];
+};
+
+
+
+struct CTcpConnector_vtbl
+{
+	void *sub_AB8800;
+	void *sub_E12AE0;
+	void *sub_B27A50;
+	int (__thiscall *Send)(struct CTcpConnector *instance, char *CCommand, int data_size, int arg8, int arg5);
+	int (__thiscall *SendObsolete)(struct CTcpConnector *instance, CCommand *cmd, int a3, int a4);
+	bool (__thiscall *KeepAlive)(struct CTcpConnector *instance);
+	void *sub_5229C0;
+	char (__thiscall *ResetRecvQueue)(struct CTcpConnector *instance);
+	void *sub2_B27A50;
+	void (__thiscall *Clear)(struct CTcpConnector *instance);
+	void *sub_522A00;
+	char (__thiscall *Read)(struct CTcpConnector *instance);
+	void *sub_55B900;
+	char (__thiscall *Connect)(struct CTcpConnector *instance, const char *szAddr, int iPort);
+	char (__thiscall *sub_AB0760)(struct CTcpConnector *instance, int a2, bool a3);
+	unsigned __int64 (__thiscall *SetConnected)(struct CTcpConnector *instance);
+	void *sub_E11300;
+	void *sub_E114F0;
+	void (__thiscall *Encrypt)(struct CTcpConnector *instance, int a2, void *pvIn, void *pvOut, int size);
+	void (__thiscall *Decrypt)(struct CTcpConnector *instance, int a2, void *pvIn, void *pvOut, int size);
+	void *sub_E13940;
+	bool (__stdcall *CheckRecvHeader)(STcpPacketHeader *a1);
+};
+
+
+#pragma pack(push, 1) 
+struct CConnector
+{
+	CTcpConnector_vtbl *_vptr_CConnector;//0x0000
+	CLocker m_kLocker;//0x0004
+	CTcpSocket* m_pkSocket;//0x001C
+	struct ICommandQueue* m_pkCommandQueue;//0x0020
+	struct ISensor* m_pkSensor;//0x0024
+	struct IDispatcher* m_pkDispatcher;//0x0028
+	UINT64 m_ullKeepAliveTick;//0x002C
+	UINT16 m_iSessionId;//0x0034
+	UINT16 m_iSessionId2;//0x0036
+	INT32 m_iSerialKey;//0x0038
+	INT m_iRegisterIndex;//0x003C
+	INT m_iRelay;//0x0040
+	bool m_bRegister;//0x0044
+	bool m_bHeaderCrypt;//0x0045
+	bool m_bIdk1;//0x0046
+	bool m_bIdk2;//0x0047
+	bool m_bIdk3;//0x0048
+	bool m_bIdk4;//0x0049
+	bool m_bIdk5;//0x004A
+	bool m_bIdk6;//0x004B
+};
+#pragma pack(pop)
+
+
+struct CTcpConnector : CConnector
+{
+	CStreamBuffer m_kStreamBuffer;//0x004C
+	char* m_acRecvBuffer;//0x0058
+	bool m_bIsConnected;//0x005c
+};
+
+struct CUdpConnector : CConnector
+{
+	INT m_iSymmetricPort;
+	INT m_iHandshakeStep;
+	bool m_bSendHole;
+};
+
+
+struct CNetMgr
+{
+	int(__stdcall** _vptr_CNetMgr)();//0x0000
+	char pad[0x1014];//0x0004
+	CTcpConnector* CFrontConnectorTcp;//0x1018
+	CTcpConnector* CMainConnectorTcp;//0x101C
+	CTcpConnector* CCastConnectorTcp;//0x1020
+	CUdpConnector* CExConnectorUdp;//0x1024
+	DWORD dword1028;//0x1028
+	DWORD dword102C;//0x102C
+	DWORD dword1030;//0x1030
+	DWORD dword1034;//0x1034
+	DWORD dword1038;//0x1038
+	BYTE byte103C;//0x103C
+	BYTE byte103D;//0x103D
+	BYTE byte103E;//0x103E
+	BYTE byte103F;//0x103F
+	DWORD dword1040;//0x1040
+	DWORD dword1044;//0x1044
+	DWORD lastConnectTick;//0x1048
+	DWORD auth_key2;//0x104C
+	DWORD serverinfo_sid;//0x1050
+	DWORD dword1054;//0x1054
+	DWORD server_time;//0x1058
+	DWORD auth_key;//0x105C
+	DWORD dword1060;//0x1060
+	DWORD dword1064;//0x1064
+	BYTE byte1068;//0x1068
+	BYTE byte1069;//0x1069
+	BYTE byte106A;//0x106A
+	BYTE byte106B;//0x106B
+	DWORD dword106C;//0x106C
+	DWORD dword1070;//0x1070
+	DWORD grade;//0x1074
+	char loginUsername[68];//0x1078
+	DWORD dword10bc;//0x10BC
+	char loginPassword[40];//0x10C0
+	DWORD dword10e8;//0x10E8
+	char loginKey[500];//0x10EC
+	DWORD dword12E0;//0x12E0
+	char char12E4[508];//0x12E4
+	DWORD dword14E0;//0x14E0
+	DWORD dword14E4;//0x14E4
+	DWORD dword14E8;//0x14E8
+	DWORD dword14EC;//0x14EC
+	DWORD ChatChannelId;//0x14F0
+	DWORD dword14F4;//0x14F4
+	uint8_t auth_token[64];//0x14F8
+};
+
+
+
+struct CUIMsgBox_vtbl
+{
+	void* sub_5C4AC0;//0x0000
+	void* sub_E608F0;//0x0004
+	void* sub_5C72A0;//0x0008
+	void* sub_E62230;//0x000C
+	void* sub_5C7310;//0x0010 //enable E_DLG
+	void* sub_E625A0;//0x0014
+	void* sub_5C7360;//0x0018
+	void* sub_E62B70;//0x001C
+	void* sub_5C73B0;//0x0020
+	void* sub_E61480;//0x0024
+	void* sub_E62FE0;//0x0028
+	void (__thiscall *Create)(struct CUIMsgBox *instance, const char* msg, int msgData, uint8_t idk, uint8_t idk2, bool bUseMsgData);
+};
+struct CUIMsgBox
+{
+	CUIMsgBox_vtbl *_vptr_CUIMsgBox;
+};
+struct CExPlayerRoomInfo
+{
+	UniqueId uniqueId;//0x0000
+	DWORD m_iCharacterInfo;//0x0004
+	DWORD m_iStatus;//0x0008
+	DWORD m_iHealth;//0x000C
+	DWORD m_iNotHealth;//0x0010
+	DWORD m_iHealthXor;//0x0014
+	char _pad[0xB70];//0x0018
+	DWORD dword0b88;//0x0B88
+	DWORD dword0b8c;//0x0B8C
+	DWORD dword0b90;//0x0B90
+	DWORD dword0b94;//0x0B94
+	DWORD dword0b98;//0x0B98
+	DWORD dword0b9c;//0x0B9C
+	DWORD dword0ba0;//0x0BA0
+	DWORD dword0ba4;//0x0BA4
+	DWORD dword0ba8;//0x0BA8
+	DWORD dword0bac;//0x0BAC
+	DWORD dword0bb0;//0x0BB0
+	DWORD dword0bb4;//0x0BB4
+	DWORD dword0bb8;//0x0BB8
+	DWORD dword0bbc;//0x0BBC
+	DWORD dword0bc0;//0x0BC0
+	DWORD dword0bc4;//0x0BC4
+	DWORD dword0bc8;//0x0BC8
+	DWORD dword0bcc;//0x0BCC
+	DWORD dword0bd0;//0x0BD0
+	DWORD dword0bd4;//0x0BD4
+	DWORD dword0bd8;//0x0BD8
+	DWORD dword0bdc;//0x0BDC
+	DWORD dword0be0;//0x0BE0
+	DWORD dword0be4;//0x0BE4
+	DWORD dword0be8;//0x0BE8
+	DWORD dword0bec;//0x0BEC
+	DWORD dword0bf0;//0x0BF0
+	DWORD dword0bf4;//0x0BF4
+	DWORD dword0bf8;//0x0BF8
+	DWORD dword0bfc;//0x0BFC
+	DWORD dword0c00;//0x0C00
+	DWORD dword0c04;//0x0C04
+	DWORD dword0c08;//0x0C08
+	DWORD dword0c0c;//0x0C0C
+	DWORD dword0c10;//0x0C10
+	DWORD dword0c14;//0x0C14
+	DWORD dword0c18;//0x0C18
+	DWORD dword0c1c;//0x0C1C
+	DWORD dword0c20;//0x0C20
+	DWORD dword0c24;//0x0C24
+	DWORD dword0c28;//0x0C28
+	DWORD dword0c2c;//0x0C2C
+	DWORD dword0c30;//0x0C30
+	DWORD dword0c34;//0x0C34
+	DWORD dword0c38;//0x0C38
+	DWORD dword0c3c;//0x0C3C
+	DWORD dword0c40;//0x0C40
+	DWORD dword0c44;//0x0C44
+	DWORD dword0c48;//0x0C48
+	DWORD dword0c4c;//0x0C4C
+	DWORD dword0c50;//0x0C50
+	DWORD dword0c54;//0x0C54
+	DWORD dword0c58;//0x0C58
+	DWORD dword0c5c;//0x0C5C
+	DWORD dword0c60;//0x0C60
+	DWORD dword0c64;//0x0C64
+	DWORD dword0c68;//0x0C68
+	DWORD dword0c6c;//0x0C6C
+	DWORD dword0c70;//0x0C70
+	DWORD dword0c74;//0x0C74
+	DWORD dword0c78;//0x0C78
+	DWORD dword0c7c;//0x0C7C
+	DWORD dword0c80;//0x0C80
+	DWORD dword0c84;//0x0C84
+	DWORD dword0c88;//0x0C88
+	DWORD dword0c8c;//0x0C8C
+	DWORD dword0c90;//0x0C90
+	DWORD dword0c94;//0x0C94
+	DWORD dword0c98;//0x0C98
+	DWORD dword0c9c;//0x0C9C
+	DWORD dword0ca0;//0x0CA0
+	DWORD dword0ca4;//0x0CA4
+	DWORD dword0ca8;//0x0CA8
+	DWORD dword0cac;//0x0CAC
+	DWORD dword0cb0;//0x0CB0
+	DWORD dword0cb4;//0x0CB4
+	DWORD dword0cb8;//0x0CB8
+	DWORD dword0cbc;//0x0CBC
+	DWORD dword0cc0;//0x0CC0
+	DWORD dword0cc4;//0x0CC4
+	DWORD dword0cc8;//0x0CC8
+	DWORD dword0ccc;//0x0CCC
+	DWORD dword0cd0;//0x0CD0
+	DWORD dword0cd4;//0x0CD4
+	DWORD dword0cd8;//0x0CD8
+	DWORD dword0cdc;//0x0CDC
+	DWORD dword0ce0;//0x0CE0
+	DWORD dword0ce4;//0x0CE4
+	DWORD dword0ce8;//0x0CE8
+	DWORD dword0cec;//0x0CEC
+	DWORD dword0cf0;//0x0CF0
+	DWORD dword0cf4;//0x0CF4
+	DWORD dword0cf8;//0x0CF8
+	DWORD dword0cfc;//0x0CFC
+	DWORD dword0d00;//0x0D00
+	DWORD dword0d04;//0x0D04
+	DWORD dword0d08;//0x0D08
+	DWORD dword0d0c;//0x0D0C
+	DWORD dword0d10;//0x0D10
+	DWORD dword0d14;//0x0D14
+	DWORD dword0d18;//0x0D18
+	DWORD dword0d1c;//0x0D1C
+	DWORD dword0d20;//0x0D20
+	DWORD dword0d24;//0x0D24
+	DWORD dword0d28;//0x0D28
+	DWORD dword0d2c;//0x0D2C
+	DWORD dword0d30;//0x0D30
+	DWORD dword0d34;//0x0D34
+	DWORD dword0d38;//0x0D38
+	DWORD dword0d3c;//0x0D3C
+	DWORD dword0d40;//0x0D40
+	DWORD dword0d44;//0x0D44
+	DWORD dword0d48;//0x0D48
+	DWORD dword0d4c;//0x0D4C
+	DWORD dword0d50;//0x0D50
+	DWORD dword0d54;//0x0D54
+	DWORD dword0d58;//0x0D58
+	DWORD dword0d5c;//0x0D5C
+	DWORD dword0d60;//0x0D60
+	DWORD dword0d64;//0x0D64
+	DWORD dword0d68;//0x0D68
+	DWORD dword0d6c;//0x0D6C
+	DWORD dword0d70;//0x0D70
+	DWORD dword0d74;//0x0D74
+	DWORD dword0d78;//0x0D78
+	DWORD dword0d7c;//0x0D7C
+	DWORD dword0d80;//0x0D80
+	DWORD dword0d84;//0x0D84
+	DWORD dword0d88;//0x0D88
+	DWORD dword0d8c;//0x0D8C
+	DWORD dword0d90;//0x0D90
+	DWORD dword0d94;//0x0D94
+	DWORD dword0d98;//0x0D98
+	DWORD dword0d9c;//0x0D9C
+	DWORD dword0da0;//0x0DA0
+	DWORD dword0da4;//0x0DA4
+	DWORD dword0da8;//0x0DA8
+	DWORD dword0dac;//0x0DAC
+	DWORD dword0db0;//0x0DB0
+	DWORD dword0db4;//0x0DB4
+	DWORD dword0db8;//0x0DB8
+	DWORD dword0dbc;//0x0DBC
+	DWORD dword0dc0;//0x0DC0
+	DWORD dword0dc4;//0x0DC4
+	DWORD dword0dc8;//0x0DC8
+	DWORD dword0dcc;//0x0DCC
+	DWORD dword0dd0;//0x0DD0
+	DWORD dword0dd4;//0x0DD4
+	DWORD dword0dd8;//0x0DD8
+	DWORD dword0ddc;//0x0DDC
+	DWORD dword0de0;//0x0DE0
+	DWORD dword0de4;//0x0DE4
+	DWORD dword0de8;//0x0DE8
+	DWORD dword0dec;//0x0DEC
+	DWORD dword0df0;//0x0DF0
+	DWORD dword0df4;//0x0DF4
+	DWORD dword0df8;//0x0DF8
+	DWORD dword0dfc;//0x0DFC
+	DWORD dword0e00;//0x0E00
+	DWORD dword0e04;//0x0E04
+	DWORD dword0e08;//0x0E08
+	DWORD dword0e0c;//0x0E0C
+	DWORD dword0e10;//0x0E10
+	DWORD dword0e14;//0x0E14
+	DWORD dword0e18;//0x0E18
+	DWORD dword0e1c;//0x0E1C
+	DWORD dword0e20;//0x0E20
+	DWORD dword0e24;//0x0E24
+	DWORD dword0e28;//0x0E28
+	DWORD dword0e2c;//0x0E2C
+	DWORD dword0e30;//0x0E30
+	DWORD dword0e34;//0x0E34
+	DWORD dword0e38;//0x0E38
+	DWORD dword0e3c;//0x0E3C
+	DWORD dword0e40;//0x0E40
+	DWORD dword0e44;//0x0E44
+	DWORD dword0e48;//0x0E48
+	DWORD dword0e4c;//0x0E4C
+	DWORD dword0e50;//0x0E50
+	DWORD dword0e54;//0x0E54
+	DWORD dword0e58;//0x0E58
+	DWORD dword0e5c;//0x0E5C
+	DWORD dword0e60;//0x0E60
+	DWORD dword0e64;//0x0E64
+	DWORD dword0e68;//0x0E68
+	DWORD dword0e6c;//0x0E6C
+	DWORD dword0e70;//0x0E70
+	DWORD dword0e74;//0x0E74
+	DWORD dword0e78;//0x0E78
+	DWORD dword0e7c;//0x0E7C
+	DWORD dword0e80;//0x0E80
+	DWORD dword0e84;//0x0E84
+	DWORD dword0e88;//0x0E88
+	DWORD dword0e8c;//0x0E8C
+	DWORD dword0e90;//0x0E90
+	DWORD dword0e94;//0x0E94
+	DWORD dword0e98;//0x0E98
+	DWORD dword0e9c;//0x0E9C
+	DWORD dword0ea0;//0x0EA0
+	DWORD dword0ea4;//0x0EA4
+	DWORD dword0ea8;//0x0EA8
+	DWORD dword0eac;//0x0EAC
+	DWORD dword0eb0;//0x0EB0
+	DWORD dword0eb4;//0x0EB4
+	DWORD dword0eb8;//0x0EB8
+	DWORD dword0ebc;//0x0EBC
+	DWORD dword0ec0;//0x0EC0
+	DWORD dword0ec4;//0x0EC4
+	DWORD dword0ec8;//0x0EC8
+	DWORD dword0ecc;//0x0ECC
+	DWORD dword0ed0;//0x0ED0
+	DWORD dword0ed4;//0x0ED4
+	DWORD dword0ed8;//0x0ED8
+	DWORD dword0edc;//0x0EDC
+	DWORD dword0ee0;//0x0EE0
+	DWORD dword0ee4;//0x0EE4
+	DWORD dword0ee8;//0x0EE8
+	DWORD dword0eec;//0x0EEC
+	DWORD dword0ef0;//0x0EF0
+	DWORD dword0ef4;//0x0EF4
+	DWORD dword0ef8;//0x0EF8
+	DWORD dword0efc;//0x0EFC
+	DWORD dword0f00;//0x0F00
+	DWORD dword0f04;//0x0F04
+	DWORD dword0f08;//0x0F08
+	DWORD dword0f0c;//0x0F0C
+	DWORD dword0f10;//0x0F10
+	DWORD dword0f14;//0x0F14
+	DWORD dword0f18;//0x0F18
+	DWORD dword0f1c;//0x0F1C
+	DWORD dword0f20;//0x0F20
+	DWORD dword0f24;//0x0F24
+	DWORD dword0f28;//0x0F28
+	DWORD dword0f2c;//0x0F2C
+	DWORD dword0f30;//0x0F30
+	DWORD dword0f34;//0x0F34
+	DWORD dword0f38;//0x0F38
+	DWORD dword0f3c;//0x0F3C
+	DWORD dword0f40;//0x0F40
+	DWORD dword0f44;//0x0F44
+	DWORD dword0f48;//0x0F48
+	DWORD dword0f4c;//0x0F4C
+	DWORD dword0f50;//0x0F50
+	DWORD dword0f54;//0x0F54
+	DWORD dword0f58;//0x0F58
+	DWORD dword0f5c;//0x0F5C
+	DWORD dword0f60;//0x0F60
+	DWORD dword0f64;//0x0F64
+	DWORD dword0f68;//0x0F68
+	DWORD dword0f6c;//0x0F6C
+	DWORD dword0f70;//0x0F70
+	DWORD dword0f74;//0x0F74
+	DWORD dword0f78;//0x0F78
+	DWORD dword0f7c;//0x0F7C
+	DWORD dword0f80;//0x0F80
+	DWORD dword0f84;//0x0F84
+	DWORD dword0f88;//0x0F88
+	DWORD dword0f8c;//0x0F8C
+	DWORD dword0f90;//0x0F90
+	DWORD dword0f94;//0x0F94
+	DWORD dword0f98;//0x0F98
+	DWORD dword0f9c;//0x0F9C
+	DWORD dword0fa0;//0x0FA0
+	DWORD dword0fa4;//0x0FA4
+	DWORD dword0fa8;//0x0FA8
+	DWORD dword0fac;//0x0FAC
+	DWORD dword0fb0;//0x0FB0
+	DWORD dword0fb4;//0x0FB4
+	DWORD dword0fb8;//0x0FB8
+	DWORD dword0fbc;//0x0FBC
+	DWORD dword0fc0;//0x0FC0
+	DWORD dword0fc4;//0x0FC4
+	DWORD dword0fc8;//0x0FC8
+	DWORD dword0fcc;//0x0FCC
+	DWORD dword0fd0;//0x0FD0
+	DWORD dword0fd4;//0x0FD4
+	DWORD dword0fd8;//0x0FD8
+	DWORD dword0fdc;//0x0FDC
+	DWORD dword0fe0;//0x0FE0
+	DWORD dword0fe4;//0x0FE4
+	DWORD dword0fe8;//0x0FE8
+	DWORD dword0fec;//0x0FEC
+	DWORD dword0ff0;//0x0FF0
+	DWORD dword0ff4;//0x0FF4
+	DWORD dword0ff8;//0x0FF8
+	DWORD dword0ffc;//0x0FFC
+	DWORD dword1000;//0x1000
+	DWORD dword1004;//0x1004
+	DWORD dword1008;//0x1008
+	DWORD dword100c;//0x100C
+	DWORD dword1010;//0x1010
+	DWORD dword1014;//0x1014
+	DWORD dword1018;//0x1018
+	DWORD dword101c;//0x101C
+	DWORD dword1020;//0x1020
+	DWORD dword1024;//0x1024
+	DWORD dword1028;//0x1028
+	DWORD dword102c;//0x102C
+	DWORD dword1030;//0x1030
+	DWORD dword1034;//0x1034
+	DWORD dword1038;//0x1038
+	DWORD dword103c;//0x103C
+	DWORD dword1040;//0x1040
+	DWORD dword1044;//0x1044
+	DWORD dword1048;//0x1048
+	DWORD dword104c;//0x104C
+	DWORD dword1050;//0x1050
+	DWORD dword1054;//0x1054
+	DWORD dword1058;//0x1058
+	DWORD dword105c;//0x105C
+	DWORD dword1060;//0x1060
+	DWORD dword1064;//0x1064
+	DWORD dword1068;//0x1068
+	DWORD dword106c;//0x106C
+	DWORD dword1070;//0x1070
+	DWORD dword1074;//0x1074
+	DWORD dword1078;//0x1078
+	DWORD dword107c;//0x107C
+	DWORD dword1080;//0x1080
+	DWORD dword1084;//0x1084
+	DWORD dword1088;//0x1088
+	DWORD dword108c;//0x108C
+	DWORD dword1090;//0x1090
+	DWORD dword1094;//0x1094
+	DWORD dword1098;//0x1098
+	DWORD dword109c;//0x109C
+	DWORD dword10a0;//0x10A0
+	DWORD dword10a4;//0x10A4
+	DWORD dword10a8;//0x10A8
+	DWORD dword10ac;//0x10AC
+	DWORD dword10b0;//0x10B0
+	DWORD dword10b4;//0x10B4
+	DWORD dword10b8;//0x10B8
+	DWORD dword10bc;//0x10BC
+	DWORD dword10c0;//0x10C0
+	DWORD dword10c4;//0x10C4
+	DWORD dword10c8;//0x10C8
+	DWORD dword10cc;//0x10CC
+	DWORD dword10d0;//0x10D0
+	DWORD dword10d4;//0x10D4
+	DWORD dword10d8;//0x10D8
+	DWORD dword10dc;//0x10DC
+	DWORD dword10e0;//0x10E0
+	DWORD dword10e4;//0x10E4
+	DWORD dword10e8;//0x10E8
+	DWORD dword10ec;//0x10EC
+	DWORD dword10f0;//0x10F0
+	DWORD dword10f4;//0x10F4
+	DWORD dword10f8;//0x10F8
+	DWORD dword10fc;//0x10FC
+	DWORD dword1100;//0x1100
+	DWORD dword1104;//0x1104
+	DWORD dword1108;//0x1108
+	DWORD dword110c;//0x110C
+	DWORD dword1110;//0x1110
+};
+struct CExPlayer
+{
+	int(__stdcall** _vptr_CExPlayer)();//0x0000
+	CExPlayerRoomInfo* m_kRoomInfo;//0x0004
+
+};
+struct CGamePlayer
+{
+	int (__stdcall **_vptr_CGamePlayer)();//0x0000
+	char pad[0x108];//0x0004
+	CExPlayer* m_pExPlayer;//0x010C
+};
+struct CUnitContainer
+{
+	char pad[0x3c];//0x0000
+	CGamePlayer* m_pGamePlayer[13];//0x003C
+	DWORD dword0070;//0x0070
+	
+};
+
 
 namespace MegaGuard
 {
@@ -1043,6 +1738,74 @@ namespace MegaGuard
 					inline auto AssignDlgInfo = enc_ptr(0x00E4E760);
 				}
 				inline auto InitPcBangInfo = enc_ptr(0x00698910);
+				namespace Resolutions
+				{
+					inline auto SetAspectRatioScale = enc_ptr(0x00E5C370);
+					inline auto WidthBuff1 = enc_ptr(0x0040CE4F);
+					inline auto WidthBuff2 = enc_ptr(0x0040CE92);
+					inline auto WidthBuff3 = enc_ptr(0x0044D016);
+					inline auto WidthBuff4 = enc_ptr(0x0044D03A);
+					inline auto WidthBuff5 = enc_ptr(0x0044D0A7);
+					inline auto WidthBuff6 = enc_ptr(0x0044D0CB);
+					inline auto WidthBuff7 = enc_ptr(0x0044D266);
+					inline auto WidthBuff8 = enc_ptr(0x0044D28A);
+					inline auto WidthBuff9 = enc_ptr(0x0044D302);
+					inline auto WidthBuff10 = enc_ptr(0x0044D326);
+					inline auto WidthBuff11 = enc_ptr(0x0044D49B);
+					inline auto WidthBuff12 = enc_ptr(0x0044D4BF);
+					inline auto WidthBuff13 = enc_ptr(0x0044D539);
+					inline auto WidthBuff14 = enc_ptr(0x0044D55D);
+					inline auto WidthBuff15 = enc_ptr(0x00651DCC);
+					inline auto WidthBuff16 = enc_ptr(0x00651DF2);
+					inline auto WidthBuff17 = enc_ptr(0x00652251);
+					inline auto WidthBuff18 = enc_ptr(0x0065227B);
+					inline auto WidthBuff19 = enc_ptr(0x006522C8);
+					inline auto WidthBuff20 = enc_ptr(0x006522F4);
+
+					inline auto HeightBuff1 = enc_ptr(0x0040CE69);
+					inline auto HeightBuff2 = enc_ptr(0x0040CEBA);
+					inline auto HeightBuff3 = enc_ptr(0x0044D006);
+					inline auto HeightBuff4 = enc_ptr(0x0044D04F);
+					inline auto HeightBuff5 = enc_ptr(0x0044D097);
+					inline auto HeightBuff6 = enc_ptr(0x0044D0DF);
+					inline auto HeightBuff7 = enc_ptr(0x0044D256);
+					inline auto HeightBuff8 = enc_ptr(0x0044D29F);
+					inline auto HeightBuff9 = enc_ptr(0x0044D2F2);
+					inline auto HeightBuff10 = enc_ptr(0x0044D33A);
+					inline auto HeightBuff11 = enc_ptr(0x0044D48B);
+					inline auto HeightBuff12 = enc_ptr(0x0044D4D4);
+					inline auto HeightBuff13 = enc_ptr(0x0044D529);
+					inline auto HeightBuff14 = enc_ptr(0x0044D572);
+					inline auto HeightBuff15 = enc_ptr(0x00651DBC);
+					inline auto HeightBuff16 = enc_ptr(0x00651E09);
+					inline auto HeightBuff17 = enc_ptr(0x0065223E);
+					inline auto HeightBuff18 = enc_ptr(0x00652295);
+					inline auto HeightBuff19 = enc_ptr(0x006522B5);
+
+					inline auto AspectRatioIds1 = enc_ptr(0x0044CFC9);
+					inline auto AspectRatioIds2 = enc_ptr(0x0044CFDB);
+					inline auto AspectRatioIds3 = enc_ptr(0x0044CFED);
+					inline auto AspectRatioIds4 = enc_ptr(0x0044D06D);
+					inline auto AspectRatioIds5 = enc_ptr(0x0044D07F);
+					inline auto AspectRatioIds6 = enc_ptr(0x0044D20B);
+					inline auto AspectRatioIds7 = enc_ptr(0x0044D21D);
+					inline auto AspectRatioIds8 = enc_ptr(0x0044D22F);
+					inline auto AspectRatioIds9 = enc_ptr(0x0044D2BD);
+					inline auto AspectRatioIds10 = enc_ptr(0x0044D2CF);
+					inline auto AspectRatioIds11 = enc_ptr(0x0044D446);
+					inline auto AspectRatioIds12 = enc_ptr(0x0044D458);
+					inline auto AspectRatioIds13 = enc_ptr(0x0044D46A);
+					inline auto AspectRatioIds14 = enc_ptr(0x0044D4F3);
+					inline auto AspectRatioIds15 = enc_ptr(0x0044D505);
+
+					inline auto ResolutionListSize1_Patch = enc_ptr(0x0065221E);
+					inline auto ResolutionListSize2_Patch = enc_ptr(0x0040CE36);
+					inline auto ResolutionListSize3_Patch = enc_ptr(0x0044CF98);
+					inline auto ResolutionListSize4_Patch = enc_ptr(0x0044D1DA);
+					inline auto ResolutionListSize5_Patch = enc_ptr(0x0044D415);
+					inline auto ResolutionListSize6_Patch = enc_ptr(0x0044D238);
+
+				}
 			}
 			namespace Bugfixes
 			{
@@ -1050,17 +1813,34 @@ namespace MegaGuard
 				inline auto RoomSettingsDialogHandler = enc_ptr(0x0066B3F0);
 				inline auto RoomMainDialogHandler = enc_ptr(0x00660280);
 				inline auto ScreenshotBug1 = enc_ptr(0x4618F0);
-				inline auto ScreenshotBug2 = enc_ptr(0x4615C0);
 				inline auto GameHWND = enc_ptr(0x011C898C);
+				inline auto ScreenshotIncrementer = enc_ptr(0x11D9BB8);
+				inline auto InterlockedScreenshot = enc_ptr(0x11C6898);
+				inline auto TakeScreenshot = enc_ptr(0x004615C0);
 				inline auto SetDateTimeShit = enc_ptr(0x00AC83BE);
 			}
 			namespace Anticheat
 			{
+				namespace AckHandlers
+				{
+					inline auto NetworkInitCrypto = enc_ptr(0x00AC7840);
+				}
+				namespace ReqHandlers
+				{
+					inline auto MainAuthorize = enc_ptr(0x00AF98F0);
+				}
+				namespace CDBM
+				{
+					inline auto Load = enc_ptr(0x0042F070);
+				}
 				namespace Heartbeat
 				{
 					inline auto Init = enc_ptr(0x00AC8D90);
 				}
-
+				namespace UIMsgBox
+				{
+					inline auto Get = enc_ptr(0x011DE354);
+				}
 				namespace GameManagers
 				{
 					namespace Room
@@ -1234,16 +2014,14 @@ char *__cdecl sub_563420()
 		inline std::uint32_t g_GameModuleBase = 0;
 		inline std::uint32_t g_GameModuleSize = 0;
 
-		inline void SendPacket(char* data, int size = 0)
+		inline int32_t SendPacket(CNetMgr* instance, char* data, int size = 0)
 		{
-			using tSendPacket = std::uint32_t(__thiscall*)(std::uint32_t*, char*, int);
+			using tSendPacket = int32_t(__thiscall*)(CNetMgr*, char*, int);
 			static auto oSendpacket = reinterpret_cast<tSendPacket>(Addresses::Hooks::Anticheat::GameManagers::NetMgr::SendPacket.get());
-
-			using tGetMgr = std::uint32_t* (__cdecl*)();
-			static auto GetNetMgr = reinterpret_cast<tGetMgr>(Addresses::Hooks::Anticheat::GameManagers::NetMgr::Get.get());
-
-			if (GetNetMgr())
-				oSendpacket(GetNetMgr(), data, size);
+			if (instance)
+				return oSendpacket(instance, data, size);
+			else
+				return -1;
 		}
 		
 
@@ -1286,12 +2064,12 @@ char *__cdecl sub_563420()
 				inline double hardcoded_tickrate3 = 0.8f / room_tickrate;//0.8f / room_tickrate;
 				inline constexpr double minimum_distance = 10;//10 default
 				inline constexpr double minimum_distance2 = 0.009999999776482582;//0.009999999776482582 default
-				inline constexpr double rotation_damping = 0.1f;//1.0f; // default 0.1
-				inline constexpr float rotation_threeshold = 1.570796371;//1.0f;// default 1.570796371;
-				inline constexpr float rotation_threeshold_limit = 1.570796371f;// default 1.570796371f aka 90 degree;
-				inline constexpr float minimum_rotation_speed = 0.2f;// default 0.2f;
-				inline constexpr float maximum_rotation_speed = 5.f;// default 5.f;
-				inline constexpr double frame_time = 1.0f;
+				inline double rotation_damping = 1.0f; // default 0.1
+				inline constexpr float rotation_threeshold = 1.570796371f;//1.570796371;//1.0f;// default 1.570796371;
+				inline constexpr float rotation_threeshold_limit = 1.570796371f;//1.570796371f;// default 1.570796371f aka 90 degree;
+				inline constexpr float minimum_rotation_speed = 0.2f;//0.2f;// default 0.2f;
+			    inline constexpr float maximum_rotation_speed = 5.f;// default 5.f;
+				inline constexpr double frame_time = 1.f;
 			}
 		}
 	}

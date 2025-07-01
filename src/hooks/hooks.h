@@ -173,6 +173,70 @@ namespace MegaGuard
 
             extern CDetourHook CommonAgoraDlgInit;
             extern CDetourHook CommonAgoraDlgConstruct;
+            extern SwapAddressPatch WidthBuff1;
+            extern SwapAddressPatch WidthBuff2;
+            extern SwapAddressPatch WidthBuff3;
+            extern SwapAddressPatch WidthBuff4;
+            extern SwapAddressPatch WidthBuff5;
+            extern SwapAddressPatch WidthBuff6;
+            extern SwapAddressPatch WidthBuff7;
+            extern SwapAddressPatch WidthBuff8;
+            extern SwapAddressPatch WidthBuff9;
+            extern SwapAddressPatch WidthBuff10;
+            extern SwapAddressPatch WidthBuff11;
+            extern SwapAddressPatch WidthBuff12;
+            extern SwapAddressPatch WidthBuff13;
+            extern SwapAddressPatch WidthBuff14;
+            extern SwapAddressPatch WidthBuff15;
+            extern SwapAddressPatch WidthBuff16;
+            extern SwapAddressPatch WidthBuff17;
+            extern SwapAddressPatch WidthBuff18;
+            extern SwapAddressPatch WidthBuff19;
+            extern SwapAddressPatch WidthBuff20;
+
+            extern SwapAddressPatch HeightBuff1;
+            extern SwapAddressPatch HeightBuff2;
+            extern SwapAddressPatch HeightBuff3;
+            extern SwapAddressPatch HeightBuff4;
+            extern SwapAddressPatch HeightBuff5;
+            extern SwapAddressPatch HeightBuff6;
+            extern SwapAddressPatch HeightBuff7;
+            extern SwapAddressPatch HeightBuff8;
+            extern SwapAddressPatch HeightBuff9;
+            extern SwapAddressPatch HeightBuff10;
+            extern SwapAddressPatch HeightBuff11;
+            extern SwapAddressPatch HeightBuff12;
+            extern SwapAddressPatch HeightBuff13;
+            extern SwapAddressPatch HeightBuff14;
+            extern SwapAddressPatch HeightBuff15;
+            extern SwapAddressPatch HeightBuff16;
+            extern SwapAddressPatch HeightBuff17;
+            extern SwapAddressPatch HeightBuff18;
+            extern SwapAddressPatch HeightBuff19;
+
+            extern SwapAddressPatch AspectRatioIds1;
+            extern SwapAddressPatch AspectRatioIds2;
+            extern SwapAddressPatch AspectRatioIds3;
+            extern SwapAddressPatch AspectRatioIds4;
+            extern SwapAddressPatch AspectRatioIds5;
+            extern SwapAddressPatch AspectRatioIds6;
+            extern SwapAddressPatch AspectRatioIds7;
+            extern SwapAddressPatch AspectRatioIds8;
+            extern SwapAddressPatch AspectRatioIds9;
+            extern SwapAddressPatch AspectRatioIds10;
+            extern SwapAddressPatch AspectRatioIds11;
+            extern SwapAddressPatch AspectRatioIds12;
+            extern SwapAddressPatch AspectRatioIds13;
+            extern SwapAddressPatch AspectRatioIds14;
+            extern SwapAddressPatch AspectRatioIds15;
+
+            extern PatchBytes ResolutionListSize1;
+            extern PatchBytes ResolutionListSize2;
+            extern PatchBytes ResolutionListSize3;
+            extern PatchBytes ResolutionListSize4;
+            extern PatchBytes ResolutionListSize5;
+            extern PatchBytes ResolutionListSize6;
+            extern CDetourHook SetAspectRatioScale;
         }
         namespace BugFixes
         {
@@ -185,6 +249,14 @@ namespace MegaGuard
         }
         namespace AntiCheat
         {
+            namespace AckHandlers
+            {
+                extern CDetourHook NetworkInitCrypto;
+            }
+            namespace ReqHandlers
+            {
+                extern CDetourHook MainAuthorize;
+            }
             namespace GameManagers
             {
                 namespace Room
@@ -234,6 +306,10 @@ namespace MegaGuard
                 }
                 extern CDetourHook Encrypt;
                 extern CDetourHook Decrypt;
+            }
+            namespace CDBM
+            {
+               extern CDetourHook Load;
             }
         }
         extern void InitFeaturesHooks();

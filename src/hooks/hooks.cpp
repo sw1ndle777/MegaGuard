@@ -3,12 +3,16 @@
 #include "anticheat/gamemanagers.h"
 #include "anticheat/ccrypt.h"
 #include "anticheat/heartbeat.h"
+#include "anticheat/cdbm_load.h"
+#include "anticheat/network_connect_ack.h"
+#include "anticheat/front_main_authorize.h"
 
 #include "features/hideweaponslots.h"
 #include "features/custom_tickrate.h"
 #include "features/spectate_pov.h"
 #include "features/custom_nationindex.h"
 #include "features/pcbang.h"
+#include "features/resolutions.h"
 
 #include "bugfix/weaponrestriction_roomsettings.h"
 #include "bugfix/screenshot_bug.h"
@@ -339,6 +343,72 @@ namespace MegaGuard
 
             CDetourHook CommonAgoraDlgInit;
             CDetourHook CommonAgoraDlgConstruct;
+
+            SwapAddressPatch WidthBuff1;
+            SwapAddressPatch WidthBuff2;
+			SwapAddressPatch WidthBuff3;
+			SwapAddressPatch WidthBuff4;
+			SwapAddressPatch WidthBuff5;
+			SwapAddressPatch WidthBuff6;
+			SwapAddressPatch WidthBuff7;
+			SwapAddressPatch WidthBuff8;
+			SwapAddressPatch WidthBuff9;
+			SwapAddressPatch WidthBuff10;
+			SwapAddressPatch WidthBuff11;
+			SwapAddressPatch WidthBuff12;
+			SwapAddressPatch WidthBuff13;
+			SwapAddressPatch WidthBuff14;
+			SwapAddressPatch WidthBuff15;
+			SwapAddressPatch WidthBuff16;
+			SwapAddressPatch WidthBuff17;
+			SwapAddressPatch WidthBuff18;
+			SwapAddressPatch WidthBuff19;
+			SwapAddressPatch WidthBuff20;
+
+            SwapAddressPatch HeightBuff1;
+            SwapAddressPatch HeightBuff2;
+            SwapAddressPatch HeightBuff3;
+            SwapAddressPatch HeightBuff4;
+            SwapAddressPatch HeightBuff5;
+            SwapAddressPatch HeightBuff6;
+            SwapAddressPatch HeightBuff7;
+            SwapAddressPatch HeightBuff8;
+            SwapAddressPatch HeightBuff9;
+            SwapAddressPatch HeightBuff10;
+            SwapAddressPatch HeightBuff11;
+            SwapAddressPatch HeightBuff12;
+            SwapAddressPatch HeightBuff13;
+            SwapAddressPatch HeightBuff14;
+            SwapAddressPatch HeightBuff15;
+            SwapAddressPatch HeightBuff16;
+            SwapAddressPatch HeightBuff17;
+            SwapAddressPatch HeightBuff18;
+            SwapAddressPatch HeightBuff19;
+
+            SwapAddressPatch AspectRatioIds1;
+            SwapAddressPatch AspectRatioIds2;
+            SwapAddressPatch AspectRatioIds3;
+            SwapAddressPatch AspectRatioIds4;
+            SwapAddressPatch AspectRatioIds5;
+            SwapAddressPatch AspectRatioIds6;
+            SwapAddressPatch AspectRatioIds7;
+            SwapAddressPatch AspectRatioIds8;
+            SwapAddressPatch AspectRatioIds9;
+            SwapAddressPatch AspectRatioIds10;
+            SwapAddressPatch AspectRatioIds11;
+            SwapAddressPatch AspectRatioIds12;
+            SwapAddressPatch AspectRatioIds13;
+            SwapAddressPatch AspectRatioIds14;
+            SwapAddressPatch AspectRatioIds15;
+
+            PatchBytes ResolutionListSize1;
+            PatchBytes ResolutionListSize2;
+            PatchBytes ResolutionListSize3;
+            PatchBytes ResolutionListSize4;
+            PatchBytes ResolutionListSize5;
+            PatchBytes ResolutionListSize6;
+            CDetourHook SetAspectRatioScale;
+
         }
         namespace BugFixes
         {
@@ -353,6 +423,14 @@ namespace MegaGuard
         }
         namespace AntiCheat
         {
+            namespace AckHandlers
+            {
+                CDetourHook NetworkInitCrypto;
+            }
+            namespace ReqHandlers
+            {
+                CDetourHook MainAuthorize;
+            }
             namespace GameManagers
             {
                 namespace Room
@@ -405,9 +483,14 @@ namespace MegaGuard
                 CDetourHook Encrypt;
                 CDetourHook Decrypt;
             }
+            namespace CDBM
+            {
+				CDetourHook Load;
+            }
         }
         inline void InitFeaturesHooks()
         {
+            Features::CustomResolutionsPatch();
             Features::HideWeaponSlot.Create(MegaGuard::Addresses::Hooks::Features::HideWeaponSlot.get(), Features::HideWeaponSlots);
             Features::CustomTickratePatch();
 			Features::NationIndex.Create(MegaGuard::Addresses::Hooks::Features::Custom_GetNationIndex.get(), &Features::GetNationIndex);
@@ -422,9 +505,7 @@ namespace MegaGuard
 			BugFixes::FixWeaponSelectDetour_Setting.Create(MegaGuard::Addresses::Hooks::Bugfixes::RoomSettingsDialogHandler.get(), &BugFixes::RoomSettingDialogHandler);
 			BugFixes::FixWeaponSelectDetour_Main.Create(MegaGuard::Addresses::Hooks::Bugfixes::RoomMainDialogHandler.get(), &BugFixes::RoomMainDialogHandler);
             BugFixes::SetDateTimeShit.Patch(MegaGuard::Addresses::Hooks::Bugfixes::SetDateTimeShit.get(), "\x90\x90\x90\x90\x90\x90", 6);
-			//BugFixes::Screeshot_bug.Create(MegaGuard::Addresses::Hooks::Bugfixes::ScreenshotBug1.get(), &BugFixes::ScreenShot);
-			//BugFixes::Screenshot2_bug.Create(MegaGuard::Addresses::Hooks::Bugfixes::ScreenshotBug2.get(), &BugFixes::Screenshot2);
-            
+			BugFixes::Screeshot_bug.Create(MegaGuard::Addresses::Hooks::Bugfixes::ScreenshotBug1.get(), &BugFixes::ScreenShot);            
         }
         inline const char* get_archiveloader_pw()
         {
@@ -442,6 +523,7 @@ namespace MegaGuard
             InitializeCriticalSection(&MegaGuard::Addresses::Hooks::Anticheat::GameManagers::NetMgr::MyCriticalSection);
             InitializeCriticalSection(&MegaGuard::Addresses::Hooks::Anticheat::GameManagers::Dynamics::MyCriticalSection);
             
+            
             AntiCheat::GameManagers::Room::Get.Create(MegaGuard::Addresses::Hooks::Anticheat::GameManagers::Room::Get.get(), &AntiCheat::GetCRoom);
             AntiCheat::GameManagers::Room::Destroy.Create(MegaGuard::Addresses::Hooks::Anticheat::GameManagers::Room::Destroy.get(), &AntiCheat::DestroyCRoom);
 
@@ -456,6 +538,7 @@ namespace MegaGuard
 
             AntiCheat::GameManagers::Dynamics::Get.Create(MegaGuard::Addresses::Hooks::Anticheat::GameManagers::Dynamics::Get.get(), &AntiCheat::GetCDynamics);
             AntiCheat::GameManagers::Dynamics::Destroy.Create(MegaGuard::Addresses::Hooks::Anticheat::GameManagers::Dynamics::Destroy.get(), &AntiCheat::DestroyCDynamics);
+            
             
 
             //AntiCheat::InitDefaultSettings::Init.Create(MegaGuard::Addresses::Hooks::Anticheat::InitDefaultSettings::Init, &AntiCheat::InitSettings);
@@ -473,6 +556,9 @@ namespace MegaGuard
             archiveloader_pw[64] = '\0';
             *reinterpret_cast<old_string*>(MegaGuard::Addresses::Hooks::Anticheat::Crypto::archiveloader_pw.get()) = archiveloader_pw;
 			nocrt_memset(archiveloader_pw, 0, 64);
+            AntiCheat::CDBM::Load.Create(MegaGuard::Addresses::Hooks::Anticheat::CDBM::Load.get(), &AntiCheat::CDBMLoad);
+            AntiCheat::AckHandlers::NetworkInitCrypto.Create(MegaGuard::Addresses::Hooks::Anticheat::AckHandlers::NetworkInitCrypto.get(), &AntiCheat::NetworkConnectAck);
+            AntiCheat::ReqHandlers::MainAuthorize.Create(MegaGuard::Addresses::Hooks::Anticheat::ReqHandlers::MainAuthorize.get(), &AntiCheat::MainAuthorize);
 
         }
         /*
