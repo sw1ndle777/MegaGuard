@@ -174,7 +174,6 @@
     <ClInclude Include="..\deps\minhook\minhook.h" />
     <ClInclude Include="..\deps\minhook\trampoline.h" />
     <ClInclude Include="..\deps\simdjson\simdjson.h" />
-    <ClInclude Include="..\deps\StackWalker\StackWalker.h" />
     <ClInclude Include="hooks\anticheat\ccrypt.h" />
     <ClInclude Include="hooks\anticheat\cdbm_load.h" />
     <ClInclude Include="hooks\anticheat\gamemanagers.h" />
@@ -191,12 +190,13 @@
     <ClInclude Include="hooks\features\spectate_pov.h" />
     <ClInclude Include="hooks\hooks.h" />
     <ClInclude Include="pch.h" />
-    <ClInclude Include="Splash.h" />
     <ClInclude Include="utils\assembler.h" />
     <ClInclude Include="utils\CLog.h" />
+    <ClInclude Include="utils\ipc.h" />
     <ClInclude Include="utils\ldasm.h" />
     <ClInclude Include="utils\memory.h" />
     <ClInclude Include="utils\midhook.h" />
+    <ClInclude Include="utils\Splash.h" />
     <ClInclude Include="utils\xorstr.h" />
   </ItemGroup>
   <ItemGroup>
@@ -324,11 +324,9 @@
     <ClCompile Include="..\deps\minhook\hook.c" />
     <ClCompile Include="..\deps\minhook\trampoline.c" />
     <ClCompile Include="..\deps\simdjson\simdjson.cpp" />
-    <ClCompile Include="..\deps\StackWalker\StackWalker.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="hooks\hooks.cpp" />
     <ClCompile Include="pch.cpp" />
-    <ClCompile Include="Splash.cpp" />
     <ClCompile Include="utils\assembler.cpp" />
     <ClCompile Include="utils\CLog.cpp" />
     <ClCompile Include="utils\ldasm.cpp" />
@@ -346,21 +344,21 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <WholeProgramOptimization>false</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
     <LLVMToolsVersion>777</LLVMToolsVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
@@ -424,7 +422,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;ASMJIT_STATIC;_CRT_SECURE_NO_WARNINGS;SODIUM_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -434,13 +432,14 @@
       <DebugInformationFormat>None</DebugInformationFormat>
       <AdditionalOptions>/utf-8 -mllvm -ind-call -mllvm -const-obfus -mllvm -string-obfus -mllvm -bcf -mllvm -bcf_loop=3 -mllvm -bcf_prob=40 %(AdditionalOptions)</AdditionalOptions>
       <Optimization>Disabled</Optimization>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>asmjit.lib;fmt.lib;Zydis.lib;gdiplus.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>asmjit.lib;fmt.lib;Zydis.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">

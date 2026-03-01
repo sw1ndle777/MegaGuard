@@ -5,19 +5,20 @@ namespace MegaGuard
     {
         namespace Features
         {
-			bool first_time_lobby = true;
-            inline void __fastcall Common_Agora_Init_DLG(std::uint32_t instance, std::uint32_t edx)
-            {
-                static auto original = MegaGuard::HooksMgr::Features::CommonAgoraDlgInit.GetOriginal<decltype(&Common_Agora_Init_DLG)>();
-               
-                auto pcroom_1 = _call<std::uint32_t(*)()>(MegaGuard::Addresses::Hooks::Features::DLG::CFactoryGet.get());
-                _call<void(__thiscall*)(std::uint32_t, std::uint32_t, void*)>(MegaGuard::Addresses::Hooks::Features::DLG::GetDlgById.get(), pcroom_1, 101075, reinterpret_cast<void*>(MegaGuard::Addresses::Hooks::Features::DLG::CExPICBaseAlloc.get()));
-                auto pcroom_2 = _call<std::uint32_t(*)()>(MegaGuard::Addresses::Hooks::Features::DLG::CFactoryGet.get());
-                auto pcroom_3 = _call<std::uint32_t(__thiscall*)(std::uint32_t, std::uint32_t)>(MegaGuard::Addresses::Hooks::Features::DLG::GetDlgId.get(), pcroom_2, 101075);
-                _call<void(__thiscall*)(std::uint32_t, const char*, std::uint32_t) >(MegaGuard::Addresses::Hooks::Features::DLG::AssignDlgInfo.get(), instance, "E_DLG_AGORA_MENU_PIC_PCROOM_ICON", pcroom_3);
+			inline bool first_time_lobby = true;
+			inline void __fastcall Common_Agora_Init_DLG(std::uint32_t instance, std::uint32_t edx)
+			{
+				auto original = MegaGuard::HooksMgr::Features::CommonAgoraDlgInit.GetOriginal<decltype(&Common_Agora_Init_DLG)>();
+				original(instance, edx);
 
-                original(instance, edx);
-            }
+				auto pcroom_1 = _call<std::uint32_t(*)()>(MegaGuard::Addresses::Hooks::Features::DLG::CFactoryGet.get());
+				_call<void(__thiscall*)(std::uint32_t, std::uint32_t, void*)>(MegaGuard::Addresses::Hooks::Features::DLG::GetDlgById.get(), pcroom_1, 101075, reinterpret_cast<void*>(MegaGuard::Addresses::Hooks::Features::DLG::CExPICBaseAlloc.get()));
+				auto pcroom_2 = _call<std::uint32_t(*)()>(MegaGuard::Addresses::Hooks::Features::DLG::CFactoryGet.get());
+				auto pcroom_3 = _call<std::uint32_t(__thiscall*)(std::uint32_t, std::uint32_t)>(MegaGuard::Addresses::Hooks::Features::DLG::GetDlgId.get(), pcroom_2, 101075);
+
+				
+				_call<void(__thiscall*)(std::uint32_t, const char*, std::uint32_t)>(MegaGuard::Addresses::Hooks::Features::DLG::AssignDlgInfo.get(), instance, "E_DLG_AGORA_MENU_PIC_PCROOM_ICON", pcroom_3);
+			}
 
             inline void __fastcall Common_Agora_Construct_DLG(std::uint32_t instance, std::uint32_t edx)
             {

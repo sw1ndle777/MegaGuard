@@ -23,43 +23,43 @@ namespace MegaGuard
                 if (Room::Encrypted)
                 {
                     if (Room::whitelist_return_addres.contains(return_address))
-                        return Room::ptr_encrypt ? Room::ptr_encrypt->process<std::uint32_t*>(Room::Encrypted) : nullptr;
+                        return Room::Decrypted;
+                        //return Room::ptr_encrypt ? Room::ptr_encrypt->process<std::uint32_t*>(Room::Encrypted) : nullptr;
                     else
                     {
                         if (return_address >= MegaGuard::Globals::g_AntiCheatModuleBase && return_address < MegaGuard::Globals::g_AntiCheatModuleBase + MegaGuard::Globals::g_AntiCheatModuleSize)
-                            return Room::ptr_encrypt ? Room::ptr_encrypt->process<std::uint32_t*>(Room::Encrypted) : nullptr;
+                            return Room::Decrypted;
+                            //return Room::ptr_encrypt ? Room::ptr_encrypt->process<std::uint32_t*>(Room::Encrypted) : nullptr;
                         else
                         {
-                            //MegaGuard::EventLog->Debug(nostd::source_location::current(), "call GetRoom() from non whitelisted 0x{:08X}, acbase: 0x{:08X} - 0x{:08X}", return_address, MegaGuard::Globals::g_AntiCheatModuleBase, MegaGuard::Globals::g_AntiCheatModuleBase + MegaGuard::Globals::g_AntiCheatModuleSize);
+                            MegaGuard::EventLog->Debug(nostd::source_location::current(), "call GetRoom() from non whitelisted 0x{:08X}, acbase: 0x{:08X} - 0x{:08X}", return_address, MegaGuard::Globals::g_AntiCheatModuleBase, MegaGuard::Globals::g_AntiCheatModuleBase + MegaGuard::Globals::g_AntiCheatModuleSize);
                             return  nullptr;
                         } 
                     }
                 }
                 EnterCriticalSection(&MegaGuard::Addresses::Hooks::Anticheat::GameManagers::Room::MyCriticalSection);
-                try
+                if (!Room::Encrypted)
                 {
-                    if (!Room::Encrypted)
+                    std::uint32_t* room_allocated_memory = new std::uint32_t[552];
+                    if (!room_allocated_memory)
                     {
-                        std::uint32_t* room_allocated_memory = new std::uint32_t[552];
-                        if (!room_allocated_memory)
-                        {
-                            LeaveCriticalSection(&MegaGuard::Addresses::Hooks::Anticheat::GameManagers::Room::MyCriticalSection);
-                            return nullptr;
-                        }
-                        if (!Room::ptr_encrypt)
-                            Room::ptr_encrypt = new pointer_encryption();
-
-                        Room::Decrypted = _call<std::uint32_t*(__thiscall*)(void*)>(Room::Init.get(), room_allocated_memory);
-                        Room::Encrypted = Room::ptr_encrypt->process<std::uint32_t*>(Room::Decrypted);
+                        LeaveCriticalSection(&MegaGuard::Addresses::Hooks::Anticheat::GameManagers::Room::MyCriticalSection);
+                        MegaGuard::EventLog->Debug(nostd::source_location::current(), "Failed to allocate memory for CRoom");
+                        return nullptr;
                     }
-                }
-                catch (...)
-                {
-                    LeaveCriticalSection(&MegaGuard::Addresses::Hooks::Anticheat::GameManagers::Room::MyCriticalSection);
-                    throw;
+                    //if (!Room::ptr_encrypt)
+                    //    Room::ptr_encrypt = new pointer_encryption();
+
+                    Room::Decrypted = _call<std::uint32_t * (__thiscall*)(void*)>(Room::Init.get(), room_allocated_memory);
+                    MegaGuard::EventLog->Debug(nostd::source_location::current(), "CRoom::Decrypted: 0x{:08X}", reinterpret_cast<std::uint32_t>(Room::Decrypted));
+                    Room::Encrypted = Room::Decrypted;//Room::ptr_encrypt->process<std::uint32_t*>(Room::Decrypted);
+                    if (g_ipcClient) g_ipcClient->OnManagerReady();
+
+
                 }
                 LeaveCriticalSection(&MegaGuard::Addresses::Hooks::Anticheat::GameManagers::Room::MyCriticalSection);
-                return Room::ptr_encrypt ? Room::ptr_encrypt->process<std::uint32_t*>(Room::Encrypted) : nullptr;
+                return Room::Decrypted;
+                //return Room::ptr_encrypt ? Room::ptr_encrypt->process<std::uint32_t*>(Room::Encrypted) : nullptr;
             }
             
             void __cdecl DestroyCRoom()
@@ -90,11 +90,13 @@ namespace MegaGuard
                 if (UnitContainer::Encrypted)
                 {
                     if (UnitContainer::whitelist_return_addres.contains(return_address))
-                        return UnitContainer::ptr_encrypt ? UnitContainer::ptr_encrypt->process<std::uint32_t*>(UnitContainer::Encrypted) : nullptr;
+                        return UnitContainer::Decrypted;
+                        //return UnitContainer::ptr_encrypt ? UnitContainer::ptr_encrypt->process<std::uint32_t*>(UnitContainer::Encrypted) : nullptr;
                     else
                     {
                         if (return_address >= MegaGuard::Globals::g_AntiCheatModuleBase && return_address < MegaGuard::Globals::g_AntiCheatModuleBase + MegaGuard::Globals::g_AntiCheatModuleSize)
-                            return UnitContainer::ptr_encrypt ? UnitContainer::ptr_encrypt->process<std::uint32_t*>(UnitContainer::Encrypted) : nullptr;
+                            return UnitContainer::Decrypted;
+                            //return UnitContainer::ptr_encrypt ? UnitContainer::ptr_encrypt->process<std::uint32_t*>(UnitContainer::Encrypted) : nullptr;
                         else
                         {
                             //MegaGuard::EventLog->Debug(nostd::source_location::current(), "call GetCUnitContainer() from non whitelisted 0x{:08X}", return_address);
@@ -103,30 +105,24 @@ namespace MegaGuard
                     }
                 }
                 EnterCriticalSection(&MegaGuard::Addresses::Hooks::Anticheat::GameManagers::UnitContainer::MyCriticalSection);
-                try
+                if (!UnitContainer::Encrypted)
                 {
-                    if (!UnitContainer::Encrypted)
+                    std::uint32_t* allocated_memory = new std::uint32_t[116];
+                    if (!allocated_memory)
                     {
-                        std::uint32_t* allocated_memory = new std::uint32_t[116];
-                        if (!allocated_memory)
-                        {
-                            LeaveCriticalSection(&MegaGuard::Addresses::Hooks::Anticheat::GameManagers::UnitContainer::MyCriticalSection);
-                            return nullptr;
-                        }
-                        if (!UnitContainer::ptr_encrypt)
-                            UnitContainer::ptr_encrypt = new pointer_encryption();
-                        UnitContainer::Decrypted = _call<std::uint32_t * (__thiscall*)(void*)>(UnitContainer::Init.get(), allocated_memory);
-                        MegaGuard::EventLog->Debug(nostd::source_location::current(), "CUnitContainer::Decrypted: 0x{:08X}", reinterpret_cast<std::uint32_t>(UnitContainer::Decrypted));
-                        UnitContainer::Encrypted = UnitContainer::ptr_encrypt->process<std::uint32_t*>(UnitContainer::Decrypted);
+                        LeaveCriticalSection(&MegaGuard::Addresses::Hooks::Anticheat::GameManagers::UnitContainer::MyCriticalSection);
+                        return nullptr;
                     }
-                }
-                catch (...)
-                {
-                    LeaveCriticalSection(&MegaGuard::Addresses::Hooks::Anticheat::GameManagers::UnitContainer::MyCriticalSection);
-                    throw;
+                    //if (!UnitContainer::ptr_encrypt)
+                    //    UnitContainer::ptr_encrypt = new pointer_encryption();
+                    UnitContainer::Decrypted = _call<std::uint32_t * (__thiscall*)(void*)>(UnitContainer::Init.get(), allocated_memory);
+                    MegaGuard::EventLog->Debug(nostd::source_location::current(), "CUnitContainer::Decrypted: 0x{:08X}", reinterpret_cast<std::uint32_t>(UnitContainer::Decrypted));
+                    UnitContainer::Encrypted = UnitContainer::Decrypted;//UnitContainer::ptr_encrypt->process<std::uint32_t*>(UnitContainer::Decrypted);
+                    if (g_ipcClient) g_ipcClient->OnManagerReady();
                 }
                 LeaveCriticalSection(&MegaGuard::Addresses::Hooks::Anticheat::GameManagers::UnitContainer::MyCriticalSection);
-                return UnitContainer::ptr_encrypt ? UnitContainer::ptr_encrypt->process<std::uint32_t*>(UnitContainer::Encrypted) : nullptr;
+                return UnitContainer::Decrypted;
+                //return UnitContainer::ptr_encrypt ? UnitContainer::ptr_encrypt->process<std::uint32_t*>(UnitContainer::Encrypted) : nullptr;
             }
             void __cdecl DestroyCUnitContainer()
             {
@@ -156,11 +152,13 @@ namespace MegaGuard
                 if (UnitMgr::Encrypted)
                 {
                     if (UnitMgr::whitelist_return_addres.contains(return_address))
-                        return UnitMgr::ptr_encrypt ? UnitMgr::ptr_encrypt->process<std::uint32_t*>(UnitMgr::Encrypted) : nullptr;
+                        return UnitMgr::Decrypted;
+                        //return UnitMgr::ptr_encrypt ? UnitMgr::ptr_encrypt->process<std::uint32_t*>(UnitMgr::Encrypted) : nullptr;
                     else
                     {
                         if (return_address >= MegaGuard::Globals::g_AntiCheatModuleBase && return_address < MegaGuard::Globals::g_AntiCheatModuleBase + MegaGuard::Globals::g_AntiCheatModuleSize)
-                            return UnitMgr::ptr_encrypt ? UnitMgr::ptr_encrypt->process<std::uint32_t*>(UnitMgr::Encrypted) : nullptr;
+                            return UnitMgr::Decrypted;
+                            //return UnitMgr::ptr_encrypt ? UnitMgr::ptr_encrypt->process<std::uint32_t*>(UnitMgr::Encrypted) : nullptr;
                         else
                         {
                             //MegaGuard::EventLog->Debug(nostd::source_location::current(), "call GetCUnitMgr() from non whitelisted 0x{:08X}", return_address);
@@ -169,29 +167,24 @@ namespace MegaGuard
                     }
                 }
                 EnterCriticalSection(&MegaGuard::Addresses::Hooks::Anticheat::GameManagers::UnitMgr::MyCriticalSection);
-                try
+                if (!UnitMgr::Encrypted)
                 {
-                    if (!UnitMgr::Encrypted)
+                    std::uint32_t* allocated_memory = new std::uint32_t[188];
+                    if (!allocated_memory)
                     {
-                        std::uint32_t* allocated_memory = new std::uint32_t[188];
-                        if (!allocated_memory)
-                        {
-                            LeaveCriticalSection(&MegaGuard::Addresses::Hooks::Anticheat::GameManagers::UnitMgr::MyCriticalSection);
-                            return nullptr;
-                        }
-                        if (!UnitMgr::ptr_encrypt)
-                            UnitMgr::ptr_encrypt = new pointer_encryption();
-                        UnitMgr::Decrypted = _call<std::uint32_t * (__thiscall*)(void*)>(UnitMgr::Init.get(), allocated_memory);
-                        UnitMgr::Encrypted = UnitMgr::ptr_encrypt->process<std::uint32_t*>(UnitMgr::Decrypted);
+                        LeaveCriticalSection(&MegaGuard::Addresses::Hooks::Anticheat::GameManagers::UnitMgr::MyCriticalSection);
+                        return nullptr;
                     }
-                }
-                catch (...)
-                {
-                    LeaveCriticalSection(&MegaGuard::Addresses::Hooks::Anticheat::GameManagers::UnitMgr::MyCriticalSection);
-                    throw;
+                    //if (!UnitMgr::ptr_encrypt)
+                    //    UnitMgr::ptr_encrypt = new pointer_encryption();
+                    UnitMgr::Decrypted = _call<std::uint32_t * (__thiscall*)(void*)>(UnitMgr::Init.get(), allocated_memory);
+                    MegaGuard::EventLog->Debug(nostd::source_location::current(), "CUnitMgr::Decrypted: 0x{:08X}", reinterpret_cast<std::uint32_t>(UnitMgr::Decrypted));
+                    UnitMgr::Encrypted = UnitMgr::Decrypted;//UnitMgr::ptr_encrypt->process<std::uint32_t*>(UnitMgr::Decrypted);
+                    if (g_ipcClient) g_ipcClient->OnManagerReady();
                 }
                 LeaveCriticalSection(&MegaGuard::Addresses::Hooks::Anticheat::GameManagers::UnitMgr::MyCriticalSection);
-                return UnitMgr::ptr_encrypt ? UnitMgr::ptr_encrypt->process<std::uint32_t*>(UnitMgr::Encrypted) : nullptr;
+                return UnitMgr::Decrypted;
+                //return UnitMgr::ptr_encrypt ? UnitMgr::ptr_encrypt->process<std::uint32_t*>(UnitMgr::Encrypted) : nullptr;
             }
             void __cdecl DestroyCUnitMgr()
             {
@@ -221,44 +214,40 @@ namespace MegaGuard
                 if (NetMgr::Encrypted)
                 {
                     if (NetMgr::whitelist_return_addres.contains(return_address))
-                        return NetMgr::ptr_encrypt ? NetMgr::ptr_encrypt->process<std::uint32_t*>(NetMgr::Encrypted) : nullptr;
+                        return NetMgr::Decrypted;
+                        //return NetMgr::ptr_encrypt ? NetMgr::ptr_encrypt->process<std::uint32_t*>(NetMgr::Encrypted) : nullptr;
                     else
                     {
                         if (return_address >= MegaGuard::Globals::g_AntiCheatModuleBase && return_address < MegaGuard::Globals::g_AntiCheatModuleBase + MegaGuard::Globals::g_AntiCheatModuleSize)
-                            return NetMgr::ptr_encrypt ? NetMgr::ptr_encrypt->process<std::uint32_t*>(NetMgr::Encrypted) : nullptr;
+                            return NetMgr::Decrypted;
+                            //return NetMgr::ptr_encrypt ? NetMgr::ptr_encrypt->process<std::uint32_t*>(NetMgr::Encrypted) : nullptr;
                         else
                         {
-                           // MegaGuard::EventLog->Debug(nostd::source_location::current(), "call GetCNetMgr() from non whitelisted 0x{:08X}", return_address);
+                            //MegaGuard::EventLog->Debug(nostd::source_location::current(), "call GetCNetMgr() from non whitelisted 0x{:08X}", return_address);
                             return nullptr;//return nullptr;
                         }
                     }
                 }
                 EnterCriticalSection(&MegaGuard::Addresses::Hooks::Anticheat::GameManagers::NetMgr::MyCriticalSection);
-                try
+                if (!NetMgr::Encrypted)
                 {
-                    if (!NetMgr::Encrypted)
+                    std::uint32_t* allocated_memory = new (std::nothrow) std::uint32_t[0x1538]; // old 0x14F8 aka last 0x14F4 offset now 0x1538 because i added uint8_t auth_token[64]
+                    if (!allocated_memory)
                     {
-                        std::uint32_t* allocated_memory = new (std::nothrow) std::uint32_t[0x1538]; // old 0x14F8 aka last 0x14F4 offset now 0x1538 because i added uint8_t auth_token[64]
-                        if (!allocated_memory)
-                        {
-                            LeaveCriticalSection(&MegaGuard::Addresses::Hooks::Anticheat::GameManagers::NetMgr::MyCriticalSection);
-                            return nullptr;
-                        }
-                        if (!NetMgr::ptr_encrypt)
-                            NetMgr::ptr_encrypt = new pointer_encryption();
-
-                        NetMgr::Decrypted = _call<std::uint32_t * (__thiscall*)(void*)>(NetMgr::Init.get(), allocated_memory);
-                        MegaGuard::EventLog->Debug(nostd::source_location::current(), "CNetMgr::Decrypted: 0x{:08X}", reinterpret_cast<std::uint32_t>(NetMgr::Decrypted));
-                        NetMgr::Encrypted = NetMgr::ptr_encrypt->process<std::uint32_t*>(NetMgr::Decrypted);
+                        LeaveCriticalSection(&MegaGuard::Addresses::Hooks::Anticheat::GameManagers::NetMgr::MyCriticalSection);
+                        return nullptr;
                     }
-                }
-                catch (...)
-                {
-                    LeaveCriticalSection(&MegaGuard::Addresses::Hooks::Anticheat::GameManagers::NetMgr::MyCriticalSection);
-                    throw;
+                    //if (!NetMgr::ptr_encrypt)
+                    //    NetMgr::ptr_encrypt = new pointer_encryption();
+
+                    NetMgr::Decrypted = _call<std::uint32_t * (__thiscall*)(void*)>(NetMgr::Init.get(), allocated_memory);
+                    MegaGuard::EventLog->Debug(nostd::source_location::current(), "CNetMgr::Decrypted: 0x{:08X}", reinterpret_cast<std::uint32_t>(NetMgr::Decrypted));
+                    NetMgr::Encrypted = NetMgr::Decrypted;//NetMgr::ptr_encrypt->process<std::uint32_t*>(NetMgr::Decrypted);
+                    if (g_ipcClient) g_ipcClient->OnManagerReady();
                 }
                 LeaveCriticalSection(&MegaGuard::Addresses::Hooks::Anticheat::GameManagers::NetMgr::MyCriticalSection);
-                return NetMgr::ptr_encrypt ? NetMgr::ptr_encrypt->process<std::uint32_t*>(NetMgr::Encrypted) : nullptr;
+                return NetMgr::Decrypted;
+                //return NetMgr::ptr_encrypt ? NetMgr::ptr_encrypt->process<std::uint32_t*>(NetMgr::Encrypted) : nullptr;
             }
             void __cdecl DestroyCNetMgr()
             {
@@ -288,11 +277,13 @@ namespace MegaGuard
                 if (Dynamics::Encrypted)
                 {
                     if (Dynamics::whitelist_return_addres.contains(return_address))
-                        return Dynamics::ptr_encrypt ? Dynamics::ptr_encrypt->process<std::uint32_t*>(Dynamics::Encrypted) : nullptr;
+                        return Dynamics::Decrypted;
+                        //return Dynamics::ptr_encrypt ? Dynamics::ptr_encrypt->process<std::uint32_t*>(Dynamics::Encrypted) : nullptr;
                     else
                     {
                         if (return_address >= MegaGuard::Globals::g_AntiCheatModuleBase && return_address < MegaGuard::Globals::g_AntiCheatModuleBase + MegaGuard::Globals::g_AntiCheatModuleSize)
-                            return Dynamics::ptr_encrypt ? Dynamics::ptr_encrypt->process<std::uint32_t*>(Dynamics::Encrypted) : nullptr;
+                            return Dynamics::Decrypted;
+                            //return Dynamics::ptr_encrypt ? Dynamics::ptr_encrypt->process<std::uint32_t*>(Dynamics::Encrypted) : nullptr;
                         else
                         {
                             //MegaGuard::EventLog->Debug(nostd::source_location::current(), "call GetCDynamics() from non whitelisted 0x{:08X}", return_address);
@@ -301,30 +292,25 @@ namespace MegaGuard
                     }
                 }
                 EnterCriticalSection(&MegaGuard::Addresses::Hooks::Anticheat::GameManagers::Dynamics::MyCriticalSection);
-                try
+                if (!Dynamics::Encrypted)
                 {
-                    if (!Dynamics::Encrypted)
+                    std::uint32_t* allocated_memory = new std::uint32_t[1760];
+                    if (!allocated_memory)
                     {
-                        std::uint32_t* allocated_memory = new std::uint32_t[1760];
-                        if (!allocated_memory)
-                        {
-                            LeaveCriticalSection(&MegaGuard::Addresses::Hooks::Anticheat::GameManagers::Dynamics::MyCriticalSection);
-                            return nullptr;
-                        }
-                        if (!Dynamics::ptr_encrypt)
-                            Dynamics::ptr_encrypt = new pointer_encryption();
-
-                        Dynamics::Decrypted = _call<std::uint32_t * (__thiscall*)(void*)>(Dynamics::Init.get(), allocated_memory);
-                        Dynamics::Encrypted = Dynamics::ptr_encrypt->process<std::uint32_t*>(Dynamics::Decrypted);
+                        LeaveCriticalSection(&MegaGuard::Addresses::Hooks::Anticheat::GameManagers::Dynamics::MyCriticalSection);
+                        return nullptr;
                     }
-                }
-                catch (...)
-                {
-                    LeaveCriticalSection(&MegaGuard::Addresses::Hooks::Anticheat::GameManagers::Dynamics::MyCriticalSection);
-                    throw;
+                    //if (!Dynamics::ptr_encrypt)
+                    //    Dynamics::ptr_encrypt = new pointer_encryption();
+
+                    Dynamics::Decrypted = _call<std::uint32_t * (__thiscall*)(void*)>(Dynamics::Init.get(), allocated_memory);
+                    MegaGuard::EventLog->Debug(nostd::source_location::current(), "CDynamics::Decrypted: 0x{:08X}", reinterpret_cast<std::uint32_t>(Dynamics::Decrypted));
+                    Dynamics::Encrypted = Dynamics::Decrypted;//Dynamics::ptr_encrypt->process<std::uint32_t*>(Dynamics::Decrypted);
+                    if (g_ipcClient) g_ipcClient->OnManagerReady();
                 }
                 LeaveCriticalSection(&MegaGuard::Addresses::Hooks::Anticheat::GameManagers::Dynamics::MyCriticalSection);
-                return Dynamics::ptr_encrypt ? Dynamics::ptr_encrypt->process<std::uint32_t*>(Dynamics::Encrypted) : nullptr;
+                return Dynamics::Decrypted;
+                //return Dynamics::ptr_encrypt ? Dynamics::ptr_encrypt->process<std::uint32_t*>(Dynamics::Encrypted) : nullptr;
             }
             void __cdecl DestroyCDynamics()
             {

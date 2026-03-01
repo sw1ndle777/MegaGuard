@@ -2,7 +2,7 @@
 
 namespace MegaGuard
 {
-
+    std::unique_ptr<CLog> EventLog;
     void CLog::Initialize(const std::string& Path, bool removeExisting)
     {
 #if DEBUG_CONSOLE_LOG == 1 || DEBUG_FILE_LOG == 1
@@ -27,7 +27,7 @@ namespace MegaGuard
 
         if (!File.is_open())
         {
-            throw std::runtime_error("Could not open file: " + Path);
+            //throw std::runtime_error("Could not open file: " + Path);
         }
 
         logThread = std::make_unique<std::thread>(&CLog::ProcessQueue, this);
@@ -49,6 +49,4 @@ namespace MegaGuard
         File << Output << std::endl;
 #endif
     }
-
-    std::unique_ptr<CLog> EventLog = std::make_unique<CLog>();
 }

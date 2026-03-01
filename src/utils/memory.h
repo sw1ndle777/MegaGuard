@@ -55,3 +55,7 @@ namespace Memory
 		return (*static_cast<VirtualFn**>(thisptr))[nIndex](thisptr, argList...);
 	}
 }
+
+
+#pragma once
+

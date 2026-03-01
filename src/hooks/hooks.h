@@ -24,7 +24,13 @@ namespace MegaGuard
                    
                 const MH_STATUS status = MH_CreateHook(pBaseFn, pReplaceFn, &pOriginalFn);
 
-                //if (status != MH_OK) throw std::runtime_error(std::format("failed to create hook function, status: {}\nbase function -> {:#08X}", MH_StatusToString(status), reinterpret_cast<std::uintptr_t>(pBaseFn)));
+                if (status != MH_OK)
+                {
+                    MegaGuard::EventLog->Debug(nostd::source_location::current(),
+                        "MH_CreateHook failed: {} at {:#08X}", MH_StatusToString(status),
+                        reinterpret_cast<std::uintptr_t>(pBaseFn));
+                    return false;
+                }
   
                 if (!this->Replace())  return false;
                    

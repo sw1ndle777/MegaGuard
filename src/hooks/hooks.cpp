@@ -556,7 +556,7 @@ namespace MegaGuard
             archiveloader_pw[64] = '\0';
             *reinterpret_cast<old_string*>(MegaGuard::Addresses::Hooks::Anticheat::Crypto::archiveloader_pw.get()) = archiveloader_pw;
 			nocrt_memset(archiveloader_pw, 0, 64);
-            AntiCheat::CDBM::Load.Create(MegaGuard::Addresses::Hooks::Anticheat::CDBM::Load.get(), &AntiCheat::CDBMLoad);
+            //AntiCheat::CDBM::Load.Create(MegaGuard::Addresses::Hooks::Anticheat::CDBM::Load.get(), &AntiCheat::CDBMLoad);
             AntiCheat::AckHandlers::NetworkInitCrypto.Create(MegaGuard::Addresses::Hooks::Anticheat::AckHandlers::NetworkInitCrypto.get(), &AntiCheat::NetworkConnectAck);
             AntiCheat::ReqHandlers::MainAuthorize.Create(MegaGuard::Addresses::Hooks::Anticheat::ReqHandlers::MainAuthorize.get(), &AntiCheat::MainAuthorize);
 
@@ -607,15 +607,20 @@ namespace MegaGuard
         inline void InitializeAllHooks()
         {
             if (MH_Initialize() != MH_OK)
-                throw std::runtime_error("failed initialize #1");
+            {
+                MegaGuard::EventLog->Debug(nostd::source_location::current(), "Failed to initialize MinHook");
+            }
 
-            
-
-            //VMProtectBeginUltra("InitializeAllHooks_vmp");
+            if (g_ipcClient) g_ipcClient->SetProgress(74);
             InitFeaturesHooks();
+            
+            if (g_ipcClient) g_ipcClient->SetProgress(80);
             InitBugFixesHooks();
+            
+            if (g_ipcClient) g_ipcClient->SetProgress(88);
             InitAntiCheatHooks();
-           // VMProtectEnd();
+            
+            if (g_ipcClient) g_ipcClient->SetProgress(95);
         }
         /*
         [[clang::annotate("x-vm,x-full,x-cfg,ind-br,alias-access,custom-cc")]]
