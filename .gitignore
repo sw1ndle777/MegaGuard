@@ -14,6 +14,14 @@
 *.dip
 *.db
 
+# Ignore text notes / scratch files, but keep build-authoritative & vendored ones
+*.txt
+!src/version.txt
+!deps/**/*.txt
+
+# Internal dev report, not part of the published tree
+CPP_MODERNIZATION_REPORT.md
+
 # Ignore build directories
 bin/
 out/
@@ -22,3 +30,6 @@ Debug/
 obj/
 /src/.vs
 .vs
+
+# Legacy pre-refactor source tree, kept locally but untracked
+src_old/

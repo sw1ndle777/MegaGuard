@@ -1,0 +1,8 @@
+// Auto-generated — DO NOT EDIT
+#pragma once
+
+#define MG_VERSION_MAJOR 1
+#define MG_VERSION_MINOR 8
+#define MG_VERSION_PATCH 119
+#define MG_VERSION_DATEBUILD "20260702.152600"
+#define MG_VERSION_FULL "1.8.119+20260702.152600"

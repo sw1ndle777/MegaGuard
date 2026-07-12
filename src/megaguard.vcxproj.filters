@@ -1,371 +1,217 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    <Filter Include="core">
+      <UniqueIdentifier>{01000000-0000-0000-0000-000000000001}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    <Filter Include="engine">
+      <UniqueIdentifier>{02000000-0000-0000-0000-000000000002}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\utils">
-      <UniqueIdentifier>{6ac919ca-7b43-42b4-8a74-ea194e076748}</UniqueIdentifier>
+    <Filter Include="game">
+      <UniqueIdentifier>{03000000-0000-0000-0000-000000000003}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\hooks">
-      <UniqueIdentifier>{d57e099c-c42f-453d-9678-32b4be6c14ba}</UniqueIdentifier>
+    <Filter Include="game\data">
+      <UniqueIdentifier>{03100000-0000-0000-0000-000000000031}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\protections">
-      <UniqueIdentifier>{458dd57f-bd87-4ee7-b9bf-da5823031013}</UniqueIdentifier>
+    <Filter Include="game\managers">
+      <UniqueIdentifier>{03200000-0000-0000-0000-000000000032}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="game\network">
+      <UniqueIdentifier>{03300000-0000-0000-0000-000000000033}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="anticheat">
+      <UniqueIdentifier>{04000000-0000-0000-0000-000000000004}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="modding">
+      <UniqueIdentifier>{05000000-0000-0000-0000-000000000005}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="modding\features">
+      <UniqueIdentifier>{05100000-0000-0000-0000-000000000051}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="modding\bugfixes">
+      <UniqueIdentifier>{05200000-0000-0000-0000-000000000052}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="platform">
+      <UniqueIdentifier>{06000000-0000-0000-0000-000000000006}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="utils">
+      <UniqueIdentifier>{07000000-0000-0000-0000-000000000007}</UniqueIdentifier>
     </Filter>
     <Filter Include="deps">
-      <UniqueIdentifier>{b95b3d15-fc14-44fe-a30c-38c5b032df44}</UniqueIdentifier>
+      <UniqueIdentifier>{08000000-0000-0000-0000-000000000008}</UniqueIdentifier>
     </Filter>
     <Filter Include="deps\minhook">
-      <UniqueIdentifier>{7a2d9b4a-675f-466a-8516-217cc971304d}</UniqueIdentifier>
+      <UniqueIdentifier>{08100000-0000-0000-0000-000000000081}</UniqueIdentifier>
     </Filter>
-    <Filter Include="deps\minhook\hde">
-      <UniqueIdentifier>{e8b70205-1d1b-444c-b67e-7d1466c76aa5}</UniqueIdentifier>
+    <Filter Include="deps\simdjson">
+      <UniqueIdentifier>{08200000-0000-0000-0000-000000000082}</UniqueIdentifier>
     </Filter>
-    <Filter Include="deps\libsodium">
-      <UniqueIdentifier>{beac145a-ecf3-483a-8a4b-7d6b652f40b9}</UniqueIdentifier>
+    <Filter Include="anticheat\scanners">
+      <UniqueIdentifier>{f54ba08d-46d3-413c-82bd-9aa43fcbd1ed}</UniqueIdentifier>
     </Filter>
-    <Filter Include="deps\libsodium\sodium">
-      <UniqueIdentifier>{3779a14d-7822-41a5-93d0-eee6ad8516b6}</UniqueIdentifier>
+    <Filter Include="game\ui">
+      <UniqueIdentifier>{7562e80b-0251-4f3f-be45-33caddca713c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="deps\libsodium\include">
-      <UniqueIdentifier>{0a7cb491-8d64-4c54-822f-9584785ba1dd}</UniqueIdentifier>
+    <Filter Include="game\ui\dialog">
+      <UniqueIdentifier>{702ab712-c45b-4fc9-84cf-56e69868f195}</UniqueIdentifier>
     </Filter>
-    <Filter Include="deps\libsodium\randombytes">
-      <UniqueIdentifier>{da5c6c73-14f8-4563-a480-65200611d66d}</UniqueIdentifier>
+    <Filter Include="game\ui\dialog\popups">
+      <UniqueIdentifier>{852282d1-6e50-42fb-9f48-4ccc3a0ad1ed}</UniqueIdentifier>
     </Filter>
-    <Filter Include="deps\libsodium\crypto_verify">
-      <UniqueIdentifier>{17481faa-9b69-4cfc-a784-00ae225fce6d}</UniqueIdentifier>
+    <Filter Include="game\ui\dialog\rightclick">
+      <UniqueIdentifier>{e91fc80b-3543-4bd0-b6f9-71104104a23e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="deps\libsodium\crypto_stream">
-      <UniqueIdentifier>{24ebd66c-26ab-4bab-b120-19b78d73c172}</UniqueIdentifier>
+    <Filter Include="game\ui\dialog\quickconfirm">
+      <UniqueIdentifier>{d3e0420d-bbeb-416e-9875-ab576b16bea9}</UniqueIdentifier>
     </Filter>
-    <Filter Include="deps\libsodium\crypto_sign">
-      <UniqueIdentifier>{51d73922-b7bc-4170-9764-57edc9313666}</UniqueIdentifier>
+    <Filter Include="game\network\custom_packets">
+      <UniqueIdentifier>{637a3200-de1a-4513-b794-ab99091257af}</UniqueIdentifier>
     </Filter>
-    <Filter Include="deps\libsodium\crypto_shorthash">
-      <UniqueIdentifier>{fe28748d-0000-44b8-8cec-2bef62a41026}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_secretstream">
-      <UniqueIdentifier>{263d411a-4f49-4557-a1e0-b003d53aaa23}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_secretbox">
-      <UniqueIdentifier>{3a1b327c-19b7-44da-8469-92403cedaf9f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_scalarmult">
-      <UniqueIdentifier>{c27e89e8-2509-43fe-ac58-2e5da8a0b672}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_pwhash">
-      <UniqueIdentifier>{e00252bf-f4f9-4120-8de2-390dacaf8133}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_onetimeauth">
-      <UniqueIdentifier>{339ac7ed-8389-4ca8-88f8-cda397e43c1e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_kx">
-      <UniqueIdentifier>{0beb6428-8b8c-4568-a83a-11abc5904851}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_kdf">
-      <UniqueIdentifier>{9123878c-403b-4ada-89ee-8f6ee20717c3}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_hash">
-      <UniqueIdentifier>{c175219b-31e4-466b-b0de-43579c8b9735}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_generichash">
-      <UniqueIdentifier>{d1956fa1-251b-46ff-aa50-c062a2bbe55d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_core">
-      <UniqueIdentifier>{001b4f27-dde4-4d53-b0b0-46f93f2218f4}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_box">
-      <UniqueIdentifier>{77a6f497-40ff-426d-8c7c-5d4ac1a4ba63}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_auth">
-      <UniqueIdentifier>{94c478e7-3f31-4503-b353-b4043c4e475e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_aead">
-      <UniqueIdentifier>{3d74c4a4-6d98-4441-86ce-e35a85e65532}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\include\sodium">
-      <UniqueIdentifier>{e8e1868c-c774-4dda-ad59-447fe7d0a4ec}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\include\sodium\private">
-      <UniqueIdentifier>{a0524de2-e7ba-4029-84a9-cf33c3e71e86}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\randombytes\internal">
-      <UniqueIdentifier>{89a1ff1c-7df1-4b88-8d01-9bb0e1f02bea}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\randombytes\sysrandom">
-      <UniqueIdentifier>{b3e8d898-a1d4-40aa-9f57-23112bd751da}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_stream\chacha20">
-      <UniqueIdentifier>{3a2d87da-8931-4b4e-8433-a22259d6534d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_stream\salsa20">
-      <UniqueIdentifier>{0a547c5b-133b-488d-9906-e2bc716eb96f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_stream\salsa208">
-      <UniqueIdentifier>{dcdb6069-245d-43c7-941a-f20a68b183f8}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_stream\salsa2012">
-      <UniqueIdentifier>{4c44b9b3-babd-488d-8ce2-5f436cc93844}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_stream\xchacha20">
-      <UniqueIdentifier>{7c360344-8da0-4da7-9bed-477a6407f751}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_stream\xsalsa20">
-      <UniqueIdentifier>{a8bafc05-bd02-4675-b376-731ccb9b3af9}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_stream\chacha20\dolbeau">
-      <UniqueIdentifier>{5dabe697-fbc7-4e14-b359-c2d43b23c4cf}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_stream\chacha20\ref">
-      <UniqueIdentifier>{d09debff-096c-459e-ac90-5d45de761841}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_stream\salsa20\ref">
-      <UniqueIdentifier>{cefccfd4-daa2-4c99-9de8-5f035808bf99}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_stream\salsa20\xmm6">
-      <UniqueIdentifier>{f9c02d9f-e0cf-4c32-90ee-6ddde0429d5f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_stream\salsa20\xmm6int">
-      <UniqueIdentifier>{c8189a35-1e52-4a60-a6a0-c0c0dd83dcdc}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_stream\salsa208\ref">
-      <UniqueIdentifier>{d7b1ac88-d2a6-49cf-9f3c-aa8b1f4ae233}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_stream\salsa2012\ref">
-      <UniqueIdentifier>{b6a9f6eb-8889-47e5-b153-d033ff5543da}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_sign\ed25519">
-      <UniqueIdentifier>{ab709615-1ac2-48d3-a696-e556b7b8df96}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_sign\ed25519\ref10">
-      <UniqueIdentifier>{f158e9d4-e0f8-4fb7-b825-53c4e819ad92}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_shorthash\siphash24">
-      <UniqueIdentifier>{423e1048-dc83-40de-9f5a-16f49b616f6a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_shorthash\siphash24\ref">
-      <UniqueIdentifier>{78ce8eeb-9a80-474a-b1ba-83cbfe80917d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_secretstream\xchacha20poly1305">
-      <UniqueIdentifier>{eea2fb74-5525-4bcf-bbb2-ddbcd4242878}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_secretbox\xsalsa20poly1305">
-      <UniqueIdentifier>{c5c440cf-a6e3-4ae9-98ff-63164de45be0}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_secretbox\xchacha20poly1305">
-      <UniqueIdentifier>{c00ff1a4-4156-4348-8f5b-a4de3128d839}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_scalarmult\ristretto255">
-      <UniqueIdentifier>{43985e3e-2e13-47e5-b34c-5c3d120a933d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_scalarmult\ed25519">
-      <UniqueIdentifier>{75f56f7c-4e36-40f7-b116-d26c1b289472}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_scalarmult\curve25519">
-      <UniqueIdentifier>{3d2cf215-b418-4068-b412-c9dab183e974}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_scalarmult\ristretto255\ref10">
-      <UniqueIdentifier>{3637ef86-cc72-43ee-af86-39d11897764c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_scalarmult\ed25519\ref10">
-      <UniqueIdentifier>{0dafe043-986f-4b95-907b-1d145f5cb019}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_scalarmult\curve25519\sandy2x">
-      <UniqueIdentifier>{07a0b09d-5da7-4843-977d-e0404b469944}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_scalarmult\curve25519\ref10">
-      <UniqueIdentifier>{bf0cffae-6caf-45f8-8719-a226b7827471}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_pwhash\scryptsalsa208sha256">
-      <UniqueIdentifier>{8a57ffe5-a6e5-4d72-baad-db7df286a50a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_pwhash\argon2">
-      <UniqueIdentifier>{37ad9f09-2551-41a3-8bf2-90fdcc4d76b2}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_pwhash\scryptsalsa208sha256\nosse">
-      <UniqueIdentifier>{e6032780-6421-4e4a-b5f9-945cac28467a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_pwhash\scryptsalsa208sha256\sse">
-      <UniqueIdentifier>{7d249335-c351-4866-a409-9d95ecb4a013}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_onetimeauth\poly1305">
-      <UniqueIdentifier>{df8e9482-92dc-4b2e-8c90-5716fa3e4b48}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_onetimeauth\poly1305\donna">
-      <UniqueIdentifier>{a1e1c69b-4482-44a1-858a-a66edfb60219}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_onetimeauth\poly1305\sse2">
-      <UniqueIdentifier>{197c88e2-fced-4c34-b6fc-e570b09a08d7}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_kdf\hkdf">
-      <UniqueIdentifier>{35160bde-009c-48e4-ba35-388bf4ecb8dc}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_kdf\blake2b">
-      <UniqueIdentifier>{25726ed1-adf6-47c4-a277-c689186468e1}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_hash\sha256">
-      <UniqueIdentifier>{cb9e36db-54d8-4695-bf7a-3c1064ffb0e6}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_hash\sha512">
-      <UniqueIdentifier>{f1e346f2-9444-4d85-8a2f-4ba90dab918d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_hash\sha512\cp">
-      <UniqueIdentifier>{a4e1c481-e67d-46aa-b397-bf98c08bd99c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_hash\sha256\cp">
-      <UniqueIdentifier>{b09bb0e6-f2bd-4fdf-8f1b-3597ac61eac8}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_generichash\blake2b">
-      <UniqueIdentifier>{f37bc42e-d60f-46ec-9936-a9ed08df78ed}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_core\ed25519">
-      <UniqueIdentifier>{17023c45-7e1d-423e-9ed9-eae37ba3f6c8}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_core\hchacha20">
-      <UniqueIdentifier>{6cbe79ab-8f6f-4882-9d78-9194c238017d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_core\hsalsa20">
-      <UniqueIdentifier>{52609b5e-1054-437f-8fc0-fcb1d5370041}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_core\salsa">
-      <UniqueIdentifier>{9463c756-88df-4e32-b7f6-13d0cbaddf42}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_core\softaes">
-      <UniqueIdentifier>{ef19372d-0ead-4262-84a9-dbc857b99c20}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_core\ed25519\ref10">
-      <UniqueIdentifier>{c002cb1e-1be0-4bd3-aca7-6b321cf86812}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_core\ed25519\ref10\fe_25_5">
-      <UniqueIdentifier>{eba962ba-5055-4e77-b4ab-49ba4cc005c8}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_core\ed25519\ref10\fe_51">
-      <UniqueIdentifier>{f3da4955-0997-4f61-bf1a-3c84f9f2ed5d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_core\hsalsa20\ref2">
-      <UniqueIdentifier>{8fe930bd-1ddc-4ad5-9255-ef8ed73eb117}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_core\salsa\ref">
-      <UniqueIdentifier>{b4fc1073-b734-42a0-a811-d19768e34a67}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_box\curve25519xsalsa20poly1305">
-      <UniqueIdentifier>{6f15c681-387d-438b-befe-55f15614160b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_box\curve25519xchacha20poly1305">
-      <UniqueIdentifier>{ac9640ee-3621-4ae4-8375-873005fec664}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_auth\hmacsha512256">
-      <UniqueIdentifier>{9ce7c922-6dda-482b-8ef0-6ceb554e369c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_auth\hmacsha512">
-      <UniqueIdentifier>{72d9709a-c656-40e5-9a87-8fa9c0db481b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_auth\hmacsha256">
-      <UniqueIdentifier>{6f0776d9-1aff-4741-98bf-5ae53b711ede}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_aead\aegis128l">
-      <UniqueIdentifier>{abb97064-68c8-4fc9-84dc-45569a6dbf8f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_aead\aegis256">
-      <UniqueIdentifier>{a9769871-b146-4b0a-bb1f-2afcc4ab20fa}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_aead\aes256gcm">
-      <UniqueIdentifier>{f45401dc-7675-46e6-8ffb-2d1f0d837665}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_aead\chacha20poly1305">
-      <UniqueIdentifier>{6d419951-380b-4d0c-a12d-f42621185bbd}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_aead\xchacha20poly1305">
-      <UniqueIdentifier>{f7256ae8-3db0-4824-8be4-a952bc46b8a8}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_aead\aes256gcm\armcrypto">
-      <UniqueIdentifier>{68f4a49e-8fb2-4eeb-ad01-f5e05e32df87}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_aead\aes256gcm\aesni">
-      <UniqueIdentifier>{5f95b775-6fd0-40dc-9091-bee0814f2edf}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="deps\libsodium\crypto_generichash\blake2b\ref">
-      <UniqueIdentifier>{bcfb0fb7-48e0-4e08-8607-e324c40e5329}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
-    </Filter>
-    <Filter Include="Header Files\utils">
-      <UniqueIdentifier>{be269221-05e9-4fbb-98b2-0b747dfa122d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\hooks">
-      <UniqueIdentifier>{bc95d2b8-1b2d-4e87-a8cb-4ac5e9322fa2}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\hooks\anticheat">
-      <UniqueIdentifier>{3be179c9-a775-485c-b556-5a26d4bcd1a4}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\hooks\features">
-      <UniqueIdentifier>{f780e1ac-394e-4296-a19d-fbb20d68aa64}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\hooks\bugfix">
-      <UniqueIdentifier>{5dbd3641-5427-4201-80fa-9f5131b77e4b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\protections">
-      <UniqueIdentifier>{3a8427c7-9aed-4e7a-ad2d-16e75586cb37}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\protections\memory">
-      <UniqueIdentifier>{62a68dfa-b7c7-43ea-9d8e-a9c77353b229}</UniqueIdentifier>
+    <Filter Include="core\monocypher">
+      <UniqueIdentifier>{9f2054eb-569c-4e3e-9dc7-4957f71788c7}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
+  <!-- ═══════════════ Headers ═══════════════ -->
   <ItemGroup>
-    <ClInclude Include="utils\memory.h">
-      <Filter>Header Files\utils</Filter>
+    <ClInclude Include="pch.hpp" />
+    <!-- core -->
+    <ClInclude Include="core\config.hpp">
+      <Filter>core</Filter>
     </ClInclude>
-    <ClInclude Include="utils\xorstr.h">
-      <Filter>Header Files\utils</Filter>
+    <ClInclude Include="core\context.hpp">
+      <Filter>core</Filter>
     </ClInclude>
-    <ClInclude Include="pch.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="core\context_accessor.hpp">
+      <Filter>core</Filter>
     </ClInclude>
-    <ClInclude Include="utils\assembler.h">
-      <Filter>Header Files\utils</Filter>
+    <ClInclude Include="core\fwd.hpp">
+      <Filter>core</Filter>
     </ClInclude>
-    <ClInclude Include="utils\ldasm.h">
-      <Filter>Header Files\utils</Filter>
+    <ClInclude Include="core\types.hpp">
+      <Filter>core</Filter>
     </ClInclude>
-    <ClInclude Include="utils\midhook.h">
-      <Filter>Header Files\utils</Filter>
+    <!-- engine -->
+    <ClInclude Include="engine\assembler.hpp">
+      <Filter>engine</Filter>
     </ClInclude>
-    <ClInclude Include="hooks\features\hideweaponslots.h">
-      <Filter>Header Files\hooks\features</Filter>
+    <ClInclude Include="engine\hook_engine.hpp">
+      <Filter>engine</Filter>
     </ClInclude>
-    <ClInclude Include="hooks\hooks.h">
-      <Filter>Header Files\hooks</Filter>
+    <ClInclude Include="engine\hook_id.hpp">
+      <Filter>engine</Filter>
     </ClInclude>
-    <ClInclude Include="hooks\bugfix\weaponrestriction_roomsettings.h">
-      <Filter>Header Files\hooks\bugfix</Filter>
+    <ClInclude Include="engine\hook_registry.hpp">
+      <Filter>engine</Filter>
     </ClInclude>
-    <ClInclude Include="hooks\features\custom_tickrate.h">
-      <Filter>Header Files\hooks\features</Filter>
+    <ClInclude Include="engine\midhook.hpp">
+      <Filter>engine</Filter>
     </ClInclude>
-    <ClInclude Include="utils\CLog.h">
-      <Filter>Header Files\utils</Filter>
+    <ClInclude Include="engine\pattern_scanner.hpp">
+      <Filter>engine</Filter>
     </ClInclude>
-    <ClInclude Include="hooks\anticheat\gamemanagers.h">
-      <Filter>Header Files\hooks\anticheat</Filter>
+    <ClInclude Include="engine\pointer_encryption.hpp">
+      <Filter>engine</Filter>
     </ClInclude>
-    <ClInclude Include="..\deps\simdjson\simdjson.h">
-      <Filter>Header Files\utils</Filter>
+    <!-- game -->
+    <ClInclude Include="game\addresses.hpp">
+      <Filter>game</Filter>
     </ClInclude>
-    <ClInclude Include="hooks\features\spectate_pov.h">
-      <Filter>Header Files\hooks\features</Filter>
+    <ClInclude Include="game\structures.hpp">
+      <Filter>game</Filter>
     </ClInclude>
-    <ClInclude Include="hooks\bugfix\screenshot_bug.h">
-      <Filter>Header Files\hooks\bugfix</Filter>
+    <ClInclude Include="game\data\cdbm_loader.hpp">
+      <Filter>game\data</Filter>
     </ClInclude>
+    <ClInclude Include="game\managers\game_managers.hpp">
+      <Filter>game\managers</Filter>
+    </ClInclude>
+    <ClInclude Include="game\managers\manager_base.hpp">
+      <Filter>game\managers</Filter>
+    </ClInclude>
+    <ClInclude Include="game\network\authorize_handler.hpp">
+      <Filter>game\network</Filter>
+    </ClInclude>
+    <ClInclude Include="game\network\connect_handler.hpp">
+      <Filter>game\network</Filter>
+    </ClInclude>
+    <ClInclude Include="game\network\crypto_engine.hpp">
+      <Filter>game\network</Filter>
+    </ClInclude>
+    <ClInclude Include="game\network\disconnect_handler.hpp">
+      <Filter>game\network</Filter>
+    </ClInclude>
+    <ClInclude Include="game\network\heartbeat_handler.hpp">
+      <Filter>game\network</Filter>
+    </ClInclude>
+    <ClInclude Include="game\network\movement\movement_protocol.hpp">
+      <Filter>game\network</Filter>
+    </ClInclude>
+    <!-- anticheat -->
+    <ClInclude Include="anticheat\iat_scrubber.hpp">
+      <Filter>anticheat</Filter>
+    </ClInclude>
+    <ClInclude Include="anticheat\integrity_engine.hpp">
+      <Filter>anticheat</Filter>
+    </ClInclude>
+    <!-- modding/features -->
+    <ClInclude Include="modding\features\custom_tickrate.hpp">
+      <Filter>modding\features</Filter>
+    </ClInclude>
+    <ClInclude Include="modding\features\hide_weapon_slots.hpp">
+      <Filter>modding\features</Filter>
+    </ClInclude>
+    <ClInclude Include="modding\features\nation_index.hpp">
+      <Filter>modding\features</Filter>
+    </ClInclude>
+    <ClInclude Include="modding\features\pcbang.hpp">
+      <Filter>modding\features</Filter>
+    </ClInclude>
+    <ClInclude Include="modding\features\resolutions.hpp">
+      <Filter>modding\features</Filter>
+    </ClInclude>
+    <ClInclude Include="modding\features\spectate_pov.hpp">
+      <Filter>modding\features</Filter>
+    </ClInclude>
+    <!-- modding/bugfixes -->
+    <ClInclude Include="modding\bugfixes\screenshot_fix.hpp">
+      <Filter>modding\bugfixes</Filter>
+    </ClInclude>
+    <ClInclude Include="modding\bugfixes\weapon_restriction.hpp">
+      <Filter>modding\bugfixes</Filter>
+    </ClInclude>
+    <!-- platform -->
+    <ClInclude Include="platform\import_resolver.hpp">
+      <Filter>platform</Filter>
+    </ClInclude>
+    <ClInclude Include="platform\ipc.hpp">
+      <Filter>platform</Filter>
+    </ClInclude>
+    <ClInclude Include="platform\memory.hpp">
+      <Filter>platform</Filter>
+    </ClInclude>
+    <ClInclude Include="platform\memory_pool.hpp">
+      <Filter>platform</Filter>
+    </ClInclude>
+    <ClInclude Include="platform\syscall_cloner.hpp">
+      <Filter>platform</Filter>
+    </ClInclude>
+    <!-- utils -->
+    <ClInclude Include="utils\call_helper.hpp">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\cloakwork_isolation.hpp">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\logger.hpp">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\splash.hpp">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\xorstr.hpp">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <!-- deps -->
     <ClInclude Include="..\deps\minhook\buffer.h">
       <Filter>deps\minhook</Filter>
     </ClInclude>
@@ -376,517 +222,256 @@
       <Filter>deps\minhook</Filter>
     </ClInclude>
     <ClInclude Include="..\deps\minhook\hde\hde32.h">
-      <Filter>deps\minhook\hde</Filter>
+      <Filter>deps\minhook</Filter>
     </ClInclude>
     <ClInclude Include="..\deps\minhook\hde\hde64.h">
-      <Filter>deps\minhook\hde</Filter>
+      <Filter>deps\minhook</Filter>
     </ClInclude>
     <ClInclude Include="..\deps\minhook\hde\pstdint.h">
-      <Filter>deps\minhook\hde</Filter>
+      <Filter>deps\minhook</Filter>
     </ClInclude>
     <ClInclude Include="..\deps\minhook\hde\table32.h">
-      <Filter>deps\minhook\hde</Filter>
+      <Filter>deps\minhook</Filter>
     </ClInclude>
     <ClInclude Include="..\deps\minhook\hde\table64.h">
-      <Filter>deps\minhook\hde</Filter>
+      <Filter>deps\minhook</Filter>
     </ClInclude>
-    <ClInclude Include="hooks\features\custom_nationindex.h">
-      <Filter>Header Files\hooks\features</Filter>
+    <ClInclude Include="..\deps\simdjson\simdjson.h">
+      <Filter>deps\simdjson</Filter>
     </ClInclude>
-    <ClInclude Include="hooks\anticheat\ccrypt.h">
-      <Filter>Header Files\hooks\anticheat</Filter>
+    <ClInclude Include="engine\ldasm.h">
+      <Filter>engine</Filter>
     </ClInclude>
-    <ClInclude Include="hooks\anticheat\heartbeat.h">
-      <Filter>Header Files\hooks\anticheat</Filter>
+    <ClInclude Include="game\network\ccrypt.hpp">
+      <Filter>game\network</Filter>
     </ClInclude>
-    <ClInclude Include="hooks\features\pcbang.h">
-      <Filter>Header Files\hooks\features</Filter>
+    <ClInclude Include="utils\cloakwork.h">
+      <Filter>utils</Filter>
     </ClInclude>
-    <ClInclude Include="hooks\features\resolutions.h">
-      <Filter>Header Files\hooks\features</Filter>
+    <ClInclude Include="anticheat\manual_seh.hpp">
+      <Filter>anticheat</Filter>
     </ClInclude>
-    <ClInclude Include="hooks\anticheat\cdbm_load.h">
-      <Filter>Header Files\hooks\anticheat</Filter>
+    <ClInclude Include="core\version_generated.hpp">
+      <Filter>core</Filter>
     </ClInclude>
-    <ClInclude Include="hooks\anticheat\network_connect_ack.h">
-      <Filter>Header Files\hooks\anticheat</Filter>
+    <ClInclude Include="anticheat\detection_engine.hpp">
+      <Filter>anticheat</Filter>
     </ClInclude>
-    <ClInclude Include="hooks\anticheat\front_main_authorize.h">
-      <Filter>Header Files\hooks\anticheat</Filter>
+    <ClInclude Include="anticheat\scanners\anonymous_thread_scanner.hpp">
+      <Filter>anticheat\scanners</Filter>
     </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_aead\aegis128l\aegis128l_aesni.h">
-      <Filter>deps\libsodium\crypto_aead\aegis128l</Filter>
+    <ClInclude Include="anticheat\scanners\anti_debug_scanner.hpp">
+      <Filter>anticheat\scanners</Filter>
     </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_aead\aegis128l\aegis128l_armcrypto.h">
-      <Filter>deps\libsodium\crypto_aead\aegis128l</Filter>
+    <ClInclude Include="anticheat\scanners\handle_watcher_scanner.hpp">
+      <Filter>anticheat\scanners</Filter>
     </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_aead\aegis128l\aegis128l_common.h">
-      <Filter>deps\libsodium\crypto_aead\aegis128l</Filter>
+    <ClInclude Include="anticheat\scanners\hook_integrity_scanner.hpp">
+      <Filter>anticheat\scanners</Filter>
     </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_aead\aegis128l\aegis128l_soft.h">
-      <Filter>deps\libsodium\crypto_aead\aegis128l</Filter>
+    <ClInclude Include="anticheat\scanners\iat_hook_scanner.hpp">
+      <Filter>anticheat\scanners</Filter>
     </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_aead\aegis128l\implementations.h">
-      <Filter>deps\libsodium\crypto_aead\aegis128l</Filter>
+    <ClInclude Include="anticheat\scanners\injection_scanner.hpp">
+      <Filter>anticheat\scanners</Filter>
     </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_aead\aegis256\aegis256_aesni.h">
-      <Filter>deps\libsodium\crypto_aead\aegis256</Filter>
+    <ClInclude Include="anticheat\scanners\inline_hook_scanner.hpp">
+      <Filter>anticheat\scanners</Filter>
     </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_aead\aegis256\aegis256_armcrypto.h">
-      <Filter>deps\libsodium\crypto_aead\aegis256</Filter>
+    <ClInclude Include="anticheat\scanners\integrity_scanner.hpp">
+      <Filter>anticheat\scanners</Filter>
     </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_aead\aegis256\aegis256_common.h">
-      <Filter>deps\libsodium\crypto_aead\aegis256</Filter>
+    <ClInclude Include="anticheat\scanners\manual_map_scanner.hpp">
+      <Filter>anticheat\scanners</Filter>
     </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_aead\aegis256\aegis256_soft.h">
-      <Filter>deps\libsodium\crypto_aead\aegis256</Filter>
+    <ClInclude Include="anticheat\scanners\peb_module_scanner.hpp">
+      <Filter>anticheat\scanners</Filter>
     </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_aead\aegis256\implementations.h">
-      <Filter>deps\libsodium\crypto_aead\aegis256</Filter>
+    <ClInclude Include="anticheat\scanners\proxy_dll_scanner.hpp">
+      <Filter>anticheat\scanners</Filter>
     </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_core\ed25519\core_h2c.h">
-      <Filter>deps\libsodium\crypto_core\ed25519</Filter>
+    <ClInclude Include="anticheat\scanners\scanner_common.hpp">
+      <Filter>anticheat\scanners</Filter>
     </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_core\ed25519\ref10\fe_25_5\base.h">
-      <Filter>deps\libsodium\crypto_core\ed25519\ref10\fe_25_5</Filter>
+    <ClInclude Include="anticheat\scanners\signature_scanner.hpp">
+      <Filter>anticheat\scanners</Filter>
     </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_core\ed25519\ref10\fe_25_5\base2.h">
-      <Filter>deps\libsodium\crypto_core\ed25519\ref10\fe_25_5</Filter>
+    <ClInclude Include="anticheat\scanners\string_scanner.hpp">
+      <Filter>anticheat\scanners</Filter>
     </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_core\ed25519\ref10\fe_25_5\constants.h">
-      <Filter>deps\libsodium\crypto_core\ed25519\ref10\fe_25_5</Filter>
+    <ClInclude Include="anticheat\scanners\unsigned_module_scanner.hpp">
+      <Filter>anticheat\scanners</Filter>
     </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_core\ed25519\ref10\fe_25_5\fe.h">
-      <Filter>deps\libsodium\crypto_core\ed25519\ref10\fe_25_5</Filter>
+    <ClInclude Include="anticheat\scanners\vulnerable_driver_scanner.hpp">
+      <Filter>anticheat\scanners</Filter>
     </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_core\ed25519\ref10\fe_51\base.h">
-      <Filter>deps\libsodium\crypto_core\ed25519\ref10\fe_51</Filter>
+    <ClInclude Include="anticheat\memory_fog.hpp">
+      <Filter>anticheat</Filter>
     </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_core\ed25519\ref10\fe_51\base2.h">
-      <Filter>deps\libsodium\crypto_core\ed25519\ref10\fe_51</Filter>
+    <ClInclude Include="game\game_engine_log.hpp">
+      <Filter>game</Filter>
     </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_core\ed25519\ref10\fe_51\constants.h">
-      <Filter>deps\libsodium\crypto_core\ed25519\ref10\fe_51</Filter>
+    <ClInclude Include="game\ui\dialog\popups\input_pop.hpp">
+      <Filter>game\ui\dialog\popups</Filter>
     </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_core\ed25519\ref10\fe_51\fe.h">
-      <Filter>deps\libsodium\crypto_core\ed25519\ref10\fe_51</Filter>
+    <ClInclude Include="game\ui\dialog\rightclick\rightclick.hpp">
+      <Filter>game\ui\dialog\rightclick</Filter>
     </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_onetimeauth\poly1305\onetimeauth_poly1305.h">
-      <Filter>deps\libsodium\crypto_onetimeauth\poly1305</Filter>
+    <ClInclude Include="game\ui\dialog\quickconfirm\quickconfirm.hpp">
+      <Filter>game\ui\dialog\quickconfirm</Filter>
     </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_onetimeauth\poly1305\donna\poly1305_donna.h">
-      <Filter>deps\libsodium\crypto_onetimeauth\poly1305\donna</Filter>
+    <ClInclude Include="game\network\custom_packets\gacha_pity_handler.hpp">
+      <Filter>game\network\custom_packets</Filter>
     </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_onetimeauth\poly1305\donna\poly1305_donna32.h">
-      <Filter>deps\libsodium\crypto_onetimeauth\poly1305\donna</Filter>
+    <ClInclude Include="game\network\custom_packets\trade_handler.hpp">
+      <Filter>game\network\custom_packets</Filter>
     </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_onetimeauth\poly1305\donna\poly1305_donna64.h">
-      <Filter>deps\libsodium\crypto_onetimeauth\poly1305\donna</Filter>
+    <ClInclude Include="game\network\custom_packets\weekly_reward_handler.hpp">
+      <Filter>game\network\custom_packets</Filter>
     </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_onetimeauth\poly1305\sse2\poly1305_sse2.h">
-      <Filter>deps\libsodium\crypto_onetimeauth\poly1305\sse2</Filter>
+    <ClInclude Include="game\network\custom_packets\custom_packet_dispatcher.hpp">
+      <Filter>game\network\custom_packets</Filter>
     </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_pwhash\argon2\argon2-core.h">
-      <Filter>deps\libsodium\crypto_pwhash\argon2</Filter>
+    <ClInclude Include="anticheat\guard_regions.hpp">
+      <Filter>anticheat</Filter>
     </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_pwhash\argon2\argon2-encoding.h">
-      <Filter>deps\libsodium\crypto_pwhash\argon2</Filter>
+    <ClInclude Include="anticheat\scanners\section_remap_scanner.hpp">
+      <Filter>anticheat\scanners</Filter>
     </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_pwhash\argon2\argon2.h">
-      <Filter>deps\libsodium\crypto_pwhash\argon2</Filter>
+    <ClInclude Include="anticheat\scanners\ntapi_monitor_scanner.hpp">
+      <Filter>anticheat\scanners</Filter>
     </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_pwhash\argon2\blake2b-long.h">
-      <Filter>deps\libsodium\crypto_pwhash\argon2</Filter>
+    <ClInclude Include="core\monocypher\monocypher.h">
+      <Filter>core\monocypher</Filter>
     </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_pwhash\argon2\blamka-round-avx2.h">
-      <Filter>deps\libsodium\crypto_pwhash\argon2</Filter>
+    <ClInclude Include="game\network\secure_channel.hpp">
+      <Filter>game\network</Filter>
     </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_pwhash\argon2\blamka-round-avx512f.h">
-      <Filter>deps\libsodium\crypto_pwhash\argon2</Filter>
+    <ClInclude Include="anticheat\detection_report.hpp">
+      <Filter>anticheat</Filter>
     </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_pwhash\argon2\blamka-round-ref.h">
-      <Filter>deps\libsodium\crypto_pwhash\argon2</Filter>
+    <ClInclude Include="modding\bugfixes\window_close_fix.hpp">
+      <Filter>modding\bugfixes</Filter>
     </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_pwhash\argon2\blamka-round-ssse3.h">
-      <Filter>deps\libsodium\crypto_pwhash\argon2</Filter>
+    <ClInclude Include="modding\features\hud_toggle.hpp">
+      <Filter>modding\features</Filter>
     </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_pwhash\scryptsalsa208sha256\crypto_scrypt.h">
-      <Filter>deps\libsodium\crypto_pwhash\scryptsalsa208sha256</Filter>
+    <ClInclude Include="modding\features\zoom_sensitivity.hpp">
+      <Filter>modding\features</Filter>
     </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_pwhash\scryptsalsa208sha256\pbkdf2-sha256.h">
-      <Filter>deps\libsodium\crypto_pwhash\scryptsalsa208sha256</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_scalarmult\curve25519\scalarmult_curve25519.h">
-      <Filter>deps\libsodium\crypto_scalarmult\curve25519</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_scalarmult\curve25519\ref10\x25519_ref10.h">
-      <Filter>deps\libsodium\crypto_scalarmult\curve25519\ref10</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_scalarmult\curve25519\sandy2x\consts_namespace.h">
-      <Filter>deps\libsodium\crypto_scalarmult\curve25519\sandy2x</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_scalarmult\curve25519\sandy2x\curve25519_sandy2x.h">
-      <Filter>deps\libsodium\crypto_scalarmult\curve25519\sandy2x</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_scalarmult\curve25519\sandy2x\fe.h">
-      <Filter>deps\libsodium\crypto_scalarmult\curve25519\sandy2x</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_scalarmult\curve25519\sandy2x\fe51.h">
-      <Filter>deps\libsodium\crypto_scalarmult\curve25519\sandy2x</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_scalarmult\curve25519\sandy2x\fe51_namespace.h">
-      <Filter>deps\libsodium\crypto_scalarmult\curve25519\sandy2x</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_scalarmult\curve25519\sandy2x\ladder.h">
-      <Filter>deps\libsodium\crypto_scalarmult\curve25519\sandy2x</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_scalarmult\curve25519\sandy2x\ladder_namespace.h">
-      <Filter>deps\libsodium\crypto_scalarmult\curve25519\sandy2x</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_shorthash\siphash24\ref\shorthash_siphash_ref.h">
-      <Filter>deps\libsodium\crypto_shorthash\siphash24\ref</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_sign\ed25519\ref10\sign_ed25519_ref10.h">
-      <Filter>deps\libsodium\crypto_sign\ed25519\ref10</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_stream\chacha20\stream_chacha20.h">
-      <Filter>deps\libsodium\crypto_stream\chacha20</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_stream\chacha20\dolbeau\chacha20_dolbeau-avx2.h">
-      <Filter>deps\libsodium\crypto_stream\chacha20\dolbeau</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_stream\chacha20\dolbeau\chacha20_dolbeau-ssse3.h">
-      <Filter>deps\libsodium\crypto_stream\chacha20\dolbeau</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_stream\chacha20\dolbeau\u0.h">
-      <Filter>deps\libsodium\crypto_stream\chacha20\dolbeau</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_stream\chacha20\dolbeau\u1.h">
-      <Filter>deps\libsodium\crypto_stream\chacha20\dolbeau</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_stream\chacha20\dolbeau\u4.h">
-      <Filter>deps\libsodium\crypto_stream\chacha20\dolbeau</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_stream\chacha20\dolbeau\u8.h">
-      <Filter>deps\libsodium\crypto_stream\chacha20\dolbeau</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_stream\chacha20\ref\chacha20_ref.h">
-      <Filter>deps\libsodium\crypto_stream\chacha20\ref</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_stream\salsa20\stream_salsa20.h">
-      <Filter>deps\libsodium\crypto_stream\salsa20</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_stream\salsa20\ref\salsa20_ref.h">
-      <Filter>deps\libsodium\crypto_stream\salsa20\ref</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_stream\salsa20\xmm6\salsa20_xmm6-asm_namespace.h">
-      <Filter>deps\libsodium\crypto_stream\salsa20\xmm6</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_stream\salsa20\xmm6\salsa20_xmm6.h">
-      <Filter>deps\libsodium\crypto_stream\salsa20\xmm6</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_stream\salsa20\xmm6int\salsa20_xmm6int-avx2.h">
-      <Filter>deps\libsodium\crypto_stream\salsa20\xmm6int</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_stream\salsa20\xmm6int\salsa20_xmm6int-sse2.h">
-      <Filter>deps\libsodium\crypto_stream\salsa20\xmm6int</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_stream\salsa20\xmm6int\u0.h">
-      <Filter>deps\libsodium\crypto_stream\salsa20\xmm6int</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_stream\salsa20\xmm6int\u1.h">
-      <Filter>deps\libsodium\crypto_stream\salsa20\xmm6int</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_stream\salsa20\xmm6int\u4.h">
-      <Filter>deps\libsodium\crypto_stream\salsa20\xmm6int</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_stream\salsa20\xmm6int\u8.h">
-      <Filter>deps\libsodium\crypto_stream\salsa20\xmm6int</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium.h">
-      <Filter>deps\libsodium\include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\core.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_aead_aegis128l.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_aead_aegis256.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_aead_aes256gcm.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_aead_chacha20poly1305.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_aead_xchacha20poly1305.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_auth.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_auth_hmacsha256.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_auth_hmacsha512.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_auth_hmacsha512256.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_box.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_box_curve25519xchacha20poly1305.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_box_curve25519xsalsa20poly1305.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_core_ed25519.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_core_hchacha20.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_core_hsalsa20.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_core_ristretto255.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_core_salsa20.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_core_salsa2012.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_core_salsa208.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_generichash.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_generichash_blake2b.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_hash.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_hash_sha256.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_hash_sha512.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_kdf.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_kdf_blake2b.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_kdf_hkdf_sha256.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_kdf_hkdf_sha512.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_kx.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_onetimeauth.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_onetimeauth_poly1305.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_pwhash.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_pwhash_argon2i.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_pwhash_argon2id.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_pwhash_scryptsalsa208sha256.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_scalarmult.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_scalarmult_curve25519.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_scalarmult_ed25519.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_scalarmult_ristretto255.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_secretbox.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_secretbox_xchacha20poly1305.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_secretbox_xsalsa20poly1305.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_secretstream_xchacha20poly1305.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_shorthash.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_shorthash_siphash24.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_sign.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_sign_ed25519.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_stream.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_stream_chacha20.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_stream_salsa20.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_stream_salsa2012.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_stream_salsa208.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_stream_xchacha20.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_stream_xsalsa20.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_verify_16.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_verify_32.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\crypto_verify_64.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\export.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\randombytes.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\randombytes_internal_random.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\randombytes_sysrandom.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\runtime.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\utils.h">
-      <Filter>deps\libsodium\include\sodium</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\private\asm_cet.h">
-      <Filter>deps\libsodium\include\sodium\private</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\private\chacha20_ietf_ext.h">
-      <Filter>deps\libsodium\include\sodium\private</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\private\common.h">
-      <Filter>deps\libsodium\include\sodium\private</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\private\ed25519_ref10.h">
-      <Filter>deps\libsodium\include\sodium\private</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\private\ed25519_ref10_fe_25_5.h">
-      <Filter>deps\libsodium\include\sodium\private</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\private\ed25519_ref10_fe_51.h">
-      <Filter>deps\libsodium\include\sodium\private</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\private\implementations.h">
-      <Filter>deps\libsodium\include\sodium\private</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\private\mutex.h">
-      <Filter>deps\libsodium\include\sodium\private</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\private\quirks.h">
-      <Filter>deps\libsodium\include\sodium\private</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\private\softaes.h">
-      <Filter>deps\libsodium\include\sodium\private</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\include\sodium\private\sse2_64_32.h">
-      <Filter>deps\libsodium\include\sodium\private</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_generichash\blake2b\ref\blake2.h">
-      <Filter>deps\libsodium\crypto_generichash\blake2b\ref</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_generichash\blake2b\ref\blake2b-compress-avx2.h">
-      <Filter>deps\libsodium\crypto_generichash\blake2b\ref</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_generichash\blake2b\ref\blake2b-compress-sse41.h">
-      <Filter>deps\libsodium\crypto_generichash\blake2b\ref</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_generichash\blake2b\ref\blake2b-compress-ssse3.h">
-      <Filter>deps\libsodium\crypto_generichash\blake2b\ref</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_generichash\blake2b\ref\blake2b-load-avx2.h">
-      <Filter>deps\libsodium\crypto_generichash\blake2b\ref</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_generichash\blake2b\ref\blake2b-load-sse2.h">
-      <Filter>deps\libsodium\crypto_generichash\blake2b\ref</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\libsodium\crypto_generichash\blake2b\ref\blake2b-load-sse41.h">
-      <Filter>deps\libsodium\crypto_generichash\blake2b\ref</Filter>
-    </ClInclude>
-    <ClInclude Include="utils\Splash.h">
-      <Filter>Header Files\utils</Filter>
-    </ClInclude>
-    <ClInclude Include="utils\ipc.h">
-      <Filter>Header Files\utils</Filter>
+    <ClInclude Include="modding\features\editbox_clipboard.hpp">
+      <Filter>modding\features</Filter>
     </ClInclude>
   </ItemGroup>
+  <!-- ═══════════════ Sources ═══════════════ -->
   <ItemGroup>
-    <ClCompile Include="utils\memory.cpp">
-      <Filter>Source Files\utils</Filter>
+    <ClCompile Include="pch.cpp" />
+    <ClCompile Include="entry.cpp" />
+    <!-- core -->
+    <ClCompile Include="core\context.cpp">
+      <Filter>core</Filter>
     </ClCompile>
-    <ClCompile Include="dllmain.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="core\context_accessor.cpp">
+      <Filter>core</Filter>
     </ClCompile>
-    <ClCompile Include="pch.cpp">
-      <Filter>Source Files</Filter>
+    <!-- engine -->
+    <ClCompile Include="engine\assembler.cpp">
+      <Filter>engine</Filter>
     </ClCompile>
-    <ClCompile Include="utils\assembler.cpp">
-      <Filter>Source Files\utils</Filter>
+    <ClCompile Include="engine\hook_engine.cpp">
+      <Filter>engine</Filter>
     </ClCompile>
-    <ClCompile Include="utils\ldasm.cpp">
-      <Filter>Source Files\utils</Filter>
+    <ClCompile Include="engine\hook_registry.cpp">
+      <Filter>engine</Filter>
     </ClCompile>
-    <ClCompile Include="utils\midhook.cpp">
-      <Filter>Source Files\utils</Filter>
+    <ClCompile Include="engine\midhook.cpp">
+      <Filter>engine</Filter>
     </ClCompile>
-    <ClCompile Include="hooks\hooks.cpp">
-      <Filter>Source Files\hooks</Filter>
+    <ClCompile Include="engine\pattern_scanner.cpp">
+      <Filter>engine</Filter>
     </ClCompile>
-    <ClCompile Include="utils\CLog.cpp">
-      <Filter>Source Files\utils</Filter>
+    <ClCompile Include="engine\pointer_encryption.cpp">
+      <Filter>engine</Filter>
     </ClCompile>
-    <ClCompile Include="..\deps\simdjson\simdjson.cpp">
-      <Filter>Source Files\utils</Filter>
+    <!-- game -->
+    <ClCompile Include="game\data\cdbm_loader.cpp">
+      <Filter>game\data</Filter>
     </ClCompile>
+    <ClCompile Include="game\managers\game_managers.cpp">
+      <Filter>game\managers</Filter>
+    </ClCompile>
+    <ClCompile Include="game\network\authorize_handler.cpp">
+      <Filter>game\network</Filter>
+    </ClCompile>
+    <ClCompile Include="game\network\connect_handler.cpp">
+      <Filter>game\network</Filter>
+    </ClCompile>
+    <ClCompile Include="game\network\crypto_engine.cpp">
+      <Filter>game\network</Filter>
+    </ClCompile>
+    <ClCompile Include="game\network\disconnect_handler.cpp">
+      <Filter>game\network</Filter>
+    </ClCompile>
+    <ClCompile Include="game\network\heartbeat_handler.cpp">
+      <Filter>game\network</Filter>
+    </ClCompile>
+    <ClCompile Include="game\network\movement\movement_protocol.cpp">
+      <Filter>game\network</Filter>
+    </ClCompile>
+    <!-- anticheat -->
+    <ClCompile Include="anticheat\iat_scrubber.cpp">
+      <Filter>anticheat</Filter>
+    </ClCompile>
+    <ClCompile Include="anticheat\integrity_engine.cpp">
+      <Filter>anticheat</Filter>
+    </ClCompile>
+    <!-- modding/features -->
+    <ClCompile Include="modding\features\custom_tickrate.cpp">
+      <Filter>modding\features</Filter>
+    </ClCompile>
+    <ClCompile Include="modding\features\hide_weapon_slots.cpp">
+      <Filter>modding\features</Filter>
+    </ClCompile>
+    <ClCompile Include="modding\features\nation_index.cpp">
+      <Filter>modding\features</Filter>
+    </ClCompile>
+    <ClCompile Include="modding\features\pcbang.cpp">
+      <Filter>modding\features</Filter>
+    </ClCompile>
+    <ClCompile Include="modding\features\resolutions.cpp">
+      <Filter>modding\features</Filter>
+    </ClCompile>
+    <ClCompile Include="modding\features\spectate_pov.cpp">
+      <Filter>modding\features</Filter>
+    </ClCompile>
+    <!-- modding/bugfixes -->
+    <ClCompile Include="modding\bugfixes\screenshot_fix.cpp">
+      <Filter>modding\bugfixes</Filter>
+    </ClCompile>
+    <ClCompile Include="modding\bugfixes\weapon_restriction.cpp">
+      <Filter>modding\bugfixes</Filter>
+    </ClCompile>
+    <!-- platform -->
+    <ClCompile Include="platform\import_resolver.cpp">
+      <Filter>platform</Filter>
+    </ClCompile>
+    <ClCompile Include="platform\ipc.cpp">
+      <Filter>platform</Filter>
+    </ClCompile>
+    <ClCompile Include="platform\memory_pool.cpp">
+      <Filter>platform</Filter>
+    </ClCompile>
+    <ClCompile Include="platform\syscall_cloner.cpp">
+      <Filter>platform</Filter>
+    </ClCompile>
+    <!-- utils -->
+    <ClCompile Include="utils\logger.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\splash.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <!-- deps -->
     <ClCompile Include="..\deps\minhook\buffer.c">
       <Filter>deps\minhook</Filter>
     </ClCompile>
@@ -897,364 +482,130 @@
       <Filter>deps\minhook</Filter>
     </ClCompile>
     <ClCompile Include="..\deps\minhook\hde\hde32.c">
-      <Filter>deps\minhook\hde</Filter>
+      <Filter>deps\minhook</Filter>
     </ClCompile>
     <ClCompile Include="..\deps\minhook\hde\hde64.c">
-      <Filter>deps\minhook\hde</Filter>
+      <Filter>deps\minhook</Filter>
     </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_aead\aegis128l\aead_aegis128l.c">
-      <Filter>deps\libsodium\crypto_aead\aegis128l</Filter>
+    <ClCompile Include="..\deps\simdjson\simdjson.cpp">
+      <Filter>deps\simdjson</Filter>
     </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_aead\aegis128l\aegis128l_aesni.c">
-      <Filter>deps\libsodium\crypto_aead\aegis128l</Filter>
+    <ClCompile Include="engine\ldasm.cpp">
+      <Filter>engine</Filter>
     </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_aead\aegis128l\aegis128l_armcrypto.c">
-      <Filter>deps\libsodium\crypto_aead\aegis128l</Filter>
+    <ClCompile Include="game\network\ccrypt.cpp">
+      <Filter>game\network</Filter>
     </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_aead\aegis128l\aegis128l_soft.c">
-      <Filter>deps\libsodium\crypto_aead\aegis128l</Filter>
+    <ClCompile Include="anticheat\manual_seh.cpp">
+      <Filter>anticheat</Filter>
     </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_aead\aegis256\aead_aegis256.c">
-      <Filter>deps\libsodium\crypto_aead\aegis256</Filter>
+    <ClCompile Include="game\managers\manager_base.cpp">
+      <Filter>game\managers</Filter>
     </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_aead\aegis256\aegis256_aesni.c">
-      <Filter>deps\libsodium\crypto_aead\aegis256</Filter>
+    <ClCompile Include="anticheat\detection_engine.cpp">
+      <Filter>anticheat</Filter>
     </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_aead\aegis256\aegis256_armcrypto.c">
-      <Filter>deps\libsodium\crypto_aead\aegis256</Filter>
+    <ClCompile Include="anticheat\scanners\anonymous_thread_scanner.cpp">
+      <Filter>anticheat\scanners</Filter>
     </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_aead\aegis256\aegis256_soft.c">
-      <Filter>deps\libsodium\crypto_aead\aegis256</Filter>
+    <ClCompile Include="anticheat\scanners\anti_debug_scanner.cpp">
+      <Filter>anticheat\scanners</Filter>
     </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_aead\aes256gcm\aead_aes256gcm.c">
-      <Filter>deps\libsodium\crypto_aead\aes256gcm</Filter>
+    <ClCompile Include="anticheat\scanners\handle_watcher_scanner.cpp">
+      <Filter>anticheat\scanners</Filter>
     </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_aead\aes256gcm\aesni\aead_aes256gcm_aesni.c">
-      <Filter>deps\libsodium\crypto_aead\aes256gcm\aesni</Filter>
+    <ClCompile Include="anticheat\scanners\hook_integrity_scanner.cpp">
+      <Filter>anticheat\scanners</Filter>
     </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_aead\aes256gcm\armcrypto\aead_aes256gcm_armcrypto.c">
-      <Filter>deps\libsodium\crypto_aead\aes256gcm\armcrypto</Filter>
+    <ClCompile Include="anticheat\scanners\iat_hook_scanner.cpp">
+      <Filter>anticheat\scanners</Filter>
     </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_aead\chacha20poly1305\aead_chacha20poly1305.c">
-      <Filter>deps\libsodium\crypto_aead\chacha20poly1305</Filter>
+    <ClCompile Include="anticheat\scanners\injection_scanner.cpp">
+      <Filter>anticheat\scanners</Filter>
     </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_aead\xchacha20poly1305\aead_xchacha20poly1305.c">
-      <Filter>deps\libsodium\crypto_aead\xchacha20poly1305</Filter>
+    <ClCompile Include="anticheat\scanners\inline_hook_scanner.cpp">
+      <Filter>anticheat\scanners</Filter>
     </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_auth\crypto_auth.c">
-      <Filter>deps\libsodium\crypto_auth</Filter>
+    <ClCompile Include="anticheat\scanners\integrity_scanner.cpp">
+      <Filter>anticheat\scanners</Filter>
     </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_auth\hmacsha256\auth_hmacsha256.c">
-      <Filter>deps\libsodium\crypto_auth\hmacsha256</Filter>
+    <ClCompile Include="anticheat\scanners\manual_map_scanner.cpp">
+      <Filter>anticheat\scanners</Filter>
     </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_auth\hmacsha512\auth_hmacsha512.c">
-      <Filter>deps\libsodium\crypto_auth\hmacsha512</Filter>
+    <ClCompile Include="anticheat\scanners\peb_module_scanner.cpp">
+      <Filter>anticheat\scanners</Filter>
     </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_auth\hmacsha512256\auth_hmacsha512256.c">
-      <Filter>deps\libsodium\crypto_auth\hmacsha512256</Filter>
+    <ClCompile Include="anticheat\scanners\proxy_dll_scanner.cpp">
+      <Filter>anticheat\scanners</Filter>
     </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_box\crypto_box.c">
-      <Filter>deps\libsodium\crypto_box</Filter>
+    <ClCompile Include="anticheat\scanners\scanner_common.cpp">
+      <Filter>anticheat\scanners</Filter>
     </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_box\crypto_box_easy.c">
-      <Filter>deps\libsodium\crypto_box</Filter>
+    <ClCompile Include="anticheat\scanners\signature_scanner.cpp">
+      <Filter>anticheat\scanners</Filter>
     </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_box\crypto_box_seal.c">
-      <Filter>deps\libsodium\crypto_box</Filter>
+    <ClCompile Include="anticheat\scanners\string_scanner.cpp">
+      <Filter>anticheat\scanners</Filter>
     </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_box\curve25519xchacha20poly1305\box_curve25519xchacha20poly1305.c">
-      <Filter>deps\libsodium\crypto_box\curve25519xchacha20poly1305</Filter>
+    <ClCompile Include="anticheat\scanners\unsigned_module_scanner.cpp">
+      <Filter>anticheat\scanners</Filter>
     </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_box\curve25519xchacha20poly1305\box_seal_curve25519xchacha20poly1305.c">
-      <Filter>deps\libsodium\crypto_box\curve25519xchacha20poly1305</Filter>
+    <ClCompile Include="anticheat\scanners\vulnerable_driver_scanner.cpp">
+      <Filter>anticheat\scanners</Filter>
     </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_box\curve25519xsalsa20poly1305\box_curve25519xsalsa20poly1305.c">
-      <Filter>deps\libsodium\crypto_box\curve25519xsalsa20poly1305</Filter>
+    <ClCompile Include="anticheat\memory_fog.cpp">
+      <Filter>anticheat</Filter>
     </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_core\ed25519\core_ed25519.c">
-      <Filter>deps\libsodium\crypto_core\ed25519</Filter>
+    <ClCompile Include="game\game_engine_log.cpp">
+      <Filter>game</Filter>
     </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_core\ed25519\core_h2c.c">
-      <Filter>deps\libsodium\crypto_core\ed25519</Filter>
+    <ClCompile Include="game\ui\dialog\popups\input_pop.cpp">
+      <Filter>game\ui\dialog\popups</Filter>
     </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_core\ed25519\core_ristretto255.c">
-      <Filter>deps\libsodium\crypto_core\ed25519</Filter>
+    <ClCompile Include="game\ui\dialog\rightclick\rightclick.cpp">
+      <Filter>game\ui\dialog\rightclick</Filter>
     </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_core\ed25519\ref10\ed25519_ref10.c">
-      <Filter>deps\libsodium\crypto_core\ed25519\ref10</Filter>
+    <ClCompile Include="game\ui\dialog\quickconfirm\quickconfirm.cpp">
+      <Filter>game\ui\dialog\quickconfirm</Filter>
     </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_core\hchacha20\core_hchacha20.c">
-      <Filter>deps\libsodium\crypto_core\hchacha20</Filter>
+    <ClCompile Include="game\network\custom_packets\gacha_pity_handler.cpp">
+      <Filter>game\network\custom_packets</Filter>
     </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_core\hsalsa20\core_hsalsa20.c">
-      <Filter>deps\libsodium\crypto_core\hsalsa20</Filter>
+    <ClCompile Include="game\network\custom_packets\trade_handler.cpp">
+      <Filter>game\network\custom_packets</Filter>
     </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_core\hsalsa20\ref2\core_hsalsa20_ref2.c">
-      <Filter>deps\libsodium\crypto_core\hsalsa20\ref2</Filter>
+    <ClCompile Include="game\network\custom_packets\weekly_reward_handler.cpp">
+      <Filter>game\network\custom_packets</Filter>
     </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_core\salsa\ref\core_salsa_ref.c">
-      <Filter>deps\libsodium\crypto_core\salsa\ref</Filter>
+    <ClCompile Include="game\network\custom_packets\custom_packet_dispatcher.cpp">
+      <Filter>game\network\custom_packets</Filter>
     </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_core\softaes\softaes.c">
-      <Filter>deps\libsodium\crypto_core\softaes</Filter>
+    <ClCompile Include="anticheat\guard_regions.cpp">
+      <Filter>anticheat</Filter>
     </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_generichash\crypto_generichash.c">
-      <Filter>deps\libsodium\crypto_generichash</Filter>
+    <ClCompile Include="anticheat\scanners\section_remap_scanner.cpp">
+      <Filter>anticheat\scanners</Filter>
     </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_generichash\blake2b\generichash_blake2.c">
-      <Filter>deps\libsodium\crypto_generichash\blake2b</Filter>
+    <ClCompile Include="anticheat\scanners\ntapi_monitor_scanner.cpp">
+      <Filter>anticheat\scanners</Filter>
     </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_hash\crypto_hash.c">
-      <Filter>deps\libsodium\crypto_hash</Filter>
+    <ClCompile Include="core\monocypher\monocypher.cpp">
+      <Filter>core\monocypher</Filter>
     </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_hash\sha256\hash_sha256.c">
-      <Filter>deps\libsodium\crypto_hash\sha256</Filter>
+    <ClCompile Include="game\network\secure_channel.cpp">
+      <Filter>game\network</Filter>
     </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_hash\sha256\cp\hash_sha256_cp.c">
-      <Filter>deps\libsodium\crypto_hash\sha256\cp</Filter>
+    <ClCompile Include="modding\bugfixes\window_close_fix.cpp">
+      <Filter>modding\bugfixes</Filter>
     </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_hash\sha512\hash_sha512.c">
-      <Filter>deps\libsodium\crypto_hash\sha512</Filter>
+    <ClCompile Include="modding\features\hud_toggle.cpp">
+      <Filter>modding\features</Filter>
     </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_hash\sha512\cp\hash_sha512_cp.c">
-      <Filter>deps\libsodium\crypto_hash\sha512\cp</Filter>
+    <ClCompile Include="modding\features\zoom_sensitivity.cpp">
+      <Filter>modding\features</Filter>
     </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_kdf\crypto_kdf.c">
-      <Filter>deps\libsodium\crypto_kdf</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_kdf\blake2b\kdf_blake2b.c">
-      <Filter>deps\libsodium\crypto_kdf\blake2b</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_kdf\hkdf\kdf_hkdf_sha256.c">
-      <Filter>deps\libsodium\crypto_kdf\hkdf</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_kdf\hkdf\kdf_hkdf_sha512.c">
-      <Filter>deps\libsodium\crypto_kdf\hkdf</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_kx\crypto_kx.c">
-      <Filter>deps\libsodium\crypto_kx</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_onetimeauth\crypto_onetimeauth.c">
-      <Filter>deps\libsodium\crypto_onetimeauth</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_onetimeauth\poly1305\onetimeauth_poly1305.c">
-      <Filter>deps\libsodium\crypto_onetimeauth\poly1305</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_onetimeauth\poly1305\donna\poly1305_donna.c">
-      <Filter>deps\libsodium\crypto_onetimeauth\poly1305\donna</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_onetimeauth\poly1305\sse2\poly1305_sse2.c">
-      <Filter>deps\libsodium\crypto_onetimeauth\poly1305\sse2</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_pwhash\crypto_pwhash.c">
-      <Filter>deps\libsodium\crypto_pwhash</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_pwhash\argon2\argon2-core.c">
-      <Filter>deps\libsodium\crypto_pwhash\argon2</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_pwhash\argon2\argon2-encoding.c">
-      <Filter>deps\libsodium\crypto_pwhash\argon2</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_pwhash\argon2\argon2-fill-block-avx2.c">
-      <Filter>deps\libsodium\crypto_pwhash\argon2</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_pwhash\argon2\argon2-fill-block-avx512f.c">
-      <Filter>deps\libsodium\crypto_pwhash\argon2</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_pwhash\argon2\argon2-fill-block-ref.c">
-      <Filter>deps\libsodium\crypto_pwhash\argon2</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_pwhash\argon2\argon2-fill-block-ssse3.c">
-      <Filter>deps\libsodium\crypto_pwhash\argon2</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_pwhash\argon2\argon2.c">
-      <Filter>deps\libsodium\crypto_pwhash\argon2</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_pwhash\argon2\blake2b-long.c">
-      <Filter>deps\libsodium\crypto_pwhash\argon2</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_pwhash\argon2\pwhash_argon2i.c">
-      <Filter>deps\libsodium\crypto_pwhash\argon2</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_pwhash\argon2\pwhash_argon2id.c">
-      <Filter>deps\libsodium\crypto_pwhash\argon2</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_pwhash\scryptsalsa208sha256\crypto_scrypt-common.c">
-      <Filter>deps\libsodium\crypto_pwhash\scryptsalsa208sha256</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_pwhash\scryptsalsa208sha256\pbkdf2-sha256.c">
-      <Filter>deps\libsodium\crypto_pwhash\scryptsalsa208sha256</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_pwhash\scryptsalsa208sha256\pwhash_scryptsalsa208sha256.c">
-      <Filter>deps\libsodium\crypto_pwhash\scryptsalsa208sha256</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_pwhash\scryptsalsa208sha256\scrypt_platform.c">
-      <Filter>deps\libsodium\crypto_pwhash\scryptsalsa208sha256</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_pwhash\scryptsalsa208sha256\nosse\pwhash_scryptsalsa208sha256_nosse.c">
-      <Filter>deps\libsodium\crypto_pwhash\scryptsalsa208sha256\nosse</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_pwhash\scryptsalsa208sha256\sse\pwhash_scryptsalsa208sha256_sse.c">
-      <Filter>deps\libsodium\crypto_pwhash\scryptsalsa208sha256\sse</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_scalarmult\crypto_scalarmult.c">
-      <Filter>deps\libsodium\crypto_scalarmult</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_scalarmult\curve25519\scalarmult_curve25519.c">
-      <Filter>deps\libsodium\crypto_scalarmult\curve25519</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_scalarmult\curve25519\ref10\x25519_ref10.c">
-      <Filter>deps\libsodium\crypto_scalarmult\curve25519\ref10</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_scalarmult\curve25519\sandy2x\curve25519_sandy2x.c">
-      <Filter>deps\libsodium\crypto_scalarmult\curve25519\sandy2x</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_scalarmult\curve25519\sandy2x\fe51_invert.c">
-      <Filter>deps\libsodium\crypto_scalarmult\curve25519\sandy2x</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_scalarmult\curve25519\sandy2x\fe_frombytes_sandy2x.c">
-      <Filter>deps\libsodium\crypto_scalarmult\curve25519\sandy2x</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_scalarmult\ed25519\ref10\scalarmult_ed25519_ref10.c">
-      <Filter>deps\libsodium\crypto_scalarmult\ed25519\ref10</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_scalarmult\ristretto255\ref10\scalarmult_ristretto255_ref10.c">
-      <Filter>deps\libsodium\crypto_scalarmult\ristretto255\ref10</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_secretbox\crypto_secretbox.c">
-      <Filter>deps\libsodium\crypto_secretbox</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_secretbox\crypto_secretbox_easy.c">
-      <Filter>deps\libsodium\crypto_secretbox</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_secretbox\xchacha20poly1305\secretbox_xchacha20poly1305.c">
-      <Filter>deps\libsodium\crypto_secretbox\xchacha20poly1305</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_secretbox\xsalsa20poly1305\secretbox_xsalsa20poly1305.c">
-      <Filter>deps\libsodium\crypto_secretbox\xsalsa20poly1305</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_secretstream\xchacha20poly1305\secretstream_xchacha20poly1305.c">
-      <Filter>deps\libsodium\crypto_secretstream\xchacha20poly1305</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_shorthash\crypto_shorthash.c">
-      <Filter>deps\libsodium\crypto_shorthash</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_shorthash\siphash24\shorthash_siphash24.c">
-      <Filter>deps\libsodium\crypto_shorthash\siphash24</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_shorthash\siphash24\shorthash_siphashx24.c">
-      <Filter>deps\libsodium\crypto_shorthash\siphash24</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_shorthash\siphash24\ref\shorthash_siphash24_ref.c">
-      <Filter>deps\libsodium\crypto_shorthash\siphash24\ref</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_shorthash\siphash24\ref\shorthash_siphashx24_ref.c">
-      <Filter>deps\libsodium\crypto_shorthash\siphash24\ref</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_sign\crypto_sign.c">
-      <Filter>deps\libsodium\crypto_sign</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_sign\ed25519\sign_ed25519.c">
-      <Filter>deps\libsodium\crypto_sign\ed25519</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_sign\ed25519\ref10\keypair.c">
-      <Filter>deps\libsodium\crypto_sign\ed25519\ref10</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_sign\ed25519\ref10\open.c">
-      <Filter>deps\libsodium\crypto_sign\ed25519\ref10</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_sign\ed25519\ref10\sign.c">
-      <Filter>deps\libsodium\crypto_sign\ed25519\ref10</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_stream\crypto_stream.c">
-      <Filter>deps\libsodium\crypto_stream</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_stream\chacha20\stream_chacha20.c">
-      <Filter>deps\libsodium\crypto_stream\chacha20</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_stream\chacha20\dolbeau\chacha20_dolbeau-avx2.c">
-      <Filter>deps\libsodium\crypto_stream\chacha20\dolbeau</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_stream\chacha20\dolbeau\chacha20_dolbeau-ssse3.c">
-      <Filter>deps\libsodium\crypto_stream\chacha20\dolbeau</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_stream\chacha20\ref\chacha20_ref.c">
-      <Filter>deps\libsodium\crypto_stream\chacha20\ref</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_stream\salsa20\stream_salsa20.c">
-      <Filter>deps\libsodium\crypto_stream\salsa20</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_stream\salsa20\ref\salsa20_ref.c">
-      <Filter>deps\libsodium\crypto_stream\salsa20\ref</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_stream\salsa20\xmm6\salsa20_xmm6.c">
-      <Filter>deps\libsodium\crypto_stream\salsa20\xmm6</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_stream\salsa20\xmm6int\salsa20_xmm6int-avx2.c">
-      <Filter>deps\libsodium\crypto_stream\salsa20\xmm6int</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_stream\salsa20\xmm6int\salsa20_xmm6int-sse2.c">
-      <Filter>deps\libsodium\crypto_stream\salsa20\xmm6int</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_stream\salsa2012\stream_salsa2012.c">
-      <Filter>deps\libsodium\crypto_stream\salsa2012</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_stream\salsa2012\ref\stream_salsa2012_ref.c">
-      <Filter>deps\libsodium\crypto_stream\salsa2012\ref</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_stream\salsa208\stream_salsa208.c">
-      <Filter>deps\libsodium\crypto_stream\salsa208</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_stream\salsa208\ref\stream_salsa208_ref.c">
-      <Filter>deps\libsodium\crypto_stream\salsa208\ref</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_stream\xchacha20\stream_xchacha20.c">
-      <Filter>deps\libsodium\crypto_stream\xchacha20</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_stream\xsalsa20\stream_xsalsa20.c">
-      <Filter>deps\libsodium\crypto_stream\xsalsa20</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_verify\verify.c">
-      <Filter>deps\libsodium\crypto_verify</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\randombytes\randombytes.c">
-      <Filter>deps\libsodium\randombytes</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\randombytes\internal\randombytes_internal_random.c">
-      <Filter>deps\libsodium\randombytes\internal</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\randombytes\sysrandom\randombytes_sysrandom.c">
-      <Filter>deps\libsodium\randombytes\sysrandom</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\sodium\codecs.c">
-      <Filter>deps\libsodium\sodium</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\sodium\core.c">
-      <Filter>deps\libsodium\sodium</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\sodium\runtime.c">
-      <Filter>deps\libsodium\sodium</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\sodium\utils.c">
-      <Filter>deps\libsodium\sodium</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_generichash\blake2b\ref\generichash_blake2b.c">
-      <Filter>deps\libsodium\crypto_generichash\blake2b\ref</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_generichash\blake2b\ref\blake2b-ref.c">
-      <Filter>deps\libsodium\crypto_generichash\blake2b\ref</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_generichash\blake2b\ref\blake2b-compress-ssse3.c">
-      <Filter>deps\libsodium\crypto_generichash\blake2b\ref</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_generichash\blake2b\ref\blake2b-compress-sse41.c">
-      <Filter>deps\libsodium\crypto_generichash\blake2b\ref</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_generichash\blake2b\ref\blake2b-compress-avx2.c">
-      <Filter>deps\libsodium\crypto_generichash\blake2b\ref</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\libsodium\crypto_generichash\blake2b\ref\blake2b-compress-ref.c">
-      <Filter>deps\libsodium\crypto_generichash\blake2b\ref</Filter>
+    <ClCompile Include="modding\features\editbox_clipboard.cpp">
+      <Filter>modding\features</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

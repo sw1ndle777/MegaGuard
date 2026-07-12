@@ -12,75 +12,13 @@
 // ╚═════╝╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝ ╚══╝╚══╝  ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝
 
 // Created by @ck0i on Discord.
-// Inspiration from obfusheader.h and Zapcrash's nimrodhide.h
+// Inspiration from obfusheader.h, Zapcrash's nimrodhide.h, and qengine.
 
-// =================================================================
-// COMPILE-TIME CONFIGURATION
-// =================================================================
-//
-// Cloakwork can be configured at compile-time to include only the features you need.
-// This reduces binary size and compilation time significantly.
-//
-// To disable a feature, define the corresponding macro as 0 before including this header:
-//   #define CW_ENABLE_STRING_ENCRYPTION 0
-//   #include "cloakwork.h"
-//
-// Alternatively, you can define them as compiler flags:
-//   -DCW_ENABLE_METAMORPHIC=0
-//
-// By default, all features are enabled for backwards compatibility.
-//
-// Configuration options:
-// ----------------------
-// CW_ENABLE_ALL                    - master switch to enable/disable everything (default: 1)
-// CW_ENABLE_STRING_ENCRYPTION      - compile-time string encryption (default: 1)
-// CW_ENABLE_VALUE_OBFUSCATION      - integer/value obfuscation (default: 1)
-// CW_ENABLE_CONTROL_FLOW           - control flow obfuscation (default: 1)
-// CW_ENABLE_ANTI_DEBUG             - anti-debugging features (default: 1)
-// CW_ENABLE_FUNCTION_OBFUSCATION   - function pointer obfuscation (default: 1)
-// CW_ENABLE_DATA_HIDING            - scattered/polymorphic values (default: 1)
-// CW_ENABLE_METAMORPHIC            - metamorphic code generation (default: 1)
-// CW_ENABLE_COMPILE_TIME_RANDOM    - compile-time random generation (default: 1)
-// CW_ENABLE_IMPORT_HIDING          - dynamic API resolution / import hiding (default: 1)
-// CW_ENABLE_SYSCALLS               - direct syscall invocation (default: 1)
-// CW_ENABLE_ANTI_VM                - anti-VM/sandbox detection (default: 1)
-// CW_ENABLE_INTEGRITY_CHECKS       - self-integrity verification (default: 1)
-// CW_ANTI_DEBUG_RESPONSE           - response to debugger detection: 0=ignore, 1=crash, 2=fake (default: 1)
-//
-// KERNEL MODE SUPPORT:
-// --------------------
-// CW_KERNEL_MODE                   - enable kernel mode compatibility (default: auto-detect)
-//
-// Kernel mode is auto-detected via _KERNEL_MODE or NTDDI_VERSION macros.
-// You can also force kernel mode with: #define CW_KERNEL_MODE 1
-//
-// In kernel mode:
-//   - STL containers (vector, mutex, atomic) are replaced with kernel-safe alternatives
-//   - Heap operations use ExAllocatePool2/ExFreePool instead of new/malloc
-//   - Anti-debug uses kernel structures (EPROCESS, ETHREAD)
-//   - Import hiding walks DriverSection linked list
-//   - Syscalls are disabled (already in kernel)
-//   - Thread-safety uses spinlocks instead of std::mutex
-//
-// Kernel mode usage:
-// ------------------
-// #include <ntddk.h>
-// #define CW_KERNEL_MODE 1  // optional, auto-detected if ntddk.h included
-// #include "cloakwork.h"
-//
-// Minimal configuration example:
-// ------------------------------
-// #define CW_ENABLE_ALL 0                      // disable everything first
-// #define CW_ENABLE_STRING_ENCRYPTION 1        // enable only what you need
-// #define CW_ENABLE_VALUE_OBFUSCATION 1
-// #include "cloakwork.h"
-//
-// Performance-focused configuration:
-// -----------------------------------
-// #define CW_ENABLE_METAMORPHIC 0              // disable heavy features
-// #include "cloakwork.h"
-//
-// =================================================================
+/*++
+
+Refer to the README.md for usage.
+
+--*/
 
 #ifndef CW_KERNEL_MODE
     #if defined(_KERNEL_MODE)
@@ -214,6 +152,42 @@
 
 #if CW_ENABLE_CONTROL_FLOW && !CW_ENABLE_COMPILE_TIME_RANDOM
     #error "CW_ENABLE_CONTROL_FLOW requires CW_ENABLE_COMPILE_TIME_RANDOM to be enabled"
+#endif
+
+#if CW_ENABLE_VALUE_OBFUSCATION && !CW_ENABLE_COMPILE_TIME_RANDOM
+    #error "CW_ENABLE_VALUE_OBFUSCATION requires CW_ENABLE_COMPILE_TIME_RANDOM to be enabled"
+#endif
+
+#if CW_ENABLE_ANTI_DEBUG && !CW_ENABLE_COMPILE_TIME_RANDOM
+    #error "CW_ENABLE_ANTI_DEBUG requires CW_ENABLE_COMPILE_TIME_RANDOM to be enabled"
+#endif
+
+#if CW_ENABLE_STRING_ENCRYPTION && !CW_ENABLE_COMPILE_TIME_RANDOM
+    #error "CW_ENABLE_STRING_ENCRYPTION requires CW_ENABLE_COMPILE_TIME_RANDOM to be enabled"
+#endif
+
+#if CW_ENABLE_FUNCTION_OBFUSCATION && !CW_ENABLE_COMPILE_TIME_RANDOM
+    #error "CW_ENABLE_FUNCTION_OBFUSCATION requires CW_ENABLE_COMPILE_TIME_RANDOM to be enabled"
+#endif
+
+#if CW_ENABLE_FUNCTION_OBFUSCATION && !CW_ENABLE_STRING_ENCRYPTION
+    #error "CW_ENABLE_FUNCTION_OBFUSCATION requires CW_ENABLE_STRING_ENCRYPTION to be enabled"
+#endif
+
+#if CW_ENABLE_METAMORPHIC && !CW_ENABLE_COMPILE_TIME_RANDOM
+    #error "CW_ENABLE_METAMORPHIC requires CW_ENABLE_COMPILE_TIME_RANDOM to be enabled"
+#endif
+
+#if CW_ENABLE_IMPORT_HIDING && !CW_ENABLE_COMPILE_TIME_RANDOM
+    #error "CW_ENABLE_IMPORT_HIDING requires CW_ENABLE_COMPILE_TIME_RANDOM to be enabled"
+#endif
+
+#if CW_ENABLE_SYSCALLS && !CW_ENABLE_IMPORT_HIDING
+    #error "CW_ENABLE_SYSCALLS requires CW_ENABLE_IMPORT_HIDING to be enabled"
+#endif
+
+#if CW_ENABLE_FUNCTION_OBFUSCATION && !CW_ENABLE_IMPORT_HIDING
+    #error "CW_ENABLE_FUNCTION_OBFUSCATION requires CW_ENABLE_IMPORT_HIDING to be enabled"
 #endif
 
 #if CW_KERNEL_MODE
@@ -507,6 +481,8 @@
     #define CW_MUTEX cloakwork_internal::kernel_spinlock
     #define CW_LOCK_GUARD(m) cloakwork_internal::spinlock_guard _cw_guard(m)
     #define CW_MO_RELAXED 0
+    #define CW_MO_ACQUIRE 0
+    #define CW_MO_RELEASE 0
 
 #else
     #include <array>
@@ -516,6 +492,11 @@
     #include <mutex>
     #include <memory>
     #include <bit>
+    #include <type_traits>
+    #include <utility>
+    #include <cstring>
+    #include <cstdlib>
+    #include <ctime>
 
     #ifdef _WIN32
         #include <windows.h>
@@ -524,8 +505,9 @@
         #include <tlhelp32.h>
         #include <iphlpapi.h>
         #pragma comment(lib, "iphlpapi.lib")
+        #pragma comment(lib, "advapi32.lib")
 
-        // full LDR_DATA_TABLE_ENTRY structure (winternl.h has incomplete definition, fuck those guys)
+        // Full LDR_DATA_TABLE_ENTRY shape; winternl.h exposes a truncated view.
         namespace cloakwork_internal {
             struct CW_LDR_DATA_TABLE_ENTRY {
                 LIST_ENTRY InLoadOrderLinks;
@@ -544,7 +526,7 @@
                     struct {
                         PVOID SectionPointer;
                         ULONG CheckSum;
-                    };
+                    } HashLinksData;
                 };
                 union {
                     ULONG TimeDateStamp;
@@ -554,12 +536,17 @@
                 PVOID PatchInformation;
             };
         }
+    #else
+        #include <cstdint>
+        #include <cpuid.h>
     #endif
 
     #define CW_ATOMIC(T) std::atomic<T>
     #define CW_MUTEX std::mutex
     #define CW_LOCK_GUARD(m) std::lock_guard<std::mutex> _cw_guard(m)
     #define CW_MO_RELAXED std::memory_order_relaxed
+    #define CW_MO_ACQUIRE std::memory_order_acquire
+    #define CW_MO_RELEASE std::memory_order_release
 
 #endif // CW_KERNEL_MODE
 
@@ -572,14 +559,17 @@
     #define CW_OPT_OFF __pragma(optimize("", off))
     #define CW_OPT_ON __pragma(optimize("", on))
     #pragma warning(push)
-    #pragma warning(disable: 4996 4244 4267)
+    #pragma warning(disable: 4996 4244 4267 4201 4189 4702)
+    #define CW_RDSEED
 #elif defined(__GNUC__) || defined(__clang__)
+
     #define CW_FORCEINLINE __attribute__((always_inline)) inline
-    #define CW_NOINLINE __attribute__((noinline)) inline
+    #define CW_NOINLINE __attribute__((noinline))
     #define CW_SECTION(x) __attribute__((section(x)))
     #define CW_COMPILER_BARRIER() asm volatile("" ::: "memory")
     #define CW_OPT_OFF _Pragma("GCC push_options") _Pragma("GCC optimize(\"O0\")")
     #define CW_OPT_ON _Pragma("GCC pop_options")
+    #define CW_RDSEED __attribute__((target("rdseed")))
 #else
     #define CW_FORCEINLINE inline
     #define CW_NOINLINE
@@ -587,6 +577,15 @@
     #define CW_COMPILER_BARRIER() std::atomic_signal_fence(std::memory_order_seq_cst)
     #define CW_OPT_OFF
     #define CW_OPT_ON
+    #define CW_RDSEED
+#endif
+
+#ifdef __clang__
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wdeprecated-volatile"
+    #pragma clang diagnostic ignored "-Wunused-variable"
+    #pragma clang diagnostic ignored "-Wmissing-field-initializers"
+    #pragma clang diagnostic ignored "-Wbitwise-instead-of-logical"
 #endif
 
 // =================================================================
@@ -720,11 +719,6 @@
 // CW_ANTI_DEBUG()                  - crashes if debugger detected (comprehensive checks)
 //                                    usage: CW_ANTI_DEBUG();
 //
-// CW_CHECK_ANALYSIS()              - comprehensive check for debuggers/analysis tools
-//                                    usage: CW_CHECK_ANALYSIS();
-//
-// CW_INLINE_CHECK()                - inline anti-debug check (scatter these throughout code)
-//                                    usage: CW_INLINE_CHECK();
 //
 // anti_debug::is_debugger_present() - returns true if debugger detected (basic checks)
 //                                     usage: if(anti_debug::is_debugger_present()) { }
@@ -884,6 +878,16 @@
 
 namespace cloakwork {
 
+    namespace detail {
+        template<typename T>
+        using clean_value_t = std::remove_cv_t<std::remove_reference_t<T>>;
+
+        template<typename T>
+        inline constexpr size_t default_scatter_chunks_v =
+            (sizeof(clean_value_t<T>) >= 8) ? 8 :
+            ((sizeof(clean_value_t<T>) >= 2) ? sizeof(clean_value_t<T>) : 2);
+    }
+
 #if CW_ENABLE_COMPILE_TIME_RANDOM
     namespace detail {
         template<size_t N>
@@ -897,14 +901,33 @@ namespace cloakwork {
         }
 
         inline bool try_hardware_random(uint64_t& out) {
-#ifdef _WIN32
-#ifdef __RDSEED__
-            if (_rdseed64_step(reinterpret_cast<unsigned long long*>(&out))) {
-                return true;
-            }
-#endif
-#endif
+#if defined(__clang__)
+            (void)out;
             return false;
+#elif defined(_MSC_VER)
+            static bool has_rdseed = [] {
+                int cpuInfo[4];
+                __cpuidex(cpuInfo, 7, 0);
+                return (cpuInfo[1] & (1 << 18)) != 0;
+            }();
+
+            if (!has_rdseed) return false;
+#if defined(_M_X64) || defined(_M_ARM64EC)
+            return _rdseed64_step(reinterpret_cast<unsigned long long*>(&out)) != 0;
+#elif defined(_M_IX86)
+            unsigned int lo = 0, hi = 0;
+            if (_rdseed32_step(&lo) == 0) return false;
+            if (_rdseed32_step(&hi) == 0) return false;
+            out = (static_cast<uint64_t>(hi) << 32) | lo;
+            return true;
+#else
+            return false;
+#endif
+
+#else
+            (void)out;
+            return false;
+#endif
         }
 
         // not cryptographic - just makes runtime keys unique per execution
@@ -1018,66 +1041,65 @@ namespace cloakwork {
 
 #if CW_KERNEL_MODE
         // consteval with __TIME__/__DATE__ doesn't work properly in WDK
+        constexpr uint32_t mix_compile_seed(uint32_t seed) {
+            seed ^= seed >> 16;
+            seed *= 0x7feb352dU;
+            seed ^= seed >> 15;
+            seed *= 0x846ca68bU;
+            seed ^= seed >> 16;
+            return seed;
+        }
+
         constexpr uint32_t compile_seed_impl(uint32_t line, uint32_t counter) {
             uint32_t seed = 0xDEADBEEF;
             seed ^= line * 0x01000193;
             seed ^= counter * 0x811c9dc5;
             seed *= 0x1664525;
             seed += 0x1013904223;
+            return mix_compile_seed(seed);
+        }
+#else
+        consteval uint32_t mix_compile_seed(uint32_t seed) {
+            seed ^= seed >> 16;
+            seed *= 0x7feb352dU;
+            seed ^= seed >> 15;
+            seed *= 0x846ca68bU;
+            seed ^= seed >> 16;
             return seed;
         }
 
-        #define CW_COMPILE_SEED() (cloakwork::detail::compile_seed_impl(__LINE__, __COUNTER__))
-
-        template<uint32_t Seed>
-        struct random_generator {
-            static constexpr uint32_t value() {
-                return (Seed * 1664525u + 1013904223u);
-            }
-            static constexpr uint32_t next() {
-                return random_generator<value()>::value();
-            }
-        };
-    }
-
-    #define CW_RANDOM_CT() (cloakwork::detail::random_generator<CW_COMPILE_SEED()>::value())
-    #define CW_RAND_CT(min, max) ((min) + (CW_RANDOM_CT() % ((max) - (min) + 1)))
-
-#else
-        constexpr uint32_t compile_seed() {
+        template<size_t FileN>
+        consteval uint32_t compile_seed_impl(const char (&file)[FileN], uint32_t line, uint32_t counter) {
             constexpr uint32_t time_hash = fnv1a_hash(__TIME__);
             constexpr uint32_t date_hash = fnv1a_hash(__DATE__);
-            constexpr uint32_t file_hash = fnv1a_hash(__FILE__);
-            return time_hash ^ (date_hash << 1) ^ (file_hash >> 1) ^ __LINE__;
+            uint32_t file_hash = fnv1a_hash(file);
+            uint32_t seed = time_hash ^ (date_hash << 1) ^ (file_hash >> 1);
+            seed ^= line * 0x01000193u;
+            seed ^= counter * 0x9E3779B9u;
+            return mix_compile_seed(seed);
         }
-
-        template<uint32_t Seed>
-        struct random_generator {
-            static constexpr uint32_t value() {
-                return (Seed * 1664525u + 1013904223u) ^ __COUNTER__;
-            }
-            static constexpr uint32_t next() {
-                return random_generator<value()>::value();
-            }
-        };
+#endif
     }
 
-    #define CW_RANDOM_CT() (cloakwork::detail::random_generator<cloakwork::detail::compile_seed() ^ __COUNTER__>::value())
-    #define CW_RAND_CT(min, max) ((min) + (CW_RANDOM_CT() % ((max) - (min) + 1)))
+    // MSVC 19.50 rejects the original random_generator<...> path in anti-debug
+    // callsites when Edit-and-Continue debug rewriting materializes __LINE__ as a
+    // non-constant symbol. Materialize the entropy directly to keep the result
+    // constexpr while preserving per-expansion variation through __COUNTER__.
+#if CW_KERNEL_MODE
+    #define CW_COMPILE_SEED() (cloakwork::detail::compile_seed_impl(__LINE__, __COUNTER__))
+#else
+    #define CW_COMPILE_SEED() (cloakwork::detail::compile_seed_impl(__FILE__, __LINE__, __COUNTER__))
 #endif
+    #define CW_RANDOM_CT() (CW_COMPILE_SEED())
+    #define CW_RAND_CT(min, max) ((min) + (CW_RANDOM_CT() % ((max) - (min) + 1)))
 
     #define CW_RANDOM_RT() (cloakwork::detail::runtime_entropy())
     #define CW_RAND_RT(min, max) ((min) + (CW_RANDOM_RT() % ((max) - (min) + 1)))
-
-    #define CW_RANDOM() CW_RANDOM_CT()
-    #define CW_RAND(min, max) CW_RAND_CT(min, max)
 #else
     #define CW_RANDOM_CT() (rand())
     #define CW_RAND_CT(min, max) ((min) + (rand() % ((max) - (min) + 1)))
     #define CW_RANDOM_RT() (rand())
     #define CW_RAND_RT(min, max) ((min) + (rand() % ((max) - (min) + 1)))
-    #define CW_RANDOM() (rand())
-    #define CW_RAND(min, max) ((min) + (rand() % ((max) - (min) + 1)))
 #endif
 
     namespace hash {
@@ -1184,25 +1206,60 @@ namespace cloakwork {
         consteval uint32_t fnv1a_ci(const char (&str)[N]) {
             return fnv1a_ci(str, N - 1);
         }
+
+        consteval uint32_t fnv1a_wide_ci_ascii(const wchar_t* str, size_t len) {
+            uint32_t hash = 0x811c9dc5;
+            for (size_t i = 0; i < len; ++i) {
+                wchar_t c = str[i];
+                if (c >= L'A' && c <= L'Z') c += 32;
+                hash ^= static_cast<uint8_t>(c & 0xFF);
+                hash *= 0x01000193;
+            }
+            return hash;
+        }
+
+        template<size_t N>
+        consteval uint32_t fnv1a_wide_ci_ascii(const wchar_t (&str)[N]) {
+            return fnv1a_wide_ci_ascii(str, N - 1);
+        }
     }
 
     #define CW_HASH(s) ([]() consteval { return cloakwork::hash::fnv1a(s); }())
     #define CW_HASH_WIDE(s) ([]() consteval { return cloakwork::hash::fnv1a_wide(s); }())
     #define CW_HASH_CI(s) ([]() consteval { return cloakwork::hash::fnv1a_ci(s); }())
+    #define CW_HASH_WIDE_CI(s) ([]() consteval { return cloakwork::hash::fnv1a_wide_ci_ascii(s); }())
 
     namespace internal_cipher {
 
-        // position-dependent xor cipher to prevent Hex-Rays stack-string reconstruction
+        //
+        // position-dependent xor cipher to prevent Hex-Rays stack-string reconstruction.
+        // mix constants are derived from the Key so each stub has unique imul operands
+        // and shift widths — prevents pattern scanning for fixed magic values.
+        //
+        template<uint32_t Key>
+        struct cipher_params {
+            static constexpr uint32_t mix_a = 0x9E3779B9u ^ (Key * 0x01000193u);
+            static constexpr uint32_t mix_b = 0x45D9F3Bu ^ ((Key >> 7) * 0x27D4EB2Du);
+            static constexpr uint32_t shift_a = 13u + (Key & 3u);
+            static constexpr uint32_t shift_b = 11u + ((Key >> 2) & 3u);
+            static constexpr bool extra_round = (Key & 0x10u) != 0;
+        };
+
         template<uint32_t Key, size_t N>
         struct encrypted_buf {
             uint8_t data[N];
 
             consteval encrypted_buf(const char (&str)[N]) : data{} {
+                using P = cipher_params<Key>;
                 for (size_t i = 0; i < N; ++i) {
-                    uint32_t subkey = Key ^ (static_cast<uint32_t>(i) * 0x9E3779B9u);
-                    subkey ^= subkey >> 16;
-                    subkey *= 0x45D9F3Bu;
-                    subkey ^= subkey >> 13;
+                    uint32_t subkey = Key ^ (static_cast<uint32_t>(i) * P::mix_a);
+                    subkey ^= subkey >> P::shift_a;
+                    subkey *= P::mix_b;
+                    subkey ^= subkey >> P::shift_b;
+                    if constexpr (P::extra_round) {
+                        subkey ^= subkey >> 7;
+                        subkey *= 0x119DE1F3u ^ (Key >> 16);
+                    }
                     data[i] = static_cast<uint8_t>(str[i]) ^ static_cast<uint8_t>(subkey);
                 }
             }
@@ -1210,12 +1267,17 @@ namespace cloakwork {
 
         template<uint32_t Key, size_t N>
         CW_NOINLINE void decrypt_to_stack(const encrypted_buf<Key, N>& enc, char (&out)[N]) {
+            using P = cipher_params<Key>;
             volatile uint8_t* dst = reinterpret_cast<volatile uint8_t*>(out);
             for (size_t i = 0; i < N; ++i) {
-                uint32_t subkey = Key ^ (static_cast<uint32_t>(i) * 0x9E3779B9u);
-                subkey ^= subkey >> 16;
-                subkey *= 0x45D9F3Bu;
-                subkey ^= subkey >> 13;
+                uint32_t subkey = Key ^ (static_cast<uint32_t>(i) * P::mix_a);
+                subkey ^= subkey >> P::shift_a;
+                subkey *= P::mix_b;
+                subkey ^= subkey >> P::shift_b;
+                if constexpr (P::extra_round) {
+                    subkey ^= subkey >> 7;
+                    subkey *= 0x119DE1F3u ^ (Key >> 16);
+                }
                 dst[i] = enc.data[i] ^ static_cast<uint8_t>(subkey);
             }
             CW_COMPILER_BARRIER();
@@ -1243,7 +1305,7 @@ namespace cloakwork {
 
     #define CW_ADSTR(name, str) \
         static constexpr cloakwork::internal_cipher::encrypted_buf< \
-            __LINE__ * 0x45D9F3Bu + static_cast<uint32_t>(sizeof(str)) * 0x9E3779B9u, sizeof(str)> \
+            (CW_HASH(str) ^ CW_COMPILE_SEED()), sizeof(str)> \
             _cw_adenc_##name(str); \
         char name[sizeof(str)]; \
         cloakwork::internal_cipher::decrypt_to_stack(_cw_adenc_##name, name)
@@ -1287,6 +1349,48 @@ namespace cloakwork {
                 return get_module_by_hash(module_hash) != nullptr;
             }
 
+            CW_FORCEINLINE void* get_proc_by_hash(void* module, uint32_t func_hash);
+
+            CW_FORCEINLINE void* resolve_forwarded_export(const char* forward_str, size_t max_len) {
+#if defined(_WIN32) && !CW_KERNEL_MODE
+                if (!forward_str || max_len == 0) return nullptr;
+
+                size_t dot_pos = max_len;
+                size_t end_pos = max_len;
+                for (size_t i = 0; i < max_len; ++i) {
+                    char c = forward_str[i];
+                    if (c == '.' && dot_pos == max_len) dot_pos = i;
+                    if (c == '\0') {
+                        end_pos = i;
+                        break;
+                    }
+                }
+
+                if (dot_pos == max_len || end_pos == max_len || dot_pos == 0 || dot_pos + 1 >= end_pos)
+                    return nullptr;
+
+                char module_name[256];
+                if (dot_pos >= sizeof(module_name) - 5) return nullptr;
+
+                for (size_t i = 0; i < dot_pos; ++i)
+                    module_name[i] = forward_str[i];
+                module_name[dot_pos] = '.';
+                module_name[dot_pos + 1] = 'd';
+                module_name[dot_pos + 2] = 'l';
+                module_name[dot_pos + 3] = 'l';
+                module_name[dot_pos + 4] = '\0';
+
+                void* target_mod = get_module_by_hash(hash::fnv1a_runtime_ci(module_name));
+                if (!target_mod) return nullptr;
+
+                return get_proc_by_hash(target_mod, hash::fnv1a_runtime(forward_str + dot_pos + 1));
+#else
+                (void)forward_str;
+                (void)max_len;
+                return nullptr;
+#endif
+            }
+
             CW_FORCEINLINE void* get_proc_by_hash(void* module, uint32_t func_hash) {
 #if defined(_WIN32) && !CW_KERNEL_MODE
                 if (!module) return nullptr;
@@ -1317,7 +1421,19 @@ namespace cloakwork {
                         if (hash::fnv1a_runtime(name) == func_hash) {
                             uint16_t ordinal = ordinals[i];
                             if (ordinal >= exports->NumberOfFunctions) return nullptr;
-                            return base + functions[ordinal];
+                            uint32_t func_rva = functions[ordinal];
+                            if (!func_rva || func_rva >= image_size) return nullptr;
+
+                            uint64_t export_start = static_cast<uint64_t>(exp_dir.VirtualAddress);
+                            uint64_t export_end = export_start + static_cast<uint64_t>(exp_dir.Size);
+                            if (static_cast<uint64_t>(func_rva) >= export_start &&
+                                static_cast<uint64_t>(func_rva) < export_end) {
+                                return resolve_forwarded_export(
+                                    reinterpret_cast<const char*>(base + func_rva),
+                                    static_cast<size_t>(export_end - func_rva));
+                            }
+
+                            return base + func_rva;
                         }
                     }
                 }
@@ -1490,9 +1606,24 @@ namespace cloakwork {
 
         CW_FORCEINLINE bool has_breakpoints(void* addr, size_t size) {
             uint8_t* bytes = reinterpret_cast<uint8_t*>(addr);
-            for(size_t i = 0; i < size; ++i) {
-                if(bytes[i] == 0xCC) return true; // int3 instruction
+            // scan for int3 software breakpoints
+            for (size_t i = 0; i < size; ++i) {
+                if (bytes[i] == 0xCC) return true;
             }
+            // check function prologue for common inline hook signatures
+            if (size >= 5 && bytes[0] == 0xE9) return true;                // jmp rel32
+            if (size >= 6 && bytes[0] == 0xFF && bytes[1] == 0x25)
+                return true;                                               // jmp [rip+disp32]
+            if (size >= 2 && bytes[0] == 0xEB) return true;                // jmp rel8 (short)
+#ifdef _WIN64
+            if (size >= 12 && bytes[0] == 0x48 && bytes[1] == 0xB8)
+                return true;                                               // mov rax, imm64
+            if (size >= 14 && bytes[0] == 0xFF && bytes[1] == 0x25 &&
+                bytes[2] == 0x00 && bytes[3] == 0x00 && bytes[4] == 0x00 && bytes[5] == 0x00)
+                return true;                                               // jmp [rip+0] (14-byte hook)
+#endif
+            if (size >= 6 && bytes[0] == 0x68 && bytes[5] == 0xC3)
+                return true;                                               // push imm32; ret
             return false;
         }
 
@@ -1507,18 +1638,18 @@ namespace cloakwork {
             return (dr0 || dr1 || dr2 || dr3);
 #else
             // x86 uses inline asm (not available in MSVC x64)
-            unsigned long dr0, dr1, dr2, dr3;
+            unsigned long dr0_val = 0, dr1_val = 0, dr2_val = 0, dr3_val = 0;
             __asm {
                 mov eax, dr0
-                mov dr0, eax
+                mov dr0_val, eax
                 mov eax, dr1
-                mov dr1, eax
+                mov dr1_val, eax
                 mov eax, dr2
-                mov dr2, eax
+                mov dr2_val, eax
                 mov eax, dr3
-                mov dr3, eax
+                mov dr3_val, eax
             }
-            return (dr0 || dr1 || dr2 || dr3);
+            return (dr0_val || dr1_val || dr2_val || dr3_val);
 #endif
 
 #elif defined(_WIN32)
@@ -1570,38 +1701,23 @@ namespace cloakwork {
                         detail::get_proc_by_hash(user32, CW_HASH("EnumWindows")));
                     auto pGetClassNameA = reinterpret_cast<int(WINAPI*)(HWND, LPSTR, int)>(
                         detail::get_proc_by_hash(user32, CW_HASH("GetClassNameA")));
-                    auto pGetWindowTextA = reinterpret_cast<int(WINAPI*)(HWND, LPSTR, int)>(
-                        detail::get_proc_by_hash(user32, CW_HASH("GetWindowTextA")));
-
-                    if (pEnumWindows && pGetClassNameA && pGetWindowTextA) {
+                    if (pEnumWindows && pGetClassNameA) {
                         constexpr uint32_t dbg_class_hashes[] = {
                             CW_HASH("OLLYDBG"),
                             CW_HASH("WinDbgFrameClass"),
                             CW_HASH("ID"),
                             CW_HASH("ObsidianGUI"),
                         };
-                        constexpr uint32_t dbg_title_hashes[] = {
-                            CW_HASH("x64dbg"),
-                            CW_HASH("x32dbg"),
-                            CW_HASH("x96dbg"),
-                            CW_HASH("Zeta Debugger"),
-                            CW_HASH("Rock Debugger"),
-                        };
-
                         struct enum_ctx {
                             bool found;
                             const uint32_t* class_hashes;
                             size_t class_count;
-                            const uint32_t* title_hashes;
-                            size_t title_count;
                             decltype(pGetClassNameA) getClassName;
-                            decltype(pGetWindowTextA) getWindowText;
                         };
 
                         enum_ctx ctx = {
                             false, dbg_class_hashes, sizeof(dbg_class_hashes)/sizeof(uint32_t),
-                            dbg_title_hashes, sizeof(dbg_title_hashes)/sizeof(uint32_t),
-                            pGetClassNameA, pGetWindowTextA
+                            pGetClassNameA
                         };
 
                         pEnumWindows([](HWND hwnd, LPARAM lParam) -> BOOL {
@@ -1611,11 +1727,6 @@ namespace cloakwork {
                                 uint32_t h = hash::fnv1a_runtime(buf);
                                 for (size_t i = 0; i < c->class_count; ++i)
                                     if (h == c->class_hashes[i]) { c->found = true; return FALSE; }
-                            }
-                            if (c->getWindowText(hwnd, buf, sizeof(buf)) > 0) {
-                                uint32_t h = hash::fnv1a_runtime(buf);
-                                for (size_t i = 0; i < c->title_count; ++i)
-                                    if (h == c->title_hashes[i]) { c->found = true; return FALSE; }
                             }
                             return TRUE;
                         }, reinterpret_cast<LPARAM>(&ctx));
@@ -1675,10 +1786,10 @@ namespace cloakwork {
                             detail::get_proc_by_hash(ntdll, CW_HASH("NtQuerySystemInformation")));
 
                     if (NtQuerySystemInformation) {
-                        ULONG kernel_debug = 0;
+                        struct { BOOLEAN KernelDebuggerEnabled; BOOLEAN KernelDebuggerNotPresent; } kdi = {};
                         // SystemKernelDebuggerInformation = 0x23
-                        NTSTATUS status = NtQuerySystemInformation(0x23, &kernel_debug, sizeof(kernel_debug), nullptr);
-                        if (status == 0 && kernel_debug != 0) return true;
+                        NTSTATUS status = NtQuerySystemInformation(0x23, &kdi, sizeof(kdi), nullptr);
+                        if (status == 0 && kdi.KernelDebuggerEnabled && !kdi.KernelDebuggerNotPresent) return true;
                     }
                 }
                 __except (EXCEPTION_EXECUTE_HANDLER) {
@@ -1733,6 +1844,7 @@ namespace cloakwork {
                         constexpr uint32_t suspicious_parent_hashes[] = {
                             CW_HASH_CI("x64dbg.exe"),
                             CW_HASH_CI("x32dbg.exe"),
+                            CW_HASH_CI("x86dbg.exe"),
                             CW_HASH_CI("ollydbg.exe"),
                             CW_HASH_CI("ida.exe"),
                             CW_HASH_CI("ida64.exe"),
@@ -1848,10 +1960,17 @@ namespace cloakwork {
             CW_FORCEINLINE bool advanced_timing_check() {
 #if defined(_WIN32) && !CW_KERNEL_MODE
                 __try {
+                    //
+                    // Self-calibrating timing check. First invocation records a
+                    // baseline measurement with no debugger. Subsequent calls
+                    // compare against a multiple of that baseline. This makes
+                    // the threshold unpatchable since it's derived at runtime.
+                    //
+                    static volatile uint64_t baseline_tsc = 0;
+
                     LARGE_INTEGER freq, qpc_start, qpc_end;
-                    if (!QueryPerformanceFrequency(&freq) || freq.QuadPart == 0) {
+                    if (!QueryPerformanceFrequency(&freq) || freq.QuadPart == 0)
                         return false;
-                    }
 
                     uint64_t tsc_start = __rdtsc();
                     QueryPerformanceCounter(&qpc_start);
@@ -1866,13 +1985,19 @@ namespace cloakwork {
                     uint64_t tsc_end = __rdtsc();
 
                     uint64_t tsc_delta = tsc_end - tsc_start;
+
+                    if (baseline_tsc == 0) {
+                        // first calibration run -- store baseline, don't flag
+                        baseline_tsc = tsc_delta;
+                        return false;
+                    }
+
+                    // suspicious if > 10x baseline; keep this generous to tolerate scheduler noise
+                    if (tsc_delta > baseline_tsc * 10) return true;
+
+                    // clock source consistency: if one source is hooked the ratio
+                    // between TSC and QPC will be wildly off
                     uint64_t qpc_delta_us = ((qpc_end.QuadPart - qpc_start.QuadPart) * 1000000) / freq.QuadPart;
-
-                    // threshold derived from compile-time random
-                    constexpr uint64_t tsc_thresh = 800000 + (CW_RANDOM_CT() % 400000);
-                    if (tsc_delta > tsc_thresh) return true;
-
-                    // check for inconsistent timing (one clock source is hooked)
                     if (qpc_delta_us > 0) {
                         double ratio = static_cast<double>(tsc_delta) / static_cast<double>(qpc_delta_us);
                         if (ratio < 0.5 || ratio > 100000.0) return true;
@@ -1929,7 +2054,7 @@ namespace cloakwork {
                 *(volatile int*)0 = 0;
             }
 #elif CW_ANTI_DEBUG_RESPONSE == 2
-            // fake response - pretend to work but return garbage
+            // fake response mode is context-specific for callers that want decoy data
             // implementation depends on context
 #endif
         }
@@ -1964,7 +2089,6 @@ namespace cloakwork {
 
                     constexpr uint32_t vm_vendor_hashes[] = {
                         detail::hash_vendor_12_ct("VMwareVMware", 12),
-                        detail::hash_vendor_12_ct("Microsoft Hv", 12),
                         detail::hash_vendor_12_ct("VBoxVBoxVBox", 12),
                         detail::hash_vendor_12_ct("KVMKVMKVM\0\0\0", 12),
                         detail::hash_vendor_12_ct("XenVMMXenVMM", 12),
@@ -2011,7 +2135,6 @@ namespace cloakwork {
                 __try {
                     constexpr uint32_t sandbox_dll_hashes[] = {
                         CW_HASH_CI("SbieDll.dll"),       // sandboxie
-                        CW_HASH_CI("dbghelp.dll"),       // often loaded by analysis tools
                         CW_HASH_CI("api_log.dll"),       // api logging
                         CW_HASH_CI("dir_watch.dll"),     // directory watching
                         CW_HASH_CI("pstorec.dll"),       // password store
@@ -2086,24 +2209,21 @@ namespace cloakwork {
 
                         CW_ADSTR(s0, "sandbox"); CW_ADSTR(s1, "virus");
                         CW_ADSTR(s2, "malware"); CW_ADSTR(s3, "sample");
-                        CW_ADSTR(s4, "test");    CW_ADSTR(s5, "user");
-                        CW_ADSTR(s6, "admin");   CW_ADSTR(s7, "currentuser");
-                        CW_ADSTR(s8, "vmware");  CW_ADSTR(s9, "vbox");
+                        CW_ADSTR(s4, "currentuser");
+                        CW_ADSTR(s5, "vmware");  CW_ADSTR(s6, "vbox");
 
-                        const char* checks[] = { s0, s1, s2, s3, s4, s5, s6, s7, s8, s9 };
+                        const char* checks[] = { s0, s1, s2, s3, s4, s5, s6 };
                         for (auto c : checks) {
                             if (internal_cipher::find_substr(buffer, c)) {
                                 CW_ADSTR_ZERO(s0); CW_ADSTR_ZERO(s1); CW_ADSTR_ZERO(s2);
                                 CW_ADSTR_ZERO(s3); CW_ADSTR_ZERO(s4); CW_ADSTR_ZERO(s5);
-                                CW_ADSTR_ZERO(s6); CW_ADSTR_ZERO(s7); CW_ADSTR_ZERO(s8);
-                                CW_ADSTR_ZERO(s9);
+                                CW_ADSTR_ZERO(s6);
                                 return true;
                             }
                         }
                         CW_ADSTR_ZERO(s0); CW_ADSTR_ZERO(s1); CW_ADSTR_ZERO(s2);
                         CW_ADSTR_ZERO(s3); CW_ADSTR_ZERO(s4); CW_ADSTR_ZERO(s5);
-                        CW_ADSTR_ZERO(s6); CW_ADSTR_ZERO(s7); CW_ADSTR_ZERO(s8);
-                        CW_ADSTR_ZERO(s9);
+                        CW_ADSTR_ZERO(s6);
                     }
 
                     size = sizeof(buffer);
@@ -2111,20 +2231,19 @@ namespace cloakwork {
                         for (DWORD i = 0; i < size && buffer[i]; ++i)
                             if (buffer[i] >= 'A' && buffer[i] <= 'Z') buffer[i] += 32;
 
-                        CW_ADSTR(c0, "sandbox"); CW_ADSTR(c1, "test");
-                        CW_ADSTR(c2, "virus");   CW_ADSTR(c3, "malware");
-                        CW_ADSTR(c4, "sample");
+                        CW_ADSTR(c0, "sandbox"); CW_ADSTR(c1, "virus");
+                        CW_ADSTR(c2, "malware"); CW_ADSTR(c3, "sample");
 
-                        const char* checks[] = { c0, c1, c2, c3, c4 };
+                        const char* checks[] = { c0, c1, c2, c3 };
                         for (auto c : checks) {
                             if (internal_cipher::find_substr(buffer, c)) {
                                 CW_ADSTR_ZERO(c0); CW_ADSTR_ZERO(c1); CW_ADSTR_ZERO(c2);
-                                CW_ADSTR_ZERO(c3); CW_ADSTR_ZERO(c4);
+                                CW_ADSTR_ZERO(c3);
                                 return true;
                             }
                         }
                         CW_ADSTR_ZERO(c0); CW_ADSTR_ZERO(c1); CW_ADSTR_ZERO(c2);
-                        CW_ADSTR_ZERO(c3); CW_ADSTR_ZERO(c4);
+                        CW_ADSTR_ZERO(c3);
                     }
                 }
                 __except (EXCEPTION_EXECUTE_HANDLER) {
@@ -2197,7 +2316,7 @@ namespace cloakwork {
                         {0x00, 0x15, 0x5D},  // hyper-v
                     };
 
-                    // get adapter info - use raw allocation to avoid SEH/RAII conflict
+                    // get adapter info
                     ULONG bufferSize = 0;
                     GetAdaptersInfo(nullptr, &bufferSize);
                     if (bufferSize == 0) return false;
@@ -2232,15 +2351,26 @@ namespace cloakwork {
 
             CW_FORCEINLINE bool comprehensive_check() {
                 __try {
-                    if (is_hypervisor_present()) return true;
-                    if (detect_vm_vendor()) return true;
-                    if (detect_low_resources()) return true;
-                    if (detect_sandbox_dlls()) return true;
-                    if (detect_sandbox_names()) return true;
-                    if (detect_vm_registry()) return true;
-                    if (detect_vm_mac()) return true;
+                    bool vendor_vm = detect_vm_vendor();
+                    bool artifacts =
+                        detect_sandbox_dlls() ||
+                        detect_sandbox_names() ||
+                        detect_vm_registry() ||
+                        detect_vm_mac();
+
+                    if (vendor_vm || artifacts) return true;
+
+                    //
+                    // Modern bare-metal Windows often exposes Microsoft's
+                    // hypervisor for VBS, Credential Guard, WSL2, or Hyper-V.
+                    // Treat the CPUID bit as corroborating evidence instead
+                    // of a standalone VM verdict.
+                    //
+                    if (is_hypervisor_present() && detect_low_resources()) return true;
+
                     return false;
                 }
+
                 __except (EXCEPTION_EXECUTE_HANDLER) {
                     return false;
                 }
@@ -2256,8 +2386,6 @@ namespace cloakwork {
                 *(volatile int*)0 = 0; \
             } \
         } while(0)
-
-    #define CW_INLINE_CHECK() cloakwork::anti_debug::inline_check()
 
     #if CW_ENABLE_ANTI_VM
         #define CW_ANTI_VM() \
@@ -2296,45 +2424,151 @@ namespace cloakwork {
         }
     }
     #define CW_ANTI_DEBUG() ((void)0)
-    #define CW_INLINE_CHECK() ((void)0)
     #define CW_ANTI_VM() ((void)0)
     #define CW_CHECK_VM() (false)
 #endif
 
+#if CW_ENABLE_CONTROL_FLOW
+    namespace control_flow {
+        template<int N>
+        CW_NOINLINE bool opaque_true();
+        template<int N>
+        CW_NOINLINE bool opaque_false();
+    }
+#endif
+
+
 #if CW_ENABLE_STRING_ENCRYPTION
     namespace string_encrypt {
 
-        // xtea block cipher - 64-bit blocks, 128-bit key, 32 rounds
-        // tiny code footprint, fully constexpr, strong against pattern matching
-        namespace xtea {
-            static constexpr uint32_t DELTA = 0x9E3779B9;
-            static constexpr uint32_t ROUNDS = 32;
-
-            struct key128 {
-                uint32_t k[4];
+        //
+        // parameterized feistel cipher — per-site structural variance.
+        // round count, shifts, multipliers, and round function are all
+        // derived from template key params so each CW_STR() call site
+        // compiles to structurally unique code. no shared constants.
+        //
+        namespace cipher {
+            template<uint32_t K0, uint32_t K1, uint32_t K2, uint32_t K3>
+            struct config {
+                static constexpr uint32_t rounds  = 16u + ((K0 >> 28) & 0xFu);
+                static constexpr uint32_t sh0     = 2u + ((K1 >> 0) & 7u);
+                static constexpr uint32_t sh1     = 2u + ((K1 >> 3) & 7u);
+                static constexpr uint32_t sh2     = 2u + ((K1 >> 6) & 7u);
+                static constexpr uint32_t sh3     = 2u + ((K1 >> 9) & 7u);
+                static constexpr uint32_t mix_0   = (K0 * 0x45D9F3Bu) ^ K2;
+                static constexpr uint32_t mix_1   = (K3 * 0x27D4EB2Du) ^ K1;
+                static constexpr uint32_t ks_step = ((K2 ^ K3) | 1u);
+                static constexpr uint32_t variant = (K0 >> 24) & 7u;
             };
 
-            static constexpr void encrypt_block(uint32_t& v0, uint32_t& v1, const key128& key) {
-                uint32_t sum = 0;
-                for (uint32_t i = 0; i < ROUNDS; ++i) {
-                    v0 += (((v1 << 4) ^ (v1 >> 5)) + v1) ^ (sum + key.k[sum & 3]);
-                    sum += DELTA;
-                    v1 += (((v0 << 4) ^ (v0 >> 5)) + v0) ^ (sum + key.k[(sum >> 11) & 3]);
+            template<uint32_t K0, uint32_t K1, uint32_t K2, uint32_t K3>
+            static constexpr void encrypt_block(uint32_t& v0, uint32_t& v1) {
+                using C = config<K0, K1, K2, K3>;
+                uint32_t ks = K0;
+                for (uint32_t i = 0; i < C::rounds; ++i) {
+                    if constexpr (C::variant == 0) {
+                        // arx
+                        v0 += (((v1 << C::sh0) ^ (v1 >> C::sh1)) + v1) ^ (ks + K2);
+                        ks += C::ks_step;
+                        v1 += (((v0 << C::sh2) ^ (v0 >> C::sh3)) + v0) ^ (ks + K3);
+                    } else if constexpr (C::variant == 1) {
+                        // multiply-first
+                        v0 += ((v1 * C::mix_0) ^ (v1 >> C::sh1)) ^ (ks + K1);
+                        ks += C::ks_step;
+                        v1 += ((v0 * C::mix_1) ^ (v0 >> C::sh3)) ^ (ks + K0);
+                    } else if constexpr (C::variant == 2) {
+                        // dual-shift
+                        v0 += ((v1 << C::sh0) ^ (v1 >> C::sh1) ^ (v1 << C::sh2)) ^ (ks * C::mix_0);
+                        ks += C::ks_step;
+                        v1 += ((v0 << C::sh2) ^ (v0 >> C::sh3) ^ (v0 << C::sh0)) ^ (ks * C::mix_1);
+                    } else if constexpr (C::variant == 3) {
+                        // interleaved
+                        uint32_t t = v1 ^ (v1 >> C::sh1);
+                        v0 += ((t << C::sh0) + (t * C::mix_0)) ^ ks;
+                        ks += C::ks_step;
+                        t = v0 ^ (v0 >> C::sh3);
+                        v1 += ((t << C::sh2) + (t * C::mix_1)) ^ ks;
+                    } else if constexpr (C::variant == 4) {
+                        // xtea-style: fixed shifts (4,5) with xor key mixing
+                        v0 += (((v1 << 4) ^ (v1 >> 5)) + v1) ^ (ks ^ C::mix_0);
+                        ks += C::ks_step;
+                        v1 += (((v0 << 4) ^ (v0 >> 5)) + v0) ^ (ks ^ C::mix_1);
+                    } else if constexpr (C::variant == 5) {
+                        // speck-like: rotation + mixed add/xor half-rounds
+                        uint32_t t0 = (v1 >> C::sh1) | (v1 << (32u - C::sh1));
+                        v0 += (t0 + v1) ^ ks;
+                        ks += C::ks_step;
+                        uint32_t t1 = (v0 << C::sh0) | (v0 >> (32u - C::sh0));
+                        v1 ^= (t1 + v0) ^ ks;
+                    } else if constexpr (C::variant == 6) {
+                        // quadratic: self-squaring for non-linear mixing
+                        v0 += ((v1 * v1) ^ (v1 >> C::sh1) ^ C::mix_0) + ks;
+                        ks += C::ks_step;
+                        v1 += ((v0 * v0) ^ (v0 >> C::sh3) ^ C::mix_1) + ks;
+                    } else {
+                        // split-merge: half-word decomposition
+                        uint32_t hi = v1 >> 16, lo = v1 & 0xFFFFu;
+                        v0 += ((hi * C::mix_0) ^ (lo << C::sh0) ^ (lo >> C::sh1)) ^ ks;
+                        ks += C::ks_step;
+                        hi = v0 >> 16; lo = v0 & 0xFFFFu;
+                        v1 += ((lo * C::mix_1) ^ (hi << C::sh2) ^ (hi >> C::sh3)) ^ ks;
+                    }
                 }
             }
 
-            static constexpr void decrypt_block(uint32_t& v0, uint32_t& v1, const key128& key) {
-                uint32_t sum = DELTA * ROUNDS;
-                for (uint32_t i = 0; i < ROUNDS; ++i) {
-                    v1 -= (((v0 << 4) ^ (v0 >> 5)) + v0) ^ (sum + key.k[(sum >> 11) & 3]);
-                    sum -= DELTA;
-                    v0 -= (((v1 << 4) ^ (v1 >> 5)) + v1) ^ (sum + key.k[sum & 3]);
+            template<uint32_t K0, uint32_t K1, uint32_t K2, uint32_t K3>
+            static constexpr void decrypt_block(uint32_t& v0, uint32_t& v1) {
+                using C = config<K0, K1, K2, K3>;
+                uint32_t ks = K0 + C::ks_step * C::rounds;
+                for (uint32_t i = 0; i < C::rounds; ++i) {
+                    if constexpr (C::variant == 0) {
+                        v1 -= (((v0 << C::sh2) ^ (v0 >> C::sh3)) + v0) ^ (ks + K3);
+                        ks -= C::ks_step;
+                        v0 -= (((v1 << C::sh0) ^ (v1 >> C::sh1)) + v1) ^ (ks + K2);
+                    } else if constexpr (C::variant == 1) {
+                        v1 -= ((v0 * C::mix_1) ^ (v0 >> C::sh3)) ^ (ks + K0);
+                        ks -= C::ks_step;
+                        v0 -= ((v1 * C::mix_0) ^ (v1 >> C::sh1)) ^ (ks + K1);
+                    } else if constexpr (C::variant == 2) {
+                        v1 -= ((v0 << C::sh2) ^ (v0 >> C::sh3) ^ (v0 << C::sh0)) ^ (ks * C::mix_1);
+                        ks -= C::ks_step;
+                        v0 -= ((v1 << C::sh0) ^ (v1 >> C::sh1) ^ (v1 << C::sh2)) ^ (ks * C::mix_0);
+                    } else if constexpr (C::variant == 3) {
+                        uint32_t t = v0 ^ (v0 >> C::sh3);
+                        v1 -= ((t << C::sh2) + (t * C::mix_1)) ^ ks;
+                        ks -= C::ks_step;
+                        t = v1 ^ (v1 >> C::sh1);
+                        v0 -= ((t << C::sh0) + (t * C::mix_0)) ^ ks;
+                    } else if constexpr (C::variant == 4) {
+                        // xtea-style inverse
+                        v1 -= (((v0 << 4) ^ (v0 >> 5)) + v0) ^ (ks ^ C::mix_1);
+                        ks -= C::ks_step;
+                        v0 -= (((v1 << 4) ^ (v1 >> 5)) + v1) ^ (ks ^ C::mix_0);
+                    } else if constexpr (C::variant == 5) {
+                        // speck-like inverse: undo xor first, then sub
+                        uint32_t t1 = (v0 << C::sh0) | (v0 >> (32u - C::sh0));
+                        v1 ^= (t1 + v0) ^ ks;
+                        ks -= C::ks_step;
+                        uint32_t t0 = (v1 >> C::sh1) | (v1 << (32u - C::sh1));
+                        v0 -= (t0 + v1) ^ ks;
+                    } else if constexpr (C::variant == 6) {
+                        // quadratic inverse
+                        v1 -= ((v0 * v0) ^ (v0 >> C::sh3) ^ C::mix_1) + ks;
+                        ks -= C::ks_step;
+                        v0 -= ((v1 * v1) ^ (v1 >> C::sh1) ^ C::mix_0) + ks;
+                    } else {
+                        // split-merge inverse
+                        uint32_t hi = v0 >> 16, lo = v0 & 0xFFFFu;
+                        v1 -= ((lo * C::mix_1) ^ (hi << C::sh2) ^ (hi >> C::sh3)) ^ ks;
+                        ks -= C::ks_step;
+                        hi = v1 >> 16; lo = v1 & 0xFFFFu;
+                        v0 -= ((hi * C::mix_0) ^ (lo << C::sh0) ^ (lo >> C::sh1)) ^ ks;
+                    }
                 }
             }
 
-            // templated to avoid reinterpret_cast, which is forbidden in constexpr
-            template<typename ByteT>
-            static constexpr void encrypt_buffer(ByteT* data, size_t len, const key128& key) {
+            template<uint32_t K0, uint32_t K1, uint32_t K2, uint32_t K3, typename ByteT>
+            static constexpr void encrypt_buffer(ByteT* data, size_t len) {
                 for (size_t i = 0; i + 7 < len; i += 8) {
                     uint32_t v0 = static_cast<uint32_t>(static_cast<uint8_t>(data[i]))
                         | (static_cast<uint32_t>(static_cast<uint8_t>(data[i+1])) << 8)
@@ -2345,7 +2579,7 @@ namespace cloakwork {
                         | (static_cast<uint32_t>(static_cast<uint8_t>(data[i+6])) << 16)
                         | (static_cast<uint32_t>(static_cast<uint8_t>(data[i+7])) << 24);
 
-                    encrypt_block(v0, v1, key);
+                    encrypt_block<K0, K1, K2, K3>(v0, v1);
 
                     data[i]   = static_cast<ByteT>(static_cast<uint8_t>(v0));
                     data[i+1] = static_cast<ByteT>(static_cast<uint8_t>(v0 >> 8));
@@ -2357,21 +2591,29 @@ namespace cloakwork {
                     data[i+7] = static_cast<ByteT>(static_cast<uint8_t>(v1 >> 24));
                 }
 
-                // remaining bytes: xor with key material
-                size_t tail_start = (len / 8) * 8;
-                for (size_t i = tail_start; i < len; ++i) {
+                // tail bytes: position-dependent xor from key params
+                size_t tail = (len / 8) * 8;
+                for (size_t i = tail; i < len; ++i) {
+                    uint32_t stream = K0 ^ (K1 * static_cast<uint32_t>(i + 1));
+                    stream *= K2 | 1u;
+                    stream ^= stream >> 16;
+                    stream += K3;
                     data[i] = static_cast<ByteT>(static_cast<uint8_t>(data[i]) ^
-                        static_cast<uint8_t>(key.k[i % 4] >> ((i % 4) * 8)));
+                        static_cast<uint8_t>(stream));
                 }
             }
 
-            template<typename ByteT>
-            static constexpr void decrypt_buffer(ByteT* data, size_t len, const key128& key) {
-                // remaining bytes first (reverse order of encrypt)
-                size_t tail_start = (len / 8) * 8;
-                for (size_t i = tail_start; i < len; ++i) {
+            template<uint32_t K0, uint32_t K1, uint32_t K2, uint32_t K3, typename ByteT>
+            static constexpr void decrypt_buffer(ByteT* data, size_t len) {
+                // tail first (xor stream is self-inverse)
+                size_t tail = (len / 8) * 8;
+                for (size_t i = tail; i < len; ++i) {
+                    uint32_t stream = K0 ^ (K1 * static_cast<uint32_t>(i + 1));
+                    stream *= K2 | 1u;
+                    stream ^= stream >> 16;
+                    stream += K3;
                     data[i] = static_cast<ByteT>(static_cast<uint8_t>(data[i]) ^
-                        static_cast<uint8_t>(key.k[i % 4] >> ((i % 4) * 8)));
+                        static_cast<uint8_t>(stream));
                 }
 
                 for (size_t i = 0; i + 7 < len; i += 8) {
@@ -2384,7 +2626,7 @@ namespace cloakwork {
                         | (static_cast<uint32_t>(static_cast<uint8_t>(data[i+6])) << 16)
                         | (static_cast<uint32_t>(static_cast<uint8_t>(data[i+7])) << 24);
 
-                    decrypt_block(v0, v1, key);
+                    decrypt_block<K0, K1, K2, K3>(v0, v1);
 
                     data[i]   = static_cast<ByteT>(static_cast<uint8_t>(v0));
                     data[i+1] = static_cast<ByteT>(static_cast<uint8_t>(v0 >> 8));
@@ -2394,6 +2636,46 @@ namespace cloakwork {
                     data[i+5] = static_cast<ByteT>(static_cast<uint8_t>(v1 >> 8));
                     data[i+6] = static_cast<ByteT>(static_cast<uint8_t>(v1 >> 16));
                     data[i+7] = static_cast<ByteT>(static_cast<uint8_t>(v1 >> 24));
+                }
+            }
+
+            // compile-time proof that encrypt/decrypt are exact inverses
+            template<uint32_t K0, uint32_t K1, uint32_t K2, uint32_t K3>
+            static consteval bool verify_roundtrip() {
+                uint32_t v0 = 0xDEADBEEF, v1 = 0xCAFEBABE;
+                uint32_t orig_v0 = v0, orig_v1 = v1;
+                encrypt_block<K0, K1, K2, K3>(v0, v1);
+                decrypt_block<K0, K1, K2, K3>(v0, v1);
+                return v0 == orig_v0 && v1 == orig_v1;
+            }
+
+            // exercises all 8 round function variants + edge cases
+            static_assert(verify_roundtrip<0x00345678, 0x9ABCDEF0, 0x11111111, 0x22222222>()); // variant 0: arx
+            static_assert(verify_roundtrip<0x01ADBEEF, 0xCAFEBABE, 0xFEEDFACE, 0x01020304>()); // variant 1: multiply-first
+            static_assert(verify_roundtrip<0x02000000, 0x55555555, 0xAAAAAAAA, 0x33333333>()); // variant 2: dual-shift
+            static_assert(verify_roundtrip<0x03C0FFEE, 0x12345678, 0x87654321, 0xDEADCAFE>()); // variant 3: interleaved
+            static_assert(verify_roundtrip<0x04B00B1E, 0xFACEFEED, 0xCAFED00D, 0xBAADF00D>()); // variant 4: xtea-style
+            static_assert(verify_roundtrip<0x05DECADE, 0xC0DEC0DE, 0x8BADF00D, 0xDEFEC8ED>()); // variant 5: speck-like
+            static_assert(verify_roundtrip<0x06F00BAA, 0xABADBABE, 0xBEEFCAFE, 0xFEEDFACE>()); // variant 6: quadratic
+            static_assert(verify_roundtrip<0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF>()); // variant 7: split-merge
+            static_assert(verify_roundtrip<0, 0, 0, 0>());                                     // edge: all zeros
+
+            //
+            // lightweight stream cipher for runtime re-keying.
+            // position-dependent xor — self-inverse, so encrypt == decrypt (always ensure encrypt == decrypt please if you're modifying).
+            // used where keys are generated at runtime and can't be template params.
+            //
+            template<typename ByteT>
+            static CW_FORCEINLINE void rt_encrypt(ByteT* data, size_t len,
+                                                  uint32_t k0, uint32_t k1,
+                                                  uint32_t k2, uint32_t k3) {
+                for (size_t i = 0; i < len; ++i) {
+                    uint32_t stream = k0 ^ (k1 * static_cast<uint32_t>(i + 1));
+                    stream *= k2 | 1u;
+                    stream ^= stream >> 16;
+                    stream += k3;
+                    data[i] = static_cast<ByteT>(static_cast<uint8_t>(data[i]) ^
+                        static_cast<uint8_t>(stream));
                 }
             }
         }
@@ -2407,13 +2689,13 @@ namespace cloakwork {
             mutable CW_ATOMIC(bool) decrypted{false};
             mutable CW_MUTEX mutex;
 
-            static constexpr xtea::key128 compile_key = {{K0, K1, K2, K3}};
+
 
             // no reinterpret_cast - uses templated buffer functions for constexpr compatibility
             static constexpr std::array<char, N> encrypt_string(const char* str) {
                 std::array<char, N> result{};
                 for (size_t i = 0; i < N; ++i) result[i] = str[i];
-                xtea::encrypt_buffer(result.data(), N, compile_key);
+                cipher::encrypt_buffer<K0, K1, K2, K3>(result.data(), N);
                 return result;
             }
 
@@ -2425,16 +2707,126 @@ namespace cloakwork {
             constexpr encrypted_string(const char (&str)[N])
                 : encrypted_string(str, std::make_index_sequence<N>{}) {}
 
-            // noinline + optimization off: prevents LTCG from constant-folding the decrypt
+            //
+            // noinline prevents LTCG from constant-folding the decrypt.
+            // per-instantiation junk selected by K0/K2 bits creates size variance
+            // so these stubs don't all land at the same byte count in the binary.
+            //
             CW_NOINLINE const char* get() const {
                 CW_COMPILER_BARRIER();
-                if (!decrypted.load(CW_MO_RELAXED)) {
+                if constexpr ((K0 & 7u) == 0) {
+                    volatile uint32_t _p = K1; _p ^= _p >> 16; (void)_p;
+                } else if constexpr ((K0 & 7u) == 1) {
+                    volatile uint32_t _p = K2, _q = K3;
+                    _p = (_p * _q) ^ (_p >> 11); (void)_p;
+                } else if constexpr ((K0 & 7u) == 2) {
+                    volatile uint32_t _p = K1 ^ K3;
+                    for (volatile int _i = 0; _i < 3; ++_i) _p ^= _p << (_i + 1);
+                    (void)_p;
+                } else if constexpr ((K0 & 7u) == 3) {
+                    volatile uint32_t _p = K0 ^ K2, _q = K1 ^ K3;
+                    _p = (_p + _q) * 0x01000193u;
+                    _q = (_q ^ _p) * 0x27D4EB2Du;
+                    volatile uint32_t _r = _p ^ _q; (void)_r;
+                } else if constexpr ((K0 & 7u) == 4) {
+                    volatile uint32_t _p = K0, _q = K1;
+                    _p ^= _q >> 13; _q ^= _p << 7;
+                    _p += _q; _q *= _p; (void)_q;
+                } else if constexpr ((K0 & 7u) == 5) {
+                    volatile uint32_t _p = K2 ^ K3;
+                    volatile uint32_t _q = K1;
+                    _p = (_p >> 7) | (_p << 25);
+                    _q += _p * (_q | 1u);
+                    volatile uint32_t _r = _p ^ _q; (void)_r;
+                } else if constexpr ((K0 & 7u) == 6) {
+                    volatile uint64_t _p = K0;
+                    _p = _p * static_cast<uint64_t>(K1) + static_cast<uint64_t>(K2);
+                    _p ^= _p >> 33;
+                    volatile uint32_t _q = static_cast<uint32_t>(_p); (void)_q;
+                } else {
+                    volatile uint32_t _pa[4] = {K0, K1, K2, K3};
+                    _pa[0] ^= _pa[2]; _pa[1] += _pa[3];
+                    _pa[2] = _pa[0] * (_pa[1] | 1u);
+                    (void)_pa[3];
+                }
+                if (!decrypted.load(CW_MO_ACQUIRE)) {
                     CW_LOCK_GUARD(mutex);
                     if (!decrypted.load(CW_MO_RELAXED)) {
                         auto& mutable_data = const_cast<std::array<char, N>&>(data);
-                        xtea::decrypt_buffer(mutable_data.data(), N, compile_key);
-                        decrypted.store(true, CW_MO_RELAXED);
+#if CW_ENABLE_CONTROL_FLOW
+                        if constexpr ((K1 & 3u) == 0) {
+                            if (control_flow::opaque_true<static_cast<int>(K1 & 0x7F)>()) {
+                                cipher::decrypt_buffer<K0, K1, K2, K3>(mutable_data.data(), N);
+                            } else {
+                                for (size_t _fi = 0; _fi < N; ++_fi)
+                                    mutable_data[_fi] ^= static_cast<char>(K2 >> ((_fi & 3u) * 8u));
+                            }
+                        } else if constexpr ((K1 & 3u) == 1) {
+                            cipher::decrypt_buffer<K0, K1, K2, K3>(mutable_data.data(), N);
+                            if (control_flow::opaque_false<static_cast<int>(K1 & 0x7F)>()) {
+                                cipher::encrypt_buffer<K0, K1, K2, K3>(mutable_data.data(), N);
+                            }
+                        } else if constexpr ((K1 & 3u) == 2) {
+                            if (control_flow::opaque_true<static_cast<int>(K1 & 0x7F)>()) {
+                                if (control_flow::opaque_true<static_cast<int>((K1 >> 7) & 0x7F)>()) {
+                                    cipher::decrypt_buffer<K0, K1, K2, K3>(mutable_data.data(), N);
+                                } else {
+                                    for (size_t _fi = N; _fi > 0; --_fi)
+                                        mutable_data[_fi-1] = static_cast<char>(
+                                            static_cast<uint8_t>(mutable_data[_fi-1]) ^ static_cast<uint8_t>(K3 >> ((_fi & 3u) * 8u)));
+                                }
+                            } else {
+                                volatile uint32_t _jk = K0;
+                                for (size_t _fi = 0; _fi < N; ++_fi) {
+                                    mutable_data[_fi] ^= static_cast<char>(_jk >> 24);
+                                    _jk = (_jk << 1) | (_jk >> 31);
+                                }
+                            }
+                        } else {
+                            cipher::decrypt_buffer<K0, K1, K2, K3>(mutable_data.data(), N);
+                            if (control_flow::opaque_false<static_cast<int>(K1 & 0x7F)>()) {
+                                volatile uint8_t _vb = static_cast<uint8_t>(mutable_data[0]);
+                                if (_vb != static_cast<uint8_t>(K3 & 0xFF))
+                                    cipher::encrypt_buffer<K0, K1, K2, K3>(mutable_data.data(), N);
+                            }
+                        }
+#else
+                        cipher::decrypt_buffer<K0, K1, K2, K3>(mutable_data.data(), N);
+#endif
+                        decrypted.store(true, CW_MO_RELEASE);
                     }
+                }
+                if constexpr ((K2 & 7u) == 0) {
+                    volatile uint32_t _e = K3; _e *= 0x119DE1F3u; _e ^= _e >> 16; (void)_e;
+                } else if constexpr ((K2 & 7u) == 1) {
+                    volatile uint32_t _e = K0, _f = K1;
+                    _e ^= _f; _f += _e; _e = _f * (K2 | 1u); (void)_e;
+                } else if constexpr ((K2 & 7u) == 2) {
+                    volatile uint32_t _e = K2;
+                    _e = (_e << 7) ^ (_e >> 25);
+                    _e *= K3 | 1u;
+                    (void)_e;
+                } else if constexpr ((K2 & 7u) == 3) {
+                    volatile uint64_t _e = K0;
+                    _e ^= static_cast<uint64_t>(K3) << 32;
+                    _e *= _e + 1u;
+                    volatile uint32_t _f = static_cast<uint32_t>(_e >> 16); (void)_f;
+                } else if constexpr ((K2 & 7u) == 4) {
+                    volatile uint32_t _e = K1, _f = K2, _g = K3;
+                    _e ^= _f >> 8; _f += _g; _g *= _e;
+                    _e = _f ^ _g; (void)_e;
+                } else if constexpr ((K2 & 7u) == 5) {
+                    volatile uint32_t _e = K0 ^ K3;
+                    for (volatile int _i = 0; _i < 2; ++_i) _e = (_e >> 11) | (_e << 21);
+                    (void)_e;
+                } else if constexpr ((K2 & 7u) == 6) {
+                    volatile uint32_t _ea[3] = {K1, K2, K3};
+                    _ea[0] *= _ea[1] | 1u; _ea[2] ^= _ea[0];
+                    (void)_ea[2];
+                } else {
+                    volatile uint32_t _e = K3, _f = K0;
+                    _e ^= _f; _f = (_f << 5) | (_f >> 27);
+                    _e += _f * (_e | 1u); (void)_e;
                 }
                 CW_COMPILER_BARRIER();
                 return data.data();
@@ -2447,8 +2839,8 @@ namespace cloakwork {
                     CW_LOCK_GUARD(mutex);
                     if (decrypted.load(CW_MO_RELAXED)) {
                         auto& mutable_data = const_cast<std::array<char, N>&>(data);
-                        xtea::encrypt_buffer(mutable_data.data(), N, compile_key);
-                        decrypted.store(false, CW_MO_RELAXED);
+                        cipher::encrypt_buffer<K0, K1, K2, K3>(mutable_data.data(), N);
+                        decrypted.store(false, CW_MO_RELEASE);
                     }
                 }
             }
@@ -2466,57 +2858,169 @@ namespace cloakwork {
             mutable CW_ATOMIC(bool) decrypted{false};
             mutable CW_ATOMIC(uint32_t) access_count{0};
             mutable CW_MUTEX mutex;
-            mutable xtea::key128 current_key;
-
-            static constexpr xtea::key128 compile_key = {{K0, K1, K2, K3}};
+            mutable uint32_t rk0{0}, rk1{0}, rk2{0}, rk3{0};
+            mutable bool has_rekeyed{false};
 
             static constexpr std::array<char, N> encrypt_string(const char* str) {
                 std::array<char, N> result{};
                 for (size_t i = 0; i < N; ++i) result[i] = str[i];
-                xtea::encrypt_buffer(result.data(), N, compile_key);
+                cipher::encrypt_buffer<K0, K1, K2, K3>(result.data(), N);
                 return result;
             }
 
-            // re-key: derive new key by mixing compile-time key with runtime entropy
+            // re-key: derive new runtime keys from entropy
             CW_FORCEINLINE void rekey() const {
                 uint64_t entropy = CW_RANDOM_RT();
-                current_key.k[0] = K0 ^ static_cast<uint32_t>(entropy);
-                current_key.k[1] = K1 ^ static_cast<uint32_t>(entropy >> 32);
-                current_key.k[2] = K2 ^ static_cast<uint32_t>(entropy * 0x9E3779B9);
-                current_key.k[3] = K3 ^ static_cast<uint32_t>((entropy >> 16) * 0x6A09E667);
+                rk0 = K0 ^ static_cast<uint32_t>(entropy);
+                rk1 = K1 ^ static_cast<uint32_t>(entropy >> 32);
+                rk2 = K2 ^ static_cast<uint32_t>(entropy * (K0 | 1u));
+                rk3 = K3 ^ static_cast<uint32_t>((entropy >> 16) * (K1 | 1u));
+                has_rekeyed = true;
             }
 
         public:
             template<size_t... I>
             constexpr layered_encrypted_string(const char (&str)[N], std::index_sequence<I...>)
-                : data(encrypt_string(str)), decrypted(false), current_key(compile_key) {}
+                : data(encrypt_string(str)), decrypted(false) {}
 
             constexpr layered_encrypted_string(const char (&str)[N])
                 : layered_encrypted_string(str, std::make_index_sequence<N>{}) {}
 
             CW_NOINLINE const char* get() const {
                 CW_COMPILER_BARRIER();
-                if (!decrypted.load(CW_MO_RELAXED)) {
+                if constexpr ((K0 & 7u) == 0) {
+                    volatile uint32_t _p = K1; _p ^= _p >> 16; (void)_p;
+                } else if constexpr ((K0 & 7u) == 1) {
+                    volatile uint32_t _p = K2, _q = K3;
+                    _p = (_p * _q) ^ (_p >> 11); (void)_p;
+                } else if constexpr ((K0 & 7u) == 2) {
+                    volatile uint32_t _p = K1 ^ K3;
+                    for (volatile int _i = 0; _i < 3; ++_i) _p ^= _p << (_i + 1);
+                    (void)_p;
+                } else if constexpr ((K0 & 7u) == 3) {
+                    volatile uint32_t _p = K0 ^ K2, _q = K1 ^ K3;
+                    _p = (_p + _q) * 0x01000193u;
+                    _q = (_q ^ _p) * 0x27D4EB2Du;
+                    volatile uint32_t _r = _p ^ _q; (void)_r;
+                } else if constexpr ((K0 & 7u) == 4) {
+                    volatile uint32_t _p = K0, _q = K1;
+                    _p ^= _q >> 13; _q ^= _p << 7;
+                    _p += _q; _q *= _p; (void)_q;
+                } else if constexpr ((K0 & 7u) == 5) {
+                    volatile uint32_t _p = K2 ^ K3;
+                    volatile uint32_t _q = K1;
+                    _p = (_p >> 7) | (_p << 25);
+                    _q += _p * (_q | 1u);
+                    volatile uint32_t _r = _p ^ _q; (void)_r;
+                } else if constexpr ((K0 & 7u) == 6) {
+                    volatile uint64_t _p = K0;
+                    _p = _p * static_cast<uint64_t>(K1) + static_cast<uint64_t>(K2);
+                    _p ^= _p >> 33;
+                    volatile uint32_t _q = static_cast<uint32_t>(_p); (void)_q;
+                } else {
+                    volatile uint32_t _pa[4] = {K0, K1, K2, K3};
+                    _pa[0] ^= _pa[2]; _pa[1] += _pa[3];
+                    _pa[2] = _pa[0] * (_pa[1] | 1u);
+                    (void)_pa[3];
+                }
+                if (!decrypted.load(CW_MO_ACQUIRE)) {
                     CW_LOCK_GUARD(mutex);
                     if (!decrypted.load(CW_MO_RELAXED)) {
                         auto& mutable_data = const_cast<std::array<char, N>&>(data);
-                        xtea::decrypt_buffer(mutable_data.data(), N, current_key);
-                        decrypted.store(true, CW_MO_RELAXED);
+#if CW_ENABLE_CONTROL_FLOW
+                        if constexpr ((K1 & 3u) == 0) {
+                            if (control_flow::opaque_true<static_cast<int>(K1 & 0x7F)>()) {
+                                cipher::decrypt_buffer<K0, K1, K2, K3>(mutable_data.data(), N);
+                            } else {
+                                for (size_t _fi = 0; _fi < N; ++_fi)
+                                    mutable_data[_fi] ^= static_cast<char>(K2 >> ((_fi & 3u) * 8u));
+                            }
+                        } else if constexpr ((K1 & 3u) == 1) {
+                            cipher::decrypt_buffer<K0, K1, K2, K3>(mutable_data.data(), N);
+                            if (control_flow::opaque_false<static_cast<int>(K1 & 0x7F)>()) {
+                                cipher::encrypt_buffer<K0, K1, K2, K3>(mutable_data.data(), N);
+                            }
+                        } else if constexpr ((K1 & 3u) == 2) {
+                            if (control_flow::opaque_true<static_cast<int>(K1 & 0x7F)>()) {
+                                if (control_flow::opaque_true<static_cast<int>((K1 >> 7) & 0x7F)>()) {
+                                    cipher::decrypt_buffer<K0, K1, K2, K3>(mutable_data.data(), N);
+                                } else {
+                                    for (size_t _fi = N; _fi > 0; --_fi)
+                                        mutable_data[_fi-1] = static_cast<char>(
+                                            static_cast<uint8_t>(mutable_data[_fi-1]) ^ static_cast<uint8_t>(K3 >> ((_fi & 3u) * 8u)));
+                                }
+                            } else {
+                                volatile uint32_t _jk = K0;
+                                for (size_t _fi = 0; _fi < N; ++_fi) {
+                                    mutable_data[_fi] ^= static_cast<char>(_jk >> 24);
+                                    _jk = (_jk << 1) | (_jk >> 31);
+                                }
+                            }
+                        } else {
+                            cipher::decrypt_buffer<K0, K1, K2, K3>(mutable_data.data(), N);
+                            if (control_flow::opaque_false<static_cast<int>(K1 & 0x7F)>()) {
+                                volatile uint8_t _vb = static_cast<uint8_t>(mutable_data[0]);
+                                if (_vb != static_cast<uint8_t>(K3 & 0xFF))
+                                    cipher::encrypt_buffer<K0, K1, K2, K3>(mutable_data.data(), N);
+                            }
+                        }
+#else
+                        cipher::decrypt_buffer<K0, K1, K2, K3>(mutable_data.data(), N);
+#endif
+                        decrypted.store(true, CW_MO_RELEASE);
                     }
                 }
 
                 // polymorphic re-encryption every 10 accesses
                 uint32_t count = access_count.fetch_add(1, CW_MO_RELAXED);
-                if (count > 0 && (count % 10) == 0 && decrypted.load(CW_MO_RELAXED)) {
+                if (count > 0 && (count % 10) == 0 && decrypted.load(CW_MO_ACQUIRE)) {
                     CW_LOCK_GUARD(mutex);
                     if (decrypted.load(CW_MO_RELAXED)) {
                         auto& mutable_data = const_cast<std::array<char, N>&>(data);
                         rekey();
-                        xtea::encrypt_buffer(mutable_data.data(), N, current_key);
-                        xtea::decrypt_buffer(mutable_data.data(), N, current_key);
+                        //
+                        // The public API returns a raw pointer, so the buffer must
+                        // still be plaintext when get() returns. Churn it through
+                        // the new runtime key and immediately invert the stream so
+                        // the destructor later seals it with the fresh key.
+                        //
+                        cipher::rt_encrypt(mutable_data.data(), N, rk0, rk1, rk2, rk3);
+                        cipher::rt_encrypt(mutable_data.data(), N, rk0, rk1, rk2, rk3);
                     }
                 }
 
+                if constexpr ((K2 & 7u) == 0) {
+                    volatile uint32_t _e = K3; _e *= 0x119DE1F3u; _e ^= _e >> 16; (void)_e;
+                } else if constexpr ((K2 & 7u) == 1) {
+                    volatile uint32_t _e = K0, _f = K1;
+                    _e ^= _f; _f += _e; _e = _f * (K2 | 1u); (void)_e;
+                } else if constexpr ((K2 & 7u) == 2) {
+                    volatile uint32_t _e = K2;
+                    _e = (_e << 7) ^ (_e >> 25);
+                    _e *= K3 | 1u;
+                    (void)_e;
+                } else if constexpr ((K2 & 7u) == 3) {
+                    volatile uint64_t _e = K0;
+                    _e ^= static_cast<uint64_t>(K3) << 32;
+                    _e *= _e + 1u;
+                    volatile uint32_t _f = static_cast<uint32_t>(_e >> 16); (void)_f;
+                } else if constexpr ((K2 & 7u) == 4) {
+                    volatile uint32_t _e = K1, _f = K2, _g = K3;
+                    _e ^= _f >> 8; _f += _g; _g *= _e;
+                    _e = _f ^ _g; (void)_e;
+                } else if constexpr ((K2 & 7u) == 5) {
+                    volatile uint32_t _e = K0 ^ K3;
+                    for (volatile int _i = 0; _i < 2; ++_i) _e = (_e >> 11) | (_e << 21);
+                    (void)_e;
+                } else if constexpr ((K2 & 7u) == 6) {
+                    volatile uint32_t _ea[3] = {K1, K2, K3};
+                    _ea[0] *= _ea[1] | 1u; _ea[2] ^= _ea[0];
+                    (void)_ea[2];
+                } else {
+                    volatile uint32_t _e = K3, _f = K0;
+                    _e ^= _f; _f = (_f << 5) | (_f >> 27);
+                    _e += _f * (_e | 1u); (void)_e;
+                }
                 CW_COMPILER_BARRIER();
                 return data.data();
             }
@@ -2528,8 +3032,11 @@ namespace cloakwork {
                     CW_LOCK_GUARD(mutex);
                     if (decrypted.load(CW_MO_RELAXED)) {
                         auto& mutable_data = const_cast<std::array<char, N>&>(data);
-                        xtea::encrypt_buffer(mutable_data.data(), N, current_key);
-                        decrypted.store(false, CW_MO_RELAXED);
+                        if (has_rekeyed)
+                            cipher::rt_encrypt(mutable_data.data(), N, rk0, rk1, rk2, rk3);
+                        else
+                            cipher::encrypt_buffer<K0, K1, K2, K3>(mutable_data.data(), N);
+                        decrypted.store(false, CW_MO_RELEASE);
                     }
                 }
             }
@@ -2573,7 +3080,7 @@ namespace cloakwork {
             mutable CW_ATOMIC(bool) decrypted{false};
             mutable CW_MUTEX mutex;
 
-            static constexpr xtea::key128 compile_key = {{K0, K1, K2, K3}};
+
 
             // constexpr-safe wchar_t encryption: serialize to bytes, encrypt, deserialize
             static constexpr std::array<wchar_t, N> encrypt_wstring(const wchar_t* str) {
@@ -2582,7 +3089,7 @@ namespace cloakwork {
                     bytes[i * 2]     = static_cast<uint8_t>(str[i] & 0xFF);
                     bytes[i * 2 + 1] = static_cast<uint8_t>((str[i] >> 8) & 0xFF);
                 }
-                xtea::encrypt_buffer(bytes.data(), BYTE_LEN, compile_key);
+                cipher::encrypt_buffer<K0, K1, K2, K3>(bytes.data(), BYTE_LEN);
                 std::array<wchar_t, N> result{};
                 for (size_t i = 0; i < N; ++i) {
                     result[i] = static_cast<wchar_t>(bytes[i * 2])
@@ -2601,7 +3108,42 @@ namespace cloakwork {
 
             CW_NOINLINE const wchar_t* get() const {
                 CW_COMPILER_BARRIER();
-                if (!decrypted.load(CW_MO_RELAXED)) {
+                if constexpr ((K0 & 7u) == 0) {
+                    volatile uint32_t _p = K1; _p ^= _p >> 16; (void)_p;
+                } else if constexpr ((K0 & 7u) == 1) {
+                    volatile uint32_t _p = K2, _q = K3;
+                    _p = (_p * _q) ^ (_p >> 11); (void)_p;
+                } else if constexpr ((K0 & 7u) == 2) {
+                    volatile uint32_t _p = K1 ^ K3;
+                    for (volatile int _i = 0; _i < 3; ++_i) _p ^= _p << (_i + 1);
+                    (void)_p;
+                } else if constexpr ((K0 & 7u) == 3) {
+                    volatile uint32_t _p = K0 ^ K2, _q = K1 ^ K3;
+                    _p = (_p + _q) * 0x01000193u;
+                    _q = (_q ^ _p) * 0x27D4EB2Du;
+                    volatile uint32_t _r = _p ^ _q; (void)_r;
+                } else if constexpr ((K0 & 7u) == 4) {
+                    volatile uint32_t _p = K0, _q = K1;
+                    _p ^= _q >> 13; _q ^= _p << 7;
+                    _p += _q; _q *= _p; (void)_q;
+                } else if constexpr ((K0 & 7u) == 5) {
+                    volatile uint32_t _p = K2 ^ K3;
+                    volatile uint32_t _q = K1;
+                    _p = (_p >> 7) | (_p << 25);
+                    _q += _p * (_q | 1u);
+                    volatile uint32_t _r = _p ^ _q; (void)_r;
+                } else if constexpr ((K0 & 7u) == 6) {
+                    volatile uint64_t _p = K0;
+                    _p = _p * static_cast<uint64_t>(K1) + static_cast<uint64_t>(K2);
+                    _p ^= _p >> 33;
+                    volatile uint32_t _q = static_cast<uint32_t>(_p); (void)_q;
+                } else {
+                    volatile uint32_t _pa[4] = {K0, K1, K2, K3};
+                    _pa[0] ^= _pa[2]; _pa[1] += _pa[3];
+                    _pa[2] = _pa[0] * (_pa[1] | 1u);
+                    (void)_pa[3];
+                }
+                if (!decrypted.load(CW_MO_ACQUIRE)) {
                     CW_LOCK_GUARD(mutex);
                     if (!decrypted.load(CW_MO_RELAXED)) {
                         auto& mutable_data = const_cast<std::array<wchar_t, N>&>(data);
@@ -2610,13 +3152,83 @@ namespace cloakwork {
                             bytes[i * 2]     = static_cast<uint8_t>(mutable_data[i] & 0xFF);
                             bytes[i * 2 + 1] = static_cast<uint8_t>((mutable_data[i] >> 8) & 0xFF);
                         }
-                        xtea::decrypt_buffer(bytes, BYTE_LEN, compile_key);
+#if CW_ENABLE_CONTROL_FLOW
+                        if constexpr ((K1 & 3u) == 0) {
+                            if (control_flow::opaque_true<static_cast<int>(K1 & 0x7F)>()) {
+                                cipher::decrypt_buffer<K0, K1, K2, K3>(bytes, BYTE_LEN);
+                            } else {
+                                for (size_t _fi = 0; _fi < BYTE_LEN; ++_fi)
+                                    bytes[_fi] ^= static_cast<uint8_t>(K2 >> ((_fi & 3u) * 8u));
+                            }
+                        } else if constexpr ((K1 & 3u) == 1) {
+                            cipher::decrypt_buffer<K0, K1, K2, K3>(bytes, BYTE_LEN);
+                            if (control_flow::opaque_false<static_cast<int>(K1 & 0x7F)>()) {
+                                cipher::encrypt_buffer<K0, K1, K2, K3>(bytes, BYTE_LEN);
+                            }
+                        } else if constexpr ((K1 & 3u) == 2) {
+                            if (control_flow::opaque_true<static_cast<int>(K1 & 0x7F)>()) {
+                                if (control_flow::opaque_true<static_cast<int>((K1 >> 7) & 0x7F)>()) {
+                                    cipher::decrypt_buffer<K0, K1, K2, K3>(bytes, BYTE_LEN);
+                                } else {
+                                    for (size_t _fi = BYTE_LEN; _fi > 0; --_fi)
+                                        bytes[_fi-1] ^= static_cast<uint8_t>(K3 >> ((_fi & 3u) * 8u));
+                                }
+                            } else {
+                                volatile uint32_t _jk = K0;
+                                for (size_t _fi = 0; _fi < BYTE_LEN; ++_fi) {
+                                    bytes[_fi] ^= static_cast<uint8_t>(_jk >> 24);
+                                    _jk = (_jk << 1) | (_jk >> 31);
+                                }
+                            }
+                        } else {
+                            cipher::decrypt_buffer<K0, K1, K2, K3>(bytes, BYTE_LEN);
+                            if (control_flow::opaque_false<static_cast<int>(K1 & 0x7F)>()) {
+                                volatile uint8_t _vb = bytes[0];
+                                if (_vb != static_cast<uint8_t>(K3 & 0xFF))
+                                    cipher::encrypt_buffer<K0, K1, K2, K3>(bytes, BYTE_LEN);
+                            }
+                        }
+#else
+                        cipher::decrypt_buffer<K0, K1, K2, K3>(bytes, BYTE_LEN);
+#endif
                         for (size_t i = 0; i < N; ++i) {
                             mutable_data[i] = static_cast<wchar_t>(bytes[i * 2])
                                             | (static_cast<wchar_t>(bytes[i * 2 + 1]) << 8);
                         }
-                        decrypted.store(true, CW_MO_RELAXED);
+                        decrypted.store(true, CW_MO_RELEASE);
                     }
+                }
+                if constexpr ((K2 & 7u) == 0) {
+                    volatile uint32_t _e = K3; _e *= 0x119DE1F3u; _e ^= _e >> 16; (void)_e;
+                } else if constexpr ((K2 & 7u) == 1) {
+                    volatile uint32_t _e = K0, _f = K1;
+                    _e ^= _f; _f += _e; _e = _f * (K2 | 1u); (void)_e;
+                } else if constexpr ((K2 & 7u) == 2) {
+                    volatile uint32_t _e = K2;
+                    _e = (_e << 7) ^ (_e >> 25);
+                    _e *= K3 | 1u;
+                    (void)_e;
+                } else if constexpr ((K2 & 7u) == 3) {
+                    volatile uint64_t _e = K0;
+                    _e ^= static_cast<uint64_t>(K3) << 32;
+                    _e *= _e + 1u;
+                    volatile uint32_t _f = static_cast<uint32_t>(_e >> 16); (void)_f;
+                } else if constexpr ((K2 & 7u) == 4) {
+                    volatile uint32_t _e = K1, _f = K2, _g = K3;
+                    _e ^= _f >> 8; _f += _g; _g *= _e;
+                    _e = _f ^ _g; (void)_e;
+                } else if constexpr ((K2 & 7u) == 5) {
+                    volatile uint32_t _e = K0 ^ K3;
+                    for (volatile int _i = 0; _i < 2; ++_i) _e = (_e >> 11) | (_e << 21);
+                    (void)_e;
+                } else if constexpr ((K2 & 7u) == 6) {
+                    volatile uint32_t _ea[3] = {K1, K2, K3};
+                    _ea[0] *= _ea[1] | 1u; _ea[2] ^= _ea[0];
+                    (void)_ea[2];
+                } else {
+                    volatile uint32_t _e = K3, _f = K0;
+                    _e ^= _f; _f = (_f << 5) | (_f >> 27);
+                    _e += _f * (_e | 1u); (void)_e;
                 }
                 CW_COMPILER_BARRIER();
                 return data.data();
@@ -2634,12 +3246,12 @@ namespace cloakwork {
                             bytes[i * 2]     = static_cast<uint8_t>(mutable_data[i] & 0xFF);
                             bytes[i * 2 + 1] = static_cast<uint8_t>((mutable_data[i] >> 8) & 0xFF);
                         }
-                        xtea::encrypt_buffer(bytes, BYTE_LEN, compile_key);
+                        cipher::encrypt_buffer<K0, K1, K2, K3>(bytes, BYTE_LEN);
                         for (size_t i = 0; i < N; ++i) {
                             mutable_data[i] = static_cast<wchar_t>(bytes[i * 2])
                                             | (static_cast<wchar_t>(bytes[i * 2 + 1]) << 8);
                         }
-                        decrypted.store(false, CW_MO_RELAXED);
+                        decrypted.store(false, CW_MO_RELEASE);
                     }
                 }
             }
@@ -2649,32 +3261,128 @@ namespace cloakwork {
         encrypted_wstring(const wchar_t (&)[N]) -> encrypted_wstring<N>;
     }
 
+    //
+    // per-site size padding injected into CW_STR wrapper lambdas.
+    // the Pad template parameter is CW_RANDOM_CT(), unique per macro expansion,
+    // so each wrapper lambda gets a different code shape via if-constexpr.
+    //
+    namespace string_encrypt {
+        template<uint32_t Pad>
+        CW_FORCEINLINE void size_pad() {
+            if constexpr ((Pad & 0xFu) == 0) {
+                volatile uint32_t _p = Pad; _p ^= _p >> 16; (void)_p;
+            } else if constexpr ((Pad & 0xFu) == 1) {
+                volatile uint32_t _p = Pad, _q = Pad >> 16;
+                _p *= _q | 1u; (void)_p;
+            } else if constexpr ((Pad & 0xFu) == 2) {
+                volatile uint32_t _p = Pad;
+                for (volatile int _i = 0; _i < 2; ++_i) _p ^= _p << 3;
+                (void)_p;
+            } else if constexpr ((Pad & 0xFu) == 3) {
+                volatile uint32_t _p = Pad, _q = Pad >> 8, _r = Pad >> 16;
+                _p ^= _q; _q += _r; _r *= _p; (void)_r;
+            } else if constexpr ((Pad & 0xFu) == 4) {
+                volatile uint32_t _p = Pad;
+                _p = (_p * 0x45D9F3Bu) ^ (_p >> 11);
+                _p += _p >> 7;
+                (void)_p;
+            } else if constexpr ((Pad & 0xFu) == 5) {
+                volatile uint32_t _p = Pad, _q = Pad >> 16;
+                _p ^= _q; _q = (_q << 3) | (_q >> 29);
+                volatile uint32_t _r = _p * (_q | 1u); (void)_r;
+            } else if constexpr ((Pad & 0xFu) == 6) {
+                volatile uint64_t _p = Pad;
+                _p *= _p + 0x45D9F3Bu;
+                _p ^= _p >> 33;
+                volatile uint32_t _q = static_cast<uint32_t>(_p); (void)_q;
+            } else if constexpr ((Pad & 0xFu) == 7) {
+                volatile uint32_t _pa[4] = {Pad, Pad >> 8, Pad >> 16, Pad >> 24};
+                for (volatile int _i = 0; _i < 3; ++_i)
+                    _pa[_i] ^= _pa[_i + 1];
+                (void)_pa[0];
+            } else if constexpr ((Pad & 0xFu) == 8) {
+                volatile uint32_t _p = Pad;
+                if (_p & 1u) _p ^= _p << 5;
+                else _p += _p >> 3;
+                _p *= (_p | 1u); (void)_p;
+            } else if constexpr ((Pad & 0xFu) == 9) {
+                volatile uint32_t _p = Pad, _q = Pad >> 11;
+                volatile uint32_t _r = _p ^ _q;
+                _r = (_r * 0x27D4EB2Du) ^ (_r >> 15);
+                _p = _r + _q; (void)_p;
+            } else if constexpr ((Pad & 0xFu) == 10) {
+                volatile uint32_t _p = Pad;
+                for (volatile int _i = 0; _i < static_cast<int>((Pad >> 28) & 3u) + 2; ++_i)
+                    _p = (_p >> 7) | (_p << 25);
+                (void)_p;
+            } else if constexpr ((Pad & 0xFu) == 11) {
+                volatile uint64_t _p = static_cast<uint64_t>(Pad) << 32 | Pad;
+                volatile uint64_t _q = _p ^ (_p >> 17);
+                _q *= _q + 1u;
+                volatile uint32_t _r = static_cast<uint32_t>(_q >> 32); (void)_r;
+            } else if constexpr ((Pad & 0xFu) == 12) {
+                volatile uint32_t _p = Pad, _q = Pad >> 4, _r = Pad >> 12;
+                _p = (_p + _q) ^ _r;
+                _q = _p * (_r | 1u);
+                _r = _q ^ (_p >> 8);
+                volatile uint32_t _s = _p ^ _q ^ _r; (void)_s;
+            } else if constexpr ((Pad & 0xFu) == 13) {
+                volatile uint32_t _pa[3] = {Pad, ~Pad, Pad >> 16};
+                _pa[0] *= _pa[2] | 1u;
+                _pa[1] ^= _pa[0];
+                _pa[2] = (_pa[0] + _pa[1]) ^ _pa[2];
+                (void)_pa[2];
+            } else if constexpr ((Pad & 0xFu) == 14) {
+                volatile uint32_t _p = Pad;
+                volatile uint32_t _q = _p;
+                _p = (_p << 13) ^ (_p >> 19);
+                _q += _p;
+                _p ^= _q;
+                _q = _p * (_q | 1u);
+                (void)_q;
+            } else {
+                volatile uint64_t _p = Pad;
+                volatile uint32_t _q = Pad >> 16;
+                _p = (_p * 0x119DE1F3u) ^ (_p >> 7);
+                _q ^= static_cast<uint32_t>(_p);
+                _p += _q;
+                volatile uint32_t _r = static_cast<uint32_t>(_p ^ (_p >> 32)); (void)_r;
+            }
+            CW_COMPILER_BARRIER();
+        }
+    }
+
     // string encryption macros
     // constinit ensures compile-time initialization (encrypted data in .rdata, not plaintext)
 #define CW_STR(s) \
     static_cast<const char*>(([]() CW_NOINLINE -> const char* { \
-        constinit static cloakwork::string_encrypt::encrypted_string<sizeof(s)> enc(s); \
-        CW_COMPILER_BARRIER(); \
+        constinit static cloakwork::string_encrypt::encrypted_string<sizeof(s), \
+            CW_RANDOM_CT(), CW_RANDOM_CT(), CW_RANDOM_CT(), CW_RANDOM_CT()> enc(s); \
+        cloakwork::string_encrypt::size_pad<CW_RANDOM_CT()>(); \
         return enc.get(); \
     }()))
 
 #define CW_STR_LAYERED(s) \
     static_cast<const char*>(([]() CW_NOINLINE -> const char* { \
-        constinit static cloakwork::string_encrypt::layered_encrypted_string<sizeof(s)> enc(s); \
-        CW_COMPILER_BARRIER(); \
+        constinit static cloakwork::string_encrypt::layered_encrypted_string<sizeof(s), \
+            CW_RANDOM_CT(), CW_RANDOM_CT(), CW_RANDOM_CT(), CW_RANDOM_CT()> enc(s); \
+        cloakwork::string_encrypt::size_pad<CW_RANDOM_CT()>(); \
         return enc.get(); \
     }()))
 
 #define CW_STR_STACK(s) \
     ([&]() CW_NOINLINE { \
-        constinit static cloakwork::string_encrypt::encrypted_string<sizeof(s)> enc(s); \
+        constinit static cloakwork::string_encrypt::encrypted_string<sizeof(s), \
+            CW_RANDOM_CT(), CW_RANDOM_CT(), CW_RANDOM_CT(), CW_RANDOM_CT()> enc(s); \
+        cloakwork::string_encrypt::size_pad<CW_RANDOM_CT()>(); \
         return cloakwork::string_encrypt::stack_encrypted_string<sizeof(s)>(enc); \
     }())
 
 #define CW_WSTR(s) \
     static_cast<const wchar_t*>(([]() CW_NOINLINE -> const wchar_t* { \
-        constinit static cloakwork::string_encrypt::encrypted_wstring<sizeof(s)/sizeof(wchar_t)> enc(s); \
-        CW_COMPILER_BARRIER(); \
+        constinit static cloakwork::string_encrypt::encrypted_wstring<sizeof(s)/sizeof(wchar_t), \
+            CW_RANDOM_CT(), CW_RANDOM_CT(), CW_RANDOM_CT(), CW_RANDOM_CT()> enc(s); \
+        cloakwork::string_encrypt::size_pad<CW_RANDOM_CT()>(); \
         return enc.get(); \
     }()))
 
@@ -2685,8 +3393,10 @@ namespace cloakwork {
     do { \
         constexpr uint8_t _cw_ssk = static_cast<uint8_t>(CW_RANDOM_CT() | 1); \
         volatile uint8_t* _cw_ssp = reinterpret_cast<volatile uint8_t*>(name); \
-        for (size_t _cw_ssi = 0; _cw_ssi < sizeof(name); ++_cw_ssi) \
-            _cw_ssp[_cw_ssi] = _cw_ssp[_cw_ssi]; \
+        for (size_t _cw_ssi = 0; _cw_ssi < sizeof(name); ++_cw_ssi) { \
+            _cw_ssp[_cw_ssi] ^= _cw_ssk; \
+            _cw_ssp[_cw_ssi] ^= _cw_ssk; \
+        } \
         CW_COMPILER_BARRIER(); \
     } while(0)
 
@@ -2710,37 +3420,103 @@ namespace cloakwork {
     }
 
     namespace mba {
-        // MBA identity: x + y = (x ^ y) + 2 * (x & y)
+
+        // deep MBA add variant 0: nested De Morgan with carry propagation
         template<typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
-        CW_FORCEINLINE constexpr T add_mba(T x, T y) {
-            return (x ^ y) + ((x & y) << 1);
+        CW_NOINLINE T add_deep(T x, T y) {
+            CW_COMPILER_BARRIER();
+            volatile T vx = x, vy = y;
+            CW_COMPILER_BARRIER();
+            volatile T t0 = ~(~vx & ~vy);
+            volatile T t1 = ~(~vx | ~vy);
+            CW_COMPILER_BARRIER();
+            T a = t0, b = t1;
+            volatile T half = a ^ b;
+            volatile T carry = (a & b) << 1;
+            CW_COMPILER_BARRIER();
+            T h = half, c = carry;
+            volatile T result = (h ^ c) + (static_cast<T>(h & c) << 1);
+            CW_COMPILER_BARRIER();
+            return static_cast<T>(result);
         }
 
-        // MBA identity: x - y = (x ^ y) - 2 * (~x & y)
+        // deep MBA add variant 1: XOR via De Morgan expansion
         template<typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
-        CW_FORCEINLINE constexpr T sub_mba(T x, T y) {
-            return (x ^ y) - ((~x & y) << 1);
+        CW_NOINLINE T add_deep_alt(T x, T y) {
+            CW_COMPILER_BARRIER();
+            volatile T vx = x, vy = y;
+            CW_COMPILER_BARRIER();
+            T a = ~static_cast<T>(vx) & static_cast<T>(vy);
+            T b = static_cast<T>(vx) & ~static_cast<T>(vy);
+            volatile T c = a | b;
+            volatile T d = ~(~vx | ~vy);
+            CW_COMPILER_BARRIER();
+            T cv = c, dv = d;
+            volatile T e = dv + dv;
+            CW_COMPILER_BARRIER();
+            T ev = e;
+            volatile T result = (cv ^ ev) + (static_cast<T>(cv & ev) << 1);
+            CW_COMPILER_BARRIER();
+            return static_cast<T>(result);
         }
 
-        // MBA identity: x * 2 = (x ^ (x << 1)) + (x << 1)
-        template<typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
-        CW_FORCEINLINE constexpr T mul2_mba(T x) {
-            return (x ^ (x << 1)) + (x << 1);
+        template<typename T, int Variant = 0, typename = std::enable_if_t<std::is_integral_v<T>>>
+        CW_FORCEINLINE T add_mba(T x, T y) {
+            if constexpr (Variant % 2 == 0) {
+                return add_deep(x, y);
+            } else {
+                return add_deep_alt(x, y);
+            }
         }
 
-        // MBA identity: -x = ~x + 1
+        // deep subtraction: x - y = x + (~y + 1)
         template<typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
-        CW_FORCEINLINE constexpr T neg_mba(T x) {
+        CW_NOINLINE T sub_deep(T x, T y) {
+            CW_COMPILER_BARRIER();
+            volatile T vy = y;
+            CW_COMPILER_BARRIER();
+            T neg_y = ~static_cast<T>(vy);
+            T one = static_cast<T>(1);
+            volatile T t0 = ~(~neg_y & ~one);
+            volatile T t1 = ~(~neg_y | ~one);
+            CW_COMPILER_BARRIER();
+            T a0 = t0, a1 = t1;
+            volatile T neg_result = (a0 ^ a1) + (static_cast<T>(a0 & a1) << 1);
+            CW_COMPILER_BARRIER();
+            volatile T vx = x;
+            CW_COMPILER_BARRIER();
+            T xv = vx, nr = neg_result;
+            T da = ~xv & nr;
+            T db = xv & ~nr;
+            volatile T dc = da | db;
+            volatile T dd = ~(~xv | ~nr);
+            CW_COMPILER_BARRIER();
+            T cv = dc;
+            volatile T result = cv + (static_cast<T>(dd) << 1);
+            CW_COMPILER_BARRIER();
+            return static_cast<T>(result);
+        }
+
+        template<typename T, int Variant = 0, typename = std::enable_if_t<std::is_integral_v<T>>>
+        CW_FORCEINLINE T sub_mba(T x, T y) {
+            return sub_deep(x, y);
+        }
+
+        template<typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
+        CW_FORCEINLINE T mul2_mba(T x) {
+            return add_mba(x, x);
+        }
+
+        template<typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
+        CW_FORCEINLINE T neg_mba(T x) {
             return add_mba(static_cast<T>(~x), static_cast<T>(1));
         }
 
-        // MBA identity: x & y = ~(~x | ~y)
         template<typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
         CW_FORCEINLINE constexpr T and_mba(T x, T y) {
             return ~(~x | ~y);
         }
 
-        // MBA identity: x | y = ~(~x & ~y)
         template<typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
         CW_FORCEINLINE constexpr T or_mba(T x, T y) {
             return ~(~x & ~y);
@@ -2760,6 +3536,7 @@ namespace cloakwork {
         static constexpr U rotate_left(U val, int shift) {
             constexpr int bits = sizeof(U) * 8;
             shift %= bits;
+            if (shift == 0) return val;
             return (val << shift) | (val >> (bits - shift));
         }
 
@@ -2767,6 +3544,7 @@ namespace cloakwork {
         static constexpr U rotate_right(U val, int shift) {
             constexpr int bits = sizeof(U) * 8;
             shift %= bits;
+            if (shift == 0) return val;
             return (val >> shift) | (val << (bits - shift));
         }
 
@@ -2805,7 +3583,7 @@ namespace cloakwork {
         CW_NOINLINE T get() const {
             CW_COMPILER_BARRIER();
             if ((++access_count % 1000) == 0) {
-                CW_INLINE_CHECK();
+                cloakwork::anti_debug::inline_check();
             }
 
             if constexpr(std::is_integral_v<T>) {
@@ -2880,40 +3658,167 @@ namespace cloakwork {
     concept Arithmetic = std::is_arithmetic_v<T>;
 
     namespace mba {
-        // MBA identity: x + y = (x ^ y) + 2 * (x & y)
+
+        /*++
+        
+        MBA transforms.
+        
+        --*/
+
         template<Integral T>
-        CW_FORCEINLINE constexpr T add_mba(T x, T y) {
-            return (x ^ y) + ((x & y) << 1);
+        using clean_integral_t = std::remove_cv_t<T>;
+
+        template<Integral T>
+        using unsigned_integral_t = std::make_unsigned_t<clean_integral_t<T>>;
+
+        template<Integral T>
+        CW_FORCEINLINE clean_integral_t<T> from_unsigned(unsigned_integral_t<T> value) {
+            using C = clean_integral_t<T>;
+            if constexpr (std::is_same_v<C, bool>) {
+                return value != 0;
+            } else {
+                return std::bit_cast<C>(value);
+            }
         }
 
-        // MBA identity: x - y = (x ^ y) - 2 * (~x & y)
+        //
+        // Deep MBA addition variant 0: nested De Morgan with carry propagation.
+        // x + y is computed through 3 layers of bitwise transforms with volatile
+        // intermediates that prevent the optimizer from collapsing back to 'add'.
+        //
         template<Integral T>
-        CW_FORCEINLINE constexpr T sub_mba(T x, T y) {
-            return (x ^ y) - ((~x & y) << 1);
+        CW_NOINLINE clean_integral_t<T> add_deep(T x, T y) {
+            CW_COMPILER_BARRIER();
+            using U = unsigned_integral_t<T>;
+            volatile U vx = static_cast<U>(x), vy = static_cast<U>(y);
+            CW_COMPILER_BARRIER();
+            // depth 1: (x|y) and (x&y) via De Morgan
+            volatile U t0 = ~(~vx & ~vy);       // x | y
+            volatile U t1 = ~(~vx | ~vy);       // x & y
+            CW_COMPILER_BARRIER();
+            // depth 2: half-sum and carry from the above
+            U a = t0, b = t1;
+            volatile U half = a ^ b;             // (x|y) ^ (x&y) = x ^ y
+            volatile U carry = (a & b) << 1;     // 2 * ((x|y) & (x&y)) = 2*(x&y)
+            CW_COMPILER_BARRIER();
+            // depth 3: recombine via MBA identity
+            U h = half, c = carry;
+            volatile U result = (h ^ c) + ((h & c) << 1);
+            CW_COMPILER_BARRIER();
+            return from_unsigned<T>(result);
         }
 
-        // MBA identity: x * 2 = (x ^ (x << 1)) + (x << 1)
+        //
+        // Deep MBA addition variant 1: XOR expanded through De Morgan.
+        // x ^ y = (~x & y) | (x & ~y), then carry via nested MBA.
+        // different instruction pattern from variant 0 at each call site.
+        //
         template<Integral T>
-        CW_FORCEINLINE constexpr T mul2_mba(T x) {
-            return (x ^ (x << 1)) + (x << 1);
+        CW_NOINLINE clean_integral_t<T> add_deep_alt(T x, T y) {
+            CW_COMPILER_BARRIER();
+            using U = unsigned_integral_t<T>;
+            volatile U vx = static_cast<U>(x), vy = static_cast<U>(y);
+            CW_COMPILER_BARRIER();
+            U a = ~static_cast<U>(vx) & static_cast<U>(vy);
+            U b = static_cast<U>(vx) & ~static_cast<U>(vy);
+            volatile U c = a | b;                // x ^ y via de Morgan
+            volatile U d = ~(~vx | ~vy);         // x & y via de Morgan
+            CW_COMPILER_BARRIER();
+            U cv = c, dv = d;
+            volatile U e = dv + dv;              // 2*(x&y)
+            CW_COMPILER_BARRIER();
+            // final: (x^y) + 2*(x&y) but both terms computed through indirection
+            U ev = e;
+            volatile U result = (cv ^ ev) + ((cv & ev) << 1);
+            CW_COMPILER_BARRIER();
+            return from_unsigned<T>(result);
         }
 
-        // MBA identity: -x = ~x + 1
-        template<Integral T>
-        CW_FORCEINLINE constexpr T neg_mba(T x) {
-            return add_mba(static_cast<T>(~x), static_cast<T>(1));
+        // compile-time variant selection gives each call site a different expansion
+        template<Integral T, int Variant = 0>
+        CW_FORCEINLINE clean_integral_t<T> add_mba(T x, T y) {
+            if constexpr (Variant % 2 == 0) {
+                return add_deep(x, y);
+            } else {
+                return add_deep_alt(x, y);
+            }
         }
 
-        // MBA identity: x & y = ~(~x | ~y)
+        //
+        // Deep subtraction: x - y = x + (~y + 1)
+        // both the negation and the addition are expanded through MBA.
+        //
         template<Integral T>
-        CW_FORCEINLINE constexpr T and_mba(T x, T y) {
-            return ~(~x | ~y);
+        CW_NOINLINE clean_integral_t<T> sub_deep(T x, T y) {
+            CW_COMPILER_BARRIER();
+            using U = unsigned_integral_t<T>;
+            volatile U vy = static_cast<U>(y);
+            CW_COMPILER_BARRIER();
+            U neg_y = ~static_cast<U>(vy);
+            U one = static_cast<U>(1);
+            // neg_y + 1 via MBA
+            volatile U t0 = ~(~neg_y & ~one);       // neg_y | 1
+            volatile U t1 = ~(~neg_y | ~one);       // neg_y & 1
+            CW_COMPILER_BARRIER();
+            U a0 = t0, a1 = t1;
+            volatile U neg_result = (a0 ^ a1) + ((a0 & a1) << 1);
+            CW_COMPILER_BARRIER();
+            // x + neg_result via different MBA path
+            volatile U vx = static_cast<U>(x);
+            CW_COMPILER_BARRIER();
+            U xv = vx, nr = neg_result;
+            U da = ~xv & nr;
+            U db = xv & ~nr;
+            volatile U dc = da | db;                 // x ^ neg_result
+            volatile U dd = ~(~xv | ~nr);            // x & neg_result
+            CW_COMPILER_BARRIER();
+            U cv = dc;
+            volatile U result = cv + (static_cast<U>(dd) << 1);
+            CW_COMPILER_BARRIER();
+            return from_unsigned<T>(result);
         }
 
-        // MBA identity: x | y = ~(~x & ~y)
+        template<Integral T, int Variant = 0>
+        CW_FORCEINLINE clean_integral_t<T> sub_mba(T x, T y) {
+            return sub_deep(x, y);
+        }
+
+        // x * 2 routed through deep add
         template<Integral T>
-        CW_FORCEINLINE constexpr T or_mba(T x, T y) {
-            return ~(~x & ~y);
+        CW_FORCEINLINE clean_integral_t<T> mul2_mba(T x) {
+            return add_mba(x, x);
+        }
+
+        // negation via deep MBA: -x = ~x + 1
+        template<Integral T>
+        CW_FORCEINLINE clean_integral_t<T> neg_mba(T x) {
+            using U = unsigned_integral_t<T>;
+            U ux = static_cast<U>(x);
+            return from_unsigned<T>(add_mba(static_cast<clean_integral_t<T>>(~ux), static_cast<clean_integral_t<T>>(1)));
+        }
+
+        // bitwise ops stay shallow -- De Morgan transforms are less
+        // recognizable than arithmetic MBA and simplifiers don't target them
+        template<Integral T>
+        CW_FORCEINLINE constexpr clean_integral_t<T> and_mba(T x, T y) {
+            using U = unsigned_integral_t<T>;
+            U result = ~(~static_cast<U>(x) | ~static_cast<U>(y));
+            return std::bit_cast<clean_integral_t<T>>(result);
+        }
+
+        template<Integral T>
+        CW_FORCEINLINE constexpr clean_integral_t<T> or_mba(T x, T y) {
+            using U = unsigned_integral_t<T>;
+            U result = ~(~static_cast<U>(x) & ~static_cast<U>(y));
+            return std::bit_cast<clean_integral_t<T>>(result);
+        }
+
+        template<Integral A, Integral B>
+        CW_FORCEINLINE auto xor_mba_once(A a, B b) {
+            using R = clean_integral_t<decltype(a ^ b)>;
+            R ra = static_cast<R>(a);
+            R rb = static_cast<R>(b);
+            return sub_mba(or_mba(ra, rb), and_mba(ra, rb));
         }
     }
 
@@ -2930,6 +3835,7 @@ namespace cloakwork {
         static constexpr U rotate_left(U val, int shift) {
             constexpr int bits = sizeof(U) * 8;
             shift %= bits;
+            if (shift == 0) return val;
             return (val << shift) | (val >> (bits - shift));
         }
 
@@ -2937,6 +3843,7 @@ namespace cloakwork {
         static constexpr U rotate_right(U val, int shift) {
             constexpr int bits = sizeof(U) * 8;
             shift %= bits;
+            if (shift == 0) return val;
             return (val >> shift) | (val << (bits - shift));
         }
 
@@ -2976,7 +3883,7 @@ namespace cloakwork {
         CW_NOINLINE T get() const {
             CW_COMPILER_BARRIER();
             if ((++access_count % 1000) == 0) {
-                CW_INLINE_CHECK();
+                cloakwork::anti_debug::inline_check();
             }
 
             if constexpr(Integral<T>) {
@@ -3100,7 +4007,7 @@ namespace cloakwork {
             CW_COMPILER_BARRIER();
 
             // transform: value = (value AND true) OR (false AND anything)
-            // mathematically equivalent to just 'value', but harder to analyze
+            // mathematically equivalent to just 'value', with extra analysis noise
             bool true_val = obfuscated_true<N>();
             bool false_val = obfuscated_false<N + 1>();
 
@@ -3130,34 +4037,45 @@ namespace cloakwork {
             static constexpr uint8_t TRUE_PATTERN = Key1 ^ 0xAA ^ Key2;
             static constexpr uint8_t FALSE_PATTERN = Key1 ^ 0x55 ^ Key3;
             static constexpr uint8_t VERIFY_MASK = Key2 ^ Key3;
+            static constexpr uint8_t TRUE_MODE = 0xA5u;
+            static constexpr uint8_t FALSE_MODE = 0x5Au;
 
             CW_FORCEINLINE void encode(bool value) {
                 uint8_t runtime_noise = static_cast<uint8_t>(CW_RANDOM_RT() & 0xF0);
 
                 if (value) {
-                    // encode true across multiple bytes with different patterns
                     encoded_primary = TRUE_PATTERN ^ runtime_noise;
-                    encoded_secondary = static_cast<uint8_t>(~encoded_primary) ^ Key1;
-                    encoded_tertiary = (encoded_primary + encoded_secondary) ^ VERIFY_MASK;
+                    encoded_secondary = encoded_primary ^ Key1 ^ TRUE_MODE;
+                    encoded_tertiary = static_cast<uint8_t>(
+                        (encoded_primary + encoded_secondary + Key2) ^ VERIFY_MASK);
                 } else {
-                    // encode false with different patterns
                     encoded_primary = FALSE_PATTERN ^ runtime_noise;
-                    encoded_secondary = static_cast<uint8_t>(~encoded_primary) ^ Key2;
-                    encoded_tertiary = (encoded_primary - encoded_secondary) ^ VERIFY_MASK;
+                    encoded_secondary = encoded_primary ^ Key1 ^ FALSE_MODE;
+                    encoded_tertiary = static_cast<uint8_t>(
+                        (encoded_primary + encoded_secondary + Key3) ^ static_cast<uint8_t>(~VERIFY_MASK));
                 }
             }
 
             CW_FORCEINLINE bool decode() const {
-                // decode using pattern matching, not simple comparison
-                uint8_t reconstructed = encoded_primary ^ (static_cast<uint8_t>(~encoded_primary) ^ Key1);
-                uint8_t check = encoded_secondary ^ Key1;
+                uint8_t true_secondary = encoded_primary ^ Key1 ^ TRUE_MODE;
+                uint8_t false_secondary = encoded_primary ^ Key1 ^ FALSE_MODE;
 
-                // verify integrity through tertiary byte
-                uint8_t expected_true = (encoded_primary + (static_cast<uint8_t>(~encoded_primary) ^ Key1)) ^ VERIFY_MASK;
-                bool is_true_pattern = (encoded_tertiary == expected_true);
+                uint8_t true_tertiary = static_cast<uint8_t>(
+                    (encoded_primary + true_secondary + Key2) ^ VERIFY_MASK);
+                uint8_t false_tertiary = static_cast<uint8_t>(
+                    (encoded_primary + false_secondary + Key3) ^ static_cast<uint8_t>(~VERIFY_MASK));
+
+                bool is_true_pattern =
+                    encoded_secondary == true_secondary &&
+                    encoded_tertiary == true_tertiary;
+                bool is_false_pattern =
+                    encoded_secondary == false_secondary &&
+                    encoded_tertiary == false_tertiary;
+
+                if (!is_true_pattern || is_false_pattern) return false;
 
                 // use MBA to compute final result
-                int true_indicator = is_true_pattern ? 1 : 0;
+                int true_indicator = 1;
                 int one = mba::sub_mba(2, 1);
                 return mba::sub_mba(true_indicator, 0) == one;
             }
@@ -3169,7 +4087,7 @@ namespace cloakwork {
             CW_FORCEINLINE bool get() const {
                 // periodic anti-debug check
                 if ((++access_count % 500) == 0) {
-                    CW_INLINE_CHECK();
+                    cloakwork::anti_debug::inline_check();
                 }
 
                 bool raw_value = decode();
@@ -3202,8 +4120,8 @@ namespace cloakwork {
     #define CW_FALSE (cloakwork::bool_obfuscation::obfuscated_false<CW_RAND_CT(1, 1000)>())
     #define CW_BOOL(x) (cloakwork::bool_obfuscation::obfuscate_bool<CW_RAND_CT(1, 1000)>(x))
 
-    #define CW_ADD(a, b) (cloakwork::mba::add_mba((a), (b)))
-    #define CW_SUB(a, b) (cloakwork::mba::sub_mba((a), (b)))
+    #define CW_ADD(a, b) (cloakwork::mba::add_mba<decltype((a)+(b)), CW_RAND_CT(0, 7)>((a), (b)))
+    #define CW_SUB(a, b) (cloakwork::mba::sub_mba<decltype((a)-(b)), CW_RAND_CT(0, 7)>((a), (b)))
     #define CW_AND(a, b) (cloakwork::mba::and_mba((a), (b)))
     #define CW_OR(a, b) (cloakwork::mba::or_mba((a), (b)))
 
@@ -3268,242 +4186,223 @@ namespace cloakwork {
 #if CW_ENABLE_CONTROL_FLOW
     namespace control_flow {
 
-        // decompiler-resistant opaque predicates
-        // these use patterns that ida/hex-rays cannot simplify:
-        // memory aliasing, environment queries, pointer arithmetic, mixed math
+        /*++
+        
+        Control flow transforms.
+        
+        --*/
+
+
+        // decompiler-resistant opaque predicates based on number-theoretic
+        // invariants. each predicate relies on a provably-true mathematical
+        // property but produces non-trivial computation in the binary.
 
         namespace opaque_detail {
-            // predicate 0: hash stack pointer through non-trivial computation
-            // the compiler cannot determine the stack address at compile time,
-            // and the multiply-xor-shift chain is non-invertible for static analysis
-            CW_NOINLINE bool stack_hash_true(int seed) {
-                volatile int anchor = seed;
-                uintptr_t sp = reinterpret_cast<uintptr_t>(&anchor);
-                CW_COMPILER_BARRIER();
-                // non-trivial hash: multiply by large prime, xor-shift, check parity of popcount
-                uint32_t h = static_cast<uint32_t>(sp);
-                h ^= static_cast<uint32_t>(seed);
-                h *= 0x45D9F3Bu;
-                h ^= h >> 16;
-                h *= 0x119DE1F3u;
-                h ^= h >> 13;
-                // popcount of any 32-bit value added to its complement is always 32
-                uint32_t complement = ~h;
-                volatile uint32_t combined = h + complement;
-                CW_COMPILER_BARRIER();
-                // h + ~h == 0xFFFFFFFF for any h, so combined is always 0xFFFFFFFF
-                return combined == 0xFFFFFFFFu;
+
+            static CW_FORCEINLINE uint32_t soft_popcount32(uint32_t value) {
+                value = value - ((value >> 1) & 0x55555555u);
+                value = (value & 0x33333333u) + ((value >> 2) & 0x33333333u);
+                value = (value + (value >> 4)) & 0x0F0F0F0Fu;
+                return (value * 0x01010101u) >> 24;
             }
 
-            // predicate 1: rdtsc XOR with stack address
-            // both values are runtime-only; the XOR and modular arithmetic
-            // produce a result the optimizer cannot statically resolve
-            CW_NOINLINE bool tsc_stack_true() {
-#if defined(_WIN32)
-                volatile int anchor = 0;
-                uintptr_t sp = reinterpret_cast<uintptr_t>(&anchor);
-                uint64_t tsc = __rdtsc();
-                CW_COMPILER_BARRIER();
-                uint64_t mixed = tsc ^ sp;
-                // (x | ~x) is always all-ones for any x
-                volatile uint64_t check = mixed | ~mixed;
-                CW_COMPILER_BARRIER();
-                return check == ~0ULL;
-#elif CW_KERNEL_MODE
-                volatile int anchor = 0;
-                uintptr_t sp = reinterpret_cast<uintptr_t>(&anchor);
-                uint64_t tsc = __rdtsc();
-                CW_COMPILER_BARRIER();
-                uint64_t mixed = tsc ^ sp;
-                volatile uint64_t check = mixed | ~mixed;
-                CW_COMPILER_BARRIER();
-                return check == ~0ULL;
-#else
-                return true;
-#endif
-            }
-
-            // predicate 2: thread ID through non-invertible transform
-            // GetCurrentThreadId is a runtime call, and the transform chain
-            // ensures the optimizer cannot prove the final comparison
-            CW_NOINLINE bool tid_transform_true() {
-#if defined(_WIN32) && !CW_KERNEL_MODE
-                uint32_t tid = GetCurrentThreadId();
-                CW_COMPILER_BARRIER();
-                // Collatz-like transform - non-invertible, runtime-dependent
-                uint32_t v = tid | 0x100u; // ensure nonzero
-                volatile uint32_t orig = v;
-                for (volatile int i = 0; i < 3; ++i) {
-                    v = (v & 1) ? (v * 3u + 1u) : (v >> 1);
+            static CW_FORCEINLINE uint32_t soft_crc32_u32(uint32_t seed, uint32_t value) {
+                uint32_t crc = ~seed;
+                for (int i = 0; i < 4; ++i) {
+                    crc ^= static_cast<uint8_t>(value >> (i * 8));
+                    for (int bit = 0; bit < 8; ++bit)
+                        crc = (crc >> 1) ^ (0xEDB88320u & (0u - (crc & 1u)));
                 }
+                return ~crc;
+            }
+
+            //
+            // Predicate 0: quadratic residue mod 4.
+            // For any integer x, x^2 mod 4 is always 0 or 1.
+            // Even: (2k)^2 = 4k^2 -> mod 4 = 0
+            // Odd:  (2k+1)^2 = 4k^2+4k+1 -> mod 4 = 1
+            //
+            static CW_NOINLINE bool quadratic_residue_true(uint32_t seed) {
+                volatile uint32_t x = seed ^ static_cast<uint32_t>(
+                    reinterpret_cast<uintptr_t>(&x));
                 CW_COMPILER_BARRIER();
-                // (orig ^ orig) is always 0, but compiler can't prove it
-                // through the volatile indirection and loop side effects
-                volatile uint32_t self_xor = orig ^ orig;
-                return self_xor == 0;
-#elif CW_KERNEL_MODE
-                uintptr_t tid = HandleToULong(PsGetCurrentThreadId());
+                uint32_t val = x;
+                volatile uint32_t sq = val * val;
                 CW_COMPILER_BARRIER();
-                uint32_t v = static_cast<uint32_t>(tid) | 0x100u;
-                volatile uint32_t orig = v;
-                for (volatile int i = 0; i < 3; ++i) {
-                    v = (v & 1) ? (v * 3u + 1u) : (v >> 1);
+                volatile uint32_t rem = sq & 3u;
+                return (rem == 0u) || (rem == 1u);
+            }
+
+            //
+            // Predicate 1: product of consecutive integers is always even.
+            // n*(n+1) must be even because one of {n, n+1} is always even.
+            //
+            static CW_NOINLINE bool consecutive_product_true() {
+                volatile uint32_t n = static_cast<uint32_t>(__rdtsc() & 0xFFFF);
+                CW_COMPILER_BARRIER();
+                uint32_t val = n;
+                volatile uint32_t product = val * (val + 1u);
+                CW_COMPILER_BARRIER();
+                return (product & 1u) == 0u;
+            }
+
+            //
+            // Predicate 2: Gauss summation identity.
+            // sum(0..n) computed via closed form n*(n+1)/2 and via iterative
+            // accumulation must agree. two independent codepaths that the
+            // compiler can't fold because of volatile intermediates.
+            //
+            static CW_NOINLINE bool gauss_sum_true() {
+                volatile uint32_t n = (static_cast<uint32_t>(
+                    reinterpret_cast<uintptr_t>(&n)) >> 4) & 0x1F;
+                CW_COMPILER_BARRIER();
+                uint32_t limit = n | 4u; // at least 4 iterations
+
+                // path A: closed form
+                volatile uint32_t closed = (limit * (limit + 1u)) >> 1;
+                CW_COMPILER_BARRIER();
+
+                // path B: iterative
+                volatile uint32_t acc = 0;
+                for (volatile uint32_t i = 0; i <= limit; ++i)
+                    acc += i;
+                CW_COMPILER_BARRIER();
+
+                return closed == acc;
+            }
+
+            //
+            // Predicate 3: popcount(x) + popcount(~x) == 32 for any 32-bit x.
+            // every bit is set in exactly one of {x, ~x}, so the total popcount
+            // is always the bitwidth. software popcount avoids feature-gated
+            // CPU instructions in default builds.
+            //
+            static CW_NOINLINE bool popcount_complement_true() {
+                volatile uint32_t x = static_cast<uint32_t>(__rdtsc());
+                CW_COMPILER_BARRIER();
+                uint32_t val = x;
+                volatile uint32_t pc1 = soft_popcount32(val);
+                volatile uint32_t pc2 = soft_popcount32(~val);
+                CW_COMPILER_BARRIER();
+                return (pc1 + pc2) == 32u;
+            }
+
+            //
+            // Predicate 4: CRC32 of the same value computed through separate
+            // volatile paths always produces equal results. the software CRC
+            // path is noisier than a single instruction but does not fault on
+            // older CPUs or clang-cl default targets.
+            //
+            static CW_NOINLINE bool crc_self_true() {
+                volatile uint32_t val = static_cast<uint32_t>(
+                    reinterpret_cast<uintptr_t>(&val));
+                CW_COMPILER_BARRIER();
+                uint32_t v = val;
+                volatile uint32_t c1 = soft_crc32_u32(0, v);
+                CW_COMPILER_BARRIER();
+                volatile uint32_t c2 = soft_crc32_u32(0, v);
+                CW_COMPILER_BARRIER();
+                return c1 == c2;
+            }
+
+            //
+            // Predicate 5: Bezout's identity / Euclidean GCD property.
+            // gcd(a, b) always divides a. we compute the GCD via the Euclidean
+            // algorithm (real iterative work) and then verify a % gcd == 0.
+            // the loop and modular arithmetic look like genuine algorithmic code.
+            //
+            static CW_NOINLINE bool bezout_true() {
+                volatile uint32_t a = static_cast<uint32_t>(
+                    reinterpret_cast<uintptr_t>(&a)) | 1u;
+                volatile uint32_t b = static_cast<uint32_t>(__rdtsc()) | 1u;
+                CW_COMPILER_BARRIER();
+                uint32_t va = a, vb = b;
+                // Euclidean GCD
+                while (vb != 0) {
+                    uint32_t t = vb;
+                    vb = va % vb;
+                    va = t;
                 }
+                volatile uint32_t orig_a = a;
                 CW_COMPILER_BARRIER();
-                volatile uint32_t self_xor = orig ^ orig;
-                return self_xor == 0;
-#else
-                return true;
-#endif
+                return (orig_a % va) == 0;
             }
 
-            // predicate 3: multiply-accumulate with runtime stack entropy
-            // uses the address of a local as entropy, runs it through a
-            // sequence of operations that always produces a known bit pattern
-            CW_NOINLINE bool mac_entropy_true(int seed) {
-                volatile int anchor = seed;
-                uint32_t addr_bits = static_cast<uint32_t>(
-                    reinterpret_cast<uintptr_t>(&anchor));
+            //
+            // Predicate 6: bit decomposition identity.
+            // for any nonzero x, the span from lowest to highest set bit plus
+            // leading and trailing zeros equals the bitwidth. popcount is bounded
+            // by the span. uses BSF, BSR, POPCNT — three distinct hardware
+            // instructions the decompiler can't fold.
+            //
+            static CW_NOINLINE bool bit_decompose_true() {
+                volatile uint32_t x = static_cast<uint32_t>(__rdtsc()) | 1u;
                 CW_COMPILER_BARRIER();
-                // Feistel-like round: split, mix, recombine
-                uint16_t lo = static_cast<uint16_t>(addr_bits);
-                uint16_t hi = static_cast<uint16_t>(addr_bits >> 16);
-                uint16_t mixed = hi ^ (lo * 0x7Fu + static_cast<uint16_t>(seed));
-                // (x - x) is always 0, but through volatile the compiler
-                // cannot fold the subtract away
-                volatile uint16_t a = mixed;
-                volatile uint16_t b = mixed;
+                uint32_t v = x;
+                unsigned long bsf_idx, bsr_idx;
+                _BitScanForward(&bsf_idx, v);
+                _BitScanReverse(&bsr_idx, v);
+                volatile uint32_t pc = soft_popcount32(v);
                 CW_COMPILER_BARRIER();
-                volatile int16_t diff = static_cast<int16_t>(a - b);
-                return diff == 0;
+                uint32_t leading  = 31u - bsr_idx;
+                uint32_t trailing = bsf_idx;
+                uint32_t span     = bsr_idx - bsf_idx + 1u;
+                return (leading + span + trailing) == 32u && pc <= span;
             }
 
-            // predicate 4: compare two independently computed representations of
-            // the same runtime value; compiler cannot prove equality across
-            // volatile stores and reloads with arithmetic in between
-            CW_NOINLINE bool dual_path_true() {
-                volatile int anchor = 42;
-                uintptr_t base = reinterpret_cast<uintptr_t>(&anchor);
+            //
+            // Predicate 7: modular multiplicative inverse via Hensel lifting.
+            // for any odd x, x * modinv(x) == 1 (mod 2^32). we compute the
+            // inverse using Newton iteration which converges in 4 steps for
+            // 32-bit integers. the resulting code looks like real crypto work.
+            //
+            static CW_NOINLINE bool modinv_true() {
+                volatile uint32_t x = (static_cast<uint32_t>(__rdtsc()) | 1u);
                 CW_COMPILER_BARRIER();
-                // path A: lower 8 bits through multiply-add
-                volatile uint32_t path_a = static_cast<uint32_t>(base & 0xFF);
-                uint32_t va = path_a;
-                va = (va * 7u + 3u) & 0xFFu;
-                va = (va * 11u + 5u) & 0xFFu;
-                volatile uint32_t result_a = va;
+                uint32_t v = x;
+                // Newton's method for modular inverse:
+                // if y ~= v^{-1} mod 2^k, then y*(2 - v*y) ~= v^{-1} mod 2^{2k}
+                uint32_t inv = v; // initial: v*v == 1 mod 2 for odd v
+                inv = inv * (2u - v * inv); // accurate mod 2^4
+                inv = inv * (2u - v * inv); // accurate mod 2^8
+                inv = inv * (2u - v * inv); // accurate mod 2^16
+                inv = inv * (2u - v * inv); // accurate mod 2^32
+                volatile uint32_t check = v * inv;
                 CW_COMPILER_BARRIER();
-                // path B: same computation on same input
-                volatile uint32_t path_b = static_cast<uint32_t>(base & 0xFF);
-                uint32_t vb = path_b;
-                vb = (vb * 7u + 3u) & 0xFFu;
-                vb = (vb * 11u + 5u) & 0xFFu;
-                volatile uint32_t result_b = vb;
-                CW_COMPILER_BARRIER();
-                return result_a == result_b;
-            }
-
-            // predicate 5: use ReturnAddress as entropy source;
-            // the return address is purely runtime and varies per call site
-            CW_NOINLINE bool retaddr_true() {
-#if defined(_MSC_VER)
-                uintptr_t ra = reinterpret_cast<uintptr_t>(_ReturnAddress());
-#elif defined(__GNUC__)
-                uintptr_t ra = reinterpret_cast<uintptr_t>(__builtin_return_address(0));
-#else
-                uintptr_t ra = 1;
-#endif
-                CW_COMPILER_BARRIER();
-                // any value XOR'd with itself is zero
-                volatile uintptr_t v = ra;
-                CW_COMPILER_BARRIER();
-                volatile uintptr_t check = v ^ v;
-                CW_COMPILER_BARRIER();
-                return check == 0;
-            }
-
-            // predicate 6: process/module base address through hash
-            CW_NOINLINE bool module_hash_true() {
-#if defined(_WIN32) && !CW_KERNEL_MODE
-                uintptr_t base = reinterpret_cast<uintptr_t>(GetModuleHandleA(nullptr));
-                CW_COMPILER_BARRIER();
-                uint32_t h = static_cast<uint32_t>(base);
-                h *= 0x85EBCA6Bu;
-                h ^= h >> 13;
-                h *= 0xC2B2AE35u;
-                // (h & 0) is always 0 - but the hash chain prevents
-                // the optimizer from seeing through to the constant
-                volatile uint32_t masked = h & 0u;
-                CW_COMPILER_BARRIER();
-                return masked == 0;
-#elif CW_KERNEL_MODE
-                uintptr_t proc = reinterpret_cast<uintptr_t>(PsGetCurrentProcess());
-                CW_COMPILER_BARRIER();
-                uint32_t h = static_cast<uint32_t>(proc);
-                h *= 0x85EBCA6Bu;
-                h ^= h >> 13;
-                h *= 0xC2B2AE35u;
-                volatile uint32_t masked = h & 0u;
-                CW_COMPILER_BARRIER();
-                return masked == 0;
-#else
-                return true;
-#endif
-            }
-
-            // predicate 7: rdtsc difference is always non-negative
-            // two consecutive rdtsc calls always produce t2 >= t1 on the same core,
-            // and the subtraction through volatile prevents constant folding
-            CW_NOINLINE bool tsc_delta_true() {
-#if defined(_WIN32)
-                uint64_t t1 = __rdtsc();
-                CW_COMPILER_BARRIER();
-                volatile int dummy = 0;
-                (void)dummy;
-                CW_COMPILER_BARRIER();
-                uint64_t t2 = __rdtsc();
-                CW_COMPILER_BARRIER();
-                // t2 - t1 is always >= 0 (unsigned), and never == UINT64_MAX
-                // in practice; but more importantly the compiler cannot
-                // determine the actual values of t1 or t2
-                volatile uint64_t delta = t2 - t1;
-                // delta < some huge value is always true
-                return delta < 0xFFFFFFFF00000000ULL;
-#else
-                return true;
-#endif
+                return check == 1u;
             }
         }
 
-        // rotate between predicate types per call site using compile-time random
-        // CW_NOINLINE prevents LTCG from inlining and resolving the predicate chain
+        // rotate between predicate types per call site using compile-time random.
+        // CW_NOINLINE prevents LTCG from inlining and resolving the predicate chain.
         template<int N = CW_RAND_CT(0, 7)>
         CW_NOINLINE bool opaque_true() {
-            volatile int seed = static_cast<int>(reinterpret_cast<uintptr_t>(&seed) & 0xFF) + N;
+            volatile uint32_t seed = static_cast<uint32_t>(
+                reinterpret_cast<uintptr_t>(&seed) & 0xFF) + static_cast<uint32_t>(N);
             CW_COMPILER_BARRIER();
 
-            // compile-time selection of predicate combination
             constexpr int primary = N % 8;
             constexpr int secondary = (N * 3 + 1) % 8;
 
             bool result;
-            if constexpr (primary == 0) result = opaque_detail::stack_hash_true(seed);
-            else if constexpr (primary == 1) result = opaque_detail::tsc_stack_true();
-            else if constexpr (primary == 2) result = opaque_detail::tid_transform_true();
-            else if constexpr (primary == 3) result = opaque_detail::mac_entropy_true(seed);
-            else if constexpr (primary == 4) result = opaque_detail::dual_path_true();
-            else if constexpr (primary == 5) result = opaque_detail::retaddr_true();
-            else if constexpr (primary == 6) result = opaque_detail::module_hash_true();
-            else result = opaque_detail::tsc_delta_true();
+            if constexpr (primary == 0) result = opaque_detail::quadratic_residue_true(seed);
+            else if constexpr (primary == 1) result = opaque_detail::consecutive_product_true();
+            else if constexpr (primary == 2) result = opaque_detail::gauss_sum_true();
+            else if constexpr (primary == 3) result = opaque_detail::popcount_complement_true();
+            else if constexpr (primary == 4) result = opaque_detail::crc_self_true();
+            else if constexpr (primary == 5) result = opaque_detail::bezout_true();
+            else if constexpr (primary == 6) result = opaque_detail::bit_decompose_true();
+            else result = opaque_detail::modinv_true();
 
-            // chain with a second predicate for extra confusion
-            if constexpr (secondary == 0) result = result && opaque_detail::stack_hash_true(seed + 1);
-            else if constexpr (secondary == 1) result = result && opaque_detail::tsc_stack_true();
-            else if constexpr (secondary == 2) result = result && opaque_detail::tid_transform_true();
-            else if constexpr (secondary == 3) result = result && opaque_detail::mac_entropy_true(seed + 1);
-            else if constexpr (secondary == 4) result = result && opaque_detail::dual_path_true();
-            else if constexpr (secondary == 5) result = result && opaque_detail::retaddr_true();
-            else if constexpr (secondary == 6) result = result && opaque_detail::module_hash_true();
-            else result = result && opaque_detail::tsc_delta_true();
+            // chain with a second predicate to increase decompiler confusion
+            if constexpr (secondary == 0) result = result && opaque_detail::quadratic_residue_true(seed + 1);
+            else if constexpr (secondary == 1) result = result && opaque_detail::consecutive_product_true();
+            else if constexpr (secondary == 2) result = result && opaque_detail::gauss_sum_true();
+            else if constexpr (secondary == 3) result = result && opaque_detail::popcount_complement_true();
+            else if constexpr (secondary == 4) result = result && opaque_detail::crc_self_true();
+            else if constexpr (secondary == 5) result = result && opaque_detail::bezout_true();
+            else if constexpr (secondary == 6) result = result && opaque_detail::bit_decompose_true();
+            else result = result && opaque_detail::modinv_true();
 
             CW_COMPILER_BARRIER();
             return result;
@@ -3548,6 +4447,7 @@ namespace cloakwork {
                     switch (decoded) {
                         case S0: {
                             volatile int anchor = static_cast<int>(iter);
+                            (void)anchor;
                             CW_COMPILER_BARRIER();
                             state = S1 ^ XK;
                             break;
@@ -3582,7 +4482,11 @@ namespace cloakwork {
                             volatile int junk = 42;
                             junk = (junk * 3 + 1) ^ static_cast<int>(iter);
                             CW_COMPILER_BARRIER();
-                            state = S1 ^ XK;
+                            // entangle: n*(n+1) is always even, so & 1 is always 0
+                            uint32_t _jv = static_cast<uint32_t>(static_cast<unsigned>(static_cast<int>(junk)));
+                            volatile uint32_t _jp = _jv * (_jv + 1u);
+                            CW_COMPILER_BARRIER();
+                            state = (S1 ^ XK) ^ (static_cast<uint32_t>(_jp) & 1u);
                             break;
                         }
                         case S6: {
@@ -3590,7 +4494,12 @@ namespace cloakwork {
                             volatile float junk = 2.718f;
                             junk = junk * 3.14f + static_cast<float>(iter);
                             CW_COMPILER_BARRIER();
-                            state = S3 ^ XK;
+                            // entangle via De Morgan: ~(a&b) ^ (~a|~b) is always 0
+                            volatile uint32_t _ea = static_cast<uint32_t>(iter) ^ XK;
+                            volatile uint32_t _eb = static_cast<uint32_t>(junk > 0.0f ? iter + 1u : iter) ^ S6;
+                            CW_COMPILER_BARRIER();
+                            uint32_t _va = _ea, _vb = _eb;
+                            state = (S3 ^ XK) ^ (~(_va & _vb) ^ ((~_va) | (~_vb)));
                             break;
                         }
                         case S7: {
@@ -3598,7 +4507,12 @@ namespace cloakwork {
                             volatile int acc = 0;
                             for (volatile int i = 0; i < 3; ++i) acc += i;
                             CW_COMPILER_BARRIER();
-                            state = S0 ^ XK;
+                            // entangle via MBA: (a+b) - (a^b) - ((a&b)<<1) is always 0
+                            uint32_t _av = static_cast<uint32_t>(static_cast<unsigned>(static_cast<int>(acc)));
+                            volatile uint32_t _bv = _av ^ XK;
+                            CW_COMPILER_BARRIER();
+                            uint32_t _b = _bv;
+                            state = (S0 ^ XK) ^ ((_av + _b) - (_av ^ _b) - ((_av & _b) << 1));
                             break;
                         }
                         default: {
@@ -3615,31 +4529,64 @@ namespace cloakwork {
         };
 
         template<typename T>
-        CW_FORCEINLINE T indirect_branch(T value) {
-            T result = value;
-            int selector = static_cast<int>(CW_RANDOM_RT() % 5);
+        CW_NOINLINE T indirect_branch(T value) {
+            //
+            // Dispatch through volatile index into genuinely different
+            // computation paths. CW_NOINLINE + volatile prevents the
+            // compiler from merging or eliminating any path.
+            //
+            volatile T v = value;
+            volatile uint32_t idx = static_cast<uint32_t>(CW_RANDOM_RT() % 4);
             CW_COMPILER_BARRIER();
 
-            // create multiple paths that all lead to same result
-            switch(selector) {
-                case 0:
-                    result = result ^ 0 ^ 0;
-                    break;
-                case 1:
-                    result = (result * 1) / 1;
-                    break;
-                case 2:
-                    result = result + 0 - 0;
-                    break;
-                case 3:
-                    result = result | 0 & ~0;
-                    break;
-                case 4:
-                    result = result << 0 >> 0;
-                    break;
+            switch (static_cast<int>(idx)) {
+            case 0: {
+                // identity through volatile round-trip
+                volatile T t = v;
+                CW_COMPILER_BARRIER();
+                return static_cast<T>(t);
             }
-
-            return result;
+            case 1: {
+                // MBA add with zero: (x ^ 0) + ((x & 0) << 1) = x
+                volatile T a = v;
+                volatile T b = static_cast<T>(0);
+                CW_COMPILER_BARRIER();
+                return static_cast<T>((a ^ b) + ((a & b) << 1));
+            }
+            case 2: {
+                // double bitwise complement: ~~x = x
+                // (skip for bool -- complement doesn't round-trip on 1-bit types)
+                if constexpr (std::is_same_v<T, bool>) {
+                    volatile T t = v;
+                    CW_COMPILER_BARRIER();
+                    return static_cast<T>(t);
+                } else {
+                    volatile T t = v;
+                    CW_COMPILER_BARRIER();
+                    T neg = ~static_cast<T>(t);
+                    volatile T store = neg;
+                    CW_COMPILER_BARRIER();
+                    return static_cast<T>(~static_cast<T>(store));
+                }
+            }
+            case 3: {
+                // rotate round-trip for integral types >= 32 bits
+                if constexpr (std::is_integral_v<T> && sizeof(T) >= 4) {
+                    volatile T t = v;
+                    CW_COMPILER_BARRIER();
+                    T rotated = std::rotl(static_cast<T>(t), 13);
+                    volatile T mid = rotated;
+                    CW_COMPILER_BARRIER();
+                    return std::rotr(static_cast<T>(mid), 13);
+                } else {
+                    volatile T t = v;
+                    CW_COMPILER_BARRIER();
+                    return static_cast<T>(t);
+                }
+            }
+            default:
+                return static_cast<T>(v);
+            }
         }
     }
 
@@ -3704,6 +4651,97 @@ namespace cloakwork {
             return (h | 1u);
         }
 
+        //
+        // opaque zero generators — produce 0 through mathematical identities
+        // that static analysis cannot trivially resolve. used to entangle
+        // dead block outputs with state transitions so DCE can't eliminate them.
+        // CW_NOINLINE blocks cross-function constant folding.
+        //
+        namespace entangle {
+
+            //
+            // consecutive product parity: n*(n+1) is always even.
+            // one of {n, n+1} must be even, so the product's LSB is always 0.
+            //
+            template<uint32_t Salt>
+            static CW_NOINLINE uint32_t consec_product(uint32_t val) {
+                volatile uint32_t n = val ^ Salt;
+                CW_COMPILER_BARRIER();
+                uint32_t v = n;
+                volatile uint32_t prod = v * (v + 1u);
+                CW_COMPILER_BARRIER();
+                return static_cast<uint32_t>(prod) & 1u;
+            }
+
+            //
+            // MBA sum identity: (a + b) == (a ^ b) + 2*(a & b).
+            // subtracting both sides from the sum always yields zero.
+            // three separate volatile stores prevent algebraic folding.
+            //
+            template<uint32_t Salt>
+            static CW_NOINLINE uint32_t mba_sum(uint32_t val) {
+                volatile uint32_t a = val ^ Salt;
+                volatile uint32_t b = val ^ (Salt * 0x9E3779B9u);
+                CW_COMPILER_BARRIER();
+                uint32_t va = a, vb = b;
+                volatile uint32_t sum = va + vb;
+                volatile uint32_t xor_part = va ^ vb;
+                volatile uint32_t carry = (va & vb) << 1;
+                CW_COMPILER_BARRIER();
+                return static_cast<uint32_t>(sum) -
+                       static_cast<uint32_t>(xor_part) -
+                       static_cast<uint32_t>(carry);
+            }
+
+            //
+            // De Morgan identity: ~(a & b) == (~a | ~b).
+            // XOR of both sides is always zero.
+            //
+            template<uint32_t Salt>
+            static CW_NOINLINE uint32_t demorgan(uint32_t val) {
+                volatile uint32_t a = val ^ Salt;
+                volatile uint32_t b = val + Salt;
+                CW_COMPILER_BARRIER();
+                uint32_t va = a, vb = b;
+                volatile uint32_t lhs = ~(va & vb);
+                volatile uint32_t rhs = (~va) | (~vb);
+                CW_COMPILER_BARRIER();
+                return static_cast<uint32_t>(lhs) ^ static_cast<uint32_t>(rhs);
+            }
+
+            //
+            // Gauss sum: iterative sum(0..n) == n*(n+1)/2 for all n.
+            // computing both paths and XORing gives 0. the iterative
+            // path produces a real loop that analysis must reason about.
+            //
+            template<uint32_t Salt>
+            static CW_NOINLINE uint32_t gauss(uint32_t val) {
+                volatile uint32_t n_raw = val ^ Salt;
+                CW_COMPILER_BARRIER();
+                uint32_t n = (static_cast<uint32_t>(n_raw) & 0xFu) + 2u;
+                volatile uint32_t closed = (n * (n + 1u)) >> 1;
+                CW_COMPILER_BARRIER();
+                volatile uint32_t acc = 0;
+                for (uint32_t i = 0; i <= n; ++i)
+                    acc = static_cast<uint32_t>(acc) + i;
+                CW_COMPILER_BARRIER();
+                return static_cast<uint32_t>(closed) ^ static_cast<uint32_t>(acc);
+            }
+
+            //
+            // dispatcher — selects identity variant at compile time.
+            // returns 0 through the chosen path. the template params
+            // ensure each call site gets a unique function instantiation.
+            //
+            template<uint32_t Variant, uint32_t Salt>
+            static CW_NOINLINE uint32_t zero(uint32_t dead_output) {
+                if constexpr ((Variant & 3u) == 0) return consec_product<Salt>(dead_output);
+                else if constexpr ((Variant & 3u) == 1) return mba_sum<Salt>(dead_output);
+                else if constexpr ((Variant & 3u) == 2) return demorgan<Salt>(dead_output);
+                else return gauss<Salt>(dead_output);
+            }
+        }
+
         // noinline dispatch wrapper - prevents LTCG/WPO from seeing through
         // the flattened code and reconstructing the original CFG
         template<typename F>
@@ -3730,243 +4768,10 @@ namespace cloakwork {
     #define _CW_FLAT_DEAD(n) \
         (cloakwork::cfg_flatten::derive_dead(static_cast<uint32_t>(n), _cw_flat_seed))
 
-    // begin a flattened function returning ret_type.
-    // use as: auto result = CW_FLAT_FUNC(int) ... CW_FLAT_END;
-    #define CW_FLAT_FUNC(ret_type) \
-        cloakwork::cfg_flatten::execute([&]() -> ret_type { \
-            constexpr uint32_t _cw_flat_seed = \
-                static_cast<uint32_t>(__LINE__) * 0x45D9F3Bu + \
-                static_cast<uint32_t>(__COUNTER__) * 0x9E3779B9u; \
-            ret_type _cw_flat_res{}; \
-            volatile bool _cw_flat_run = true; \
-            volatile uint32_t _cw_flat_it = 0; \
-            volatile uint32_t _cw_flat_st;
-
-    // begin a void flattened function.
-    // use as: CW_FLAT_VOID ... CW_FLAT_VOID_END;
-    #define CW_FLAT_VOID \
-        cloakwork::cfg_flatten::execute_void([&]() { \
-            constexpr uint32_t _cw_flat_seed = \
-                static_cast<uint32_t>(__LINE__) * 0x45D9F3Bu + \
-                static_cast<uint32_t>(__COUNTER__) * 0x9E3779B9u; \
-            volatile bool _cw_flat_run = true; \
-            volatile uint32_t _cw_flat_it = 0; \
-            volatile uint32_t _cw_flat_st;
-
-    // declare shared variables accessible across all blocks.
-    // must appear between CW_FLAT_FUNC/CW_FLAT_VOID and CW_FLAT_ENTRY.
-    #define CW_FLAT_VARS(...) __VA_ARGS__
-
-    // set the entry block ID. must appear before CW_FLAT_BEGIN.
-    #define CW_FLAT_ENTRY(id) \
-        _cw_flat_st = _CW_FLAT_STATE(id);
-
-    // begin the dispatch loop. inserts dead blocks automatically.
-    // dead blocks form an unreachable cycle that inflates the CFG
-    // and confuses path enumeration in decompilers.
-    #define CW_FLAT_BEGIN \
-        CW_COMPILER_BARRIER(); \
-        while (_cw_flat_run && _cw_flat_it < 16384u) { \
-            uint32_t _cw_flat_d = static_cast<uint32_t>(_cw_flat_st); \
-            ++_cw_flat_it; \
-            CW_COMPILER_BARRIER(); \
-            switch (_cw_flat_d) { \
-                /* dead block 0: hash-like computation */ \
-                case _CW_FLAT_DEAD(0): { \
-                    volatile uint32_t _dh = 0x811C9DC5u; \
-                    _dh ^= static_cast<uint32_t>(_cw_flat_it); \
-                    _dh *= 0x01000193u; \
-                    _dh ^= _dh >> 16; \
-                    _cw_flat_st = _CW_FLAT_DEAD(1); \
-                    break; \
-                } \
-                /* dead block 1: accumulator loop */ \
-                case _CW_FLAT_DEAD(1): { \
-                    volatile int _da = 0; \
-                    for (volatile int _di = 0; _di < 3; ++_di) \
-                        _da = _da * 31 + _di; \
-                    _cw_flat_st = _CW_FLAT_DEAD(2); \
-                    break; \
-                } \
-                /* dead block 2: xorshift junk */ \
-                case _CW_FLAT_DEAD(2): { \
-                    volatile uint32_t _dx = _cw_flat_it; \
-                    _dx ^= _dx << 13; \
-                    _dx ^= _dx >> 17; \
-                    _dx ^= _dx << 5; \
-                    _cw_flat_st = _CW_FLAT_DEAD(3); \
-                    break; \
-                } \
-                /* dead block 3: conditional cycle back */ \
-                case _CW_FLAT_DEAD(3): { \
-                    volatile int _dc = static_cast<int>(_cw_flat_it) & 0xFF; \
-                    if (_dc > 128) { _cw_flat_st = _CW_FLAT_DEAD(4); } \
-                    else { _cw_flat_st = _CW_FLAT_DEAD(0); } \
-                    break; \
-                } \
-                /* dead block 4: stack entropy */ \
-                case _CW_FLAT_DEAD(4): { \
-                    volatile int _ds; \
-                    volatile uintptr_t _dp = reinterpret_cast<uintptr_t>(&_ds); \
-                    _ds = static_cast<int>(_dp & 0xFFu); \
-                    _cw_flat_st = _CW_FLAT_DEAD(5); \
-                    break; \
-                } \
-                /* dead block 5: multiply-accumulate */ \
-                case _CW_FLAT_DEAD(5): { \
-                    volatile uint32_t _dm = _cw_flat_it * 0x45D9F3Bu; \
-                    _dm ^= _dm >> 16; \
-                    _dm += 0x119DE1F3u; \
-                    _cw_flat_st = _CW_FLAT_DEAD(0); \
-                    break; \
-                } \
-                /* sentinel - closed by first CW_FLAT_BLOCK */ \
-                case _CW_FLAT_DEAD(0xFF): {
-
-    // start a user block with the given ID.
-    // every block must end with GOTO, IF, RETURN, or EXIT.
-    #define CW_FLAT_BLOCK(id) \
-                break; \
-                } \
-                case _CW_FLAT_STATE(id): {
-
-    // unconditional transition to target block
-    #define CW_FLAT_GOTO(id) \
-                    CW_COMPILER_BARRIER(); \
-                    _cw_flat_st = _CW_FLAT_STATE(id); \
-                    CW_COMPILER_BARRIER(); \
-                    break;
-
-    // obfuscated transition - adds fake dead-block branch via opaque predicate.
-    // use this for critical transitions to maximize IDA confusion.
-    #define CW_FLAT_GOTO_OBF(id) \
-                    CW_COMPILER_BARRIER(); \
-                    if (cloakwork::control_flow::opaque_true<>()) { \
-                        _cw_flat_st = _CW_FLAT_STATE(id); \
-                    } else { \
-                        _cw_flat_st = _CW_FLAT_DEAD(0); \
-                    } \
-                    CW_COMPILER_BARRIER(); \
-                    break;
-
-    // conditional transition - dispatches to true_id or false_id based on condition
-    #define CW_FLAT_IF(cond, true_id, false_id) \
-                    CW_COMPILER_BARRIER(); \
-                    _cw_flat_st = (cond) \
-                        ? static_cast<uint32_t>(_CW_FLAT_STATE(true_id)) \
-                        : static_cast<uint32_t>(_CW_FLAT_STATE(false_id)); \
-                    CW_COMPILER_BARRIER(); \
-                    break;
-
-    // obfuscated conditional - routes through volatile to prevent branch folding
-    #define CW_FLAT_IF_OBF(cond, true_id, false_id) \
-                    CW_COMPILER_BARRIER(); \
-                    { \
-                        volatile bool _cw_cond = (cond); \
-                        CW_COMPILER_BARRIER(); \
-                        if (_cw_cond) { \
-                            if (cloakwork::control_flow::opaque_true<>()) \
-                                _cw_flat_st = _CW_FLAT_STATE(true_id); \
-                            else \
-                                _cw_flat_st = _CW_FLAT_DEAD(0); \
-                        } else { \
-                            if (cloakwork::control_flow::opaque_true<>()) \
-                                _cw_flat_st = _CW_FLAT_STATE(false_id); \
-                            else \
-                                _cw_flat_st = _CW_FLAT_DEAD(1); \
-                        } \
-                    } \
-                    CW_COMPILER_BARRIER(); \
-                    break;
-
-    // return a value and exit the flattened function
-    #define CW_FLAT_RETURN(val) \
-                    CW_COMPILER_BARRIER(); \
-                    _cw_flat_res = (val); \
-                    _cw_flat_run = false; \
-                    CW_COMPILER_BARRIER(); \
-                    break;
-
-    // exit without returning a value (for void functions or default-return)
-    #define CW_FLAT_EXIT() \
-                    CW_COMPILER_BARRIER(); \
-                    _cw_flat_run = false; \
-                    CW_COMPILER_BARRIER(); \
-                    break;
-
-    // multi-way branch - flattened switch replacement.
-    // evaluates expr once, transitions to the matching block.
-    // pairs is a sequence of (value, block_id) checks with a default.
-    // usage: CW_FLAT_SWITCH(x, 0,blk_a, 1,blk_b, 2,blk_c, default_blk)
-    // (last argument is the default block)
-    #define CW_FLAT_SWITCH2(expr, v0,b0, v1,b1, def_blk) \
-                    CW_COMPILER_BARRIER(); \
-                    { \
-                        auto _cw_sw = (expr); \
-                        if (_cw_sw == (v0)) _cw_flat_st = _CW_FLAT_STATE(b0); \
-                        else if (_cw_sw == (v1)) _cw_flat_st = _CW_FLAT_STATE(b1); \
-                        else _cw_flat_st = _CW_FLAT_STATE(def_blk); \
-                    } \
-                    CW_COMPILER_BARRIER(); \
-                    break;
-
-    #define CW_FLAT_SWITCH3(expr, v0,b0, v1,b1, v2,b2, def_blk) \
-                    CW_COMPILER_BARRIER(); \
-                    { \
-                        auto _cw_sw = (expr); \
-                        if (_cw_sw == (v0)) _cw_flat_st = _CW_FLAT_STATE(b0); \
-                        else if (_cw_sw == (v1)) _cw_flat_st = _CW_FLAT_STATE(b1); \
-                        else if (_cw_sw == (v2)) _cw_flat_st = _CW_FLAT_STATE(b2); \
-                        else _cw_flat_st = _CW_FLAT_STATE(def_blk); \
-                    } \
-                    CW_COMPILER_BARRIER(); \
-                    break;
-
-    #define CW_FLAT_SWITCH4(expr, v0,b0, v1,b1, v2,b2, v3,b3, def_blk) \
-                    CW_COMPILER_BARRIER(); \
-                    { \
-                        auto _cw_sw = (expr); \
-                        if (_cw_sw == (v0)) _cw_flat_st = _CW_FLAT_STATE(b0); \
-                        else if (_cw_sw == (v1)) _cw_flat_st = _CW_FLAT_STATE(b1); \
-                        else if (_cw_sw == (v2)) _cw_flat_st = _CW_FLAT_STATE(b2); \
-                        else if (_cw_sw == (v3)) _cw_flat_st = _CW_FLAT_STATE(b3); \
-                        else _cw_flat_st = _CW_FLAT_STATE(def_blk); \
-                    } \
-                    CW_COMPILER_BARRIER(); \
-                    break;
-
-    // close the dispatch loop and return. use after last CW_FLAT_BLOCK.
-    #define CW_FLAT_END \
-                break; \
-                } \
-                default: { \
-                    _cw_flat_run = false; \
-                    break; \
-                } \
-            } \
-            CW_COMPILER_BARRIER(); \
-        } \
-        return _cw_flat_res; \
-    })
-
-    // close a void flattened function
-    #define CW_FLAT_VOID_END \
-                break; \
-                } \
-                default: { \
-                    _cw_flat_run = false; \
-                    break; \
-                } \
-            } \
-            CW_COMPILER_BARRIER(); \
-        } \
-    })
-
     //
     // wraps arbitrary code in an encrypted state machine dispatcher.
     // the user's code becomes one state among dead blocks and opaque
-    // predicates. produces the same decompiler-hostile output as the
-    // manual CW_FLAT_* API but without requiring manual block decomposition.
+    // predicates, producing decompiler-hostile output automatically.
     //
     // usage:
     //   int result = CW_PROTECT(int, {
@@ -3983,21 +4788,19 @@ namespace cloakwork {
     //   - all local variables from the enclosing scope are accessible
     //   - ret_type must not contain unparenthesized commas
     //     (use a typedef for std::pair<int,int> etc.)
-    //
-    // for maximum protection with manual control flow decomposition,
-    // use the CW_FLAT_* API instead.
 
     #define CW_PROTECT(ret_type, ...) \
         cloakwork::cfg_flatten::execute([&]() -> ret_type { \
             constexpr uint32_t _cw_flat_seed = \
                 static_cast<uint32_t>(__LINE__) * 0x45D9F3Bu + \
                 static_cast<uint32_t>(__COUNTER__) * 0x9E3779B9u; \
+            constexpr uint32_t _cw_flat_limit = 8192u + (_cw_flat_seed & 0x3FFFu); \
             ret_type _cw_flat_res{}; \
             volatile bool _cw_flat_run = true; \
-            volatile uint32_t _cw_flat_it = 0; \
+            uint32_t _cw_flat_it = 0; \
             volatile uint32_t _cw_flat_st = _CW_FLAT_STATE(0); \
             CW_COMPILER_BARRIER(); \
-            while (_cw_flat_run && _cw_flat_it < 16384u) { \
+            while (_cw_flat_run && _cw_flat_it < _cw_flat_limit) { \
                 uint32_t _cw_flat_d = static_cast<uint32_t>(_cw_flat_st); \
                 ++_cw_flat_it; \
                 CW_COMPILER_BARRIER(); \
@@ -4007,14 +4810,16 @@ namespace cloakwork {
                         _dh ^= static_cast<uint32_t>(_cw_flat_it); \
                         _dh *= 0x01000193u; \
                         _dh ^= _dh >> 16; \
-                        _cw_flat_st = _CW_FLAT_DEAD(1); \
+                        _cw_flat_st = _CW_FLAT_DEAD(1) ^ \
+                            cloakwork::cfg_flatten::entangle::zero<(_cw_flat_seed >> 3) & 3u, _cw_flat_seed ^ 0x811C9DC5u>(static_cast<uint32_t>(_dh)); \
                         break; \
                     } \
                     case _CW_FLAT_DEAD(1): { \
                         volatile int _da = 0; \
-                        for (volatile int _di = 0; _di < 3; ++_di) \
+                        for (int _di = 0; _di < 3; ++_di) \
                             _da = _da * 31 + _di; \
-                        _cw_flat_st = _CW_FLAT_DEAD(2); \
+                        _cw_flat_st = _CW_FLAT_DEAD(2) ^ \
+                            cloakwork::cfg_flatten::entangle::zero<(_cw_flat_seed >> 5) & 3u, _cw_flat_seed ^ 0x01000193u>(static_cast<uint32_t>(static_cast<unsigned>(_da))); \
                         break; \
                     } \
                     case _CW_FLAT_DEAD(2): { \
@@ -4022,27 +4827,31 @@ namespace cloakwork {
                         _dx ^= _dx << 13; \
                         _dx ^= _dx >> 17; \
                         _dx ^= _dx << 5; \
-                        _cw_flat_st = _CW_FLAT_DEAD(3); \
+                        _cw_flat_st = _CW_FLAT_DEAD(3) ^ \
+                            cloakwork::cfg_flatten::entangle::zero<(_cw_flat_seed >> 7) & 3u, _cw_flat_seed ^ 0x119DE1F3u>(static_cast<uint32_t>(_dx)); \
                         break; \
                     } \
                     case _CW_FLAT_DEAD(3): { \
                         volatile int _dc = static_cast<int>(_cw_flat_it) & 0xFF; \
-                        if (_dc > 128) { _cw_flat_st = _CW_FLAT_DEAD(4); } \
-                        else { _cw_flat_st = _CW_FLAT_DEAD(0); } \
+                        uint32_t _de3 = cloakwork::cfg_flatten::entangle::zero<(_cw_flat_seed >> 9) & 3u, _cw_flat_seed ^ 0x27D4EB2Du>(static_cast<uint32_t>(static_cast<unsigned>(_dc))); \
+                        if (_dc > 128) { _cw_flat_st = _CW_FLAT_DEAD(4) ^ _de3; } \
+                        else { _cw_flat_st = _CW_FLAT_DEAD(0) ^ _de3; } \
                         break; \
                     } \
                     case _CW_FLAT_DEAD(4): { \
                         volatile int _ds; \
                         volatile uintptr_t _dp = reinterpret_cast<uintptr_t>(&_ds); \
                         _ds = static_cast<int>(_dp & 0xFFu); \
-                        _cw_flat_st = _CW_FLAT_DEAD(5); \
+                        _cw_flat_st = _CW_FLAT_DEAD(5) ^ \
+                            cloakwork::cfg_flatten::entangle::zero<(_cw_flat_seed >> 11) & 3u, _cw_flat_seed ^ 0x297A2D39u>(static_cast<uint32_t>(static_cast<unsigned>(_ds))); \
                         break; \
                     } \
                     case _CW_FLAT_DEAD(5): { \
                         volatile uint32_t _dm = _cw_flat_it * 0x45D9F3Bu; \
                         _dm ^= _dm >> 16; \
                         _dm += 0x119DE1F3u; \
-                        _cw_flat_st = _CW_FLAT_DEAD(0); \
+                        _cw_flat_st = _CW_FLAT_DEAD(0) ^ \
+                            cloakwork::cfg_flatten::entangle::zero<(_cw_flat_seed >> 13) & 3u, _cw_flat_seed ^ 0x45D9F3Bu>(static_cast<uint32_t>(_dm)); \
                         break; \
                     } \
                     case _CW_FLAT_STATE(0): { \
@@ -4104,11 +4913,12 @@ namespace cloakwork {
             constexpr uint32_t _cw_flat_seed = \
                 static_cast<uint32_t>(__LINE__) * 0x45D9F3Bu + \
                 static_cast<uint32_t>(__COUNTER__) * 0x9E3779B9u; \
+            constexpr uint32_t _cw_flat_limit = 8192u + (_cw_flat_seed & 0x3FFFu); \
             volatile bool _cw_flat_run = true; \
-            volatile uint32_t _cw_flat_it = 0; \
+            uint32_t _cw_flat_it = 0; \
             volatile uint32_t _cw_flat_st = _CW_FLAT_STATE(0); \
             CW_COMPILER_BARRIER(); \
-            while (_cw_flat_run && _cw_flat_it < 16384u) { \
+            while (_cw_flat_run && _cw_flat_it < _cw_flat_limit) { \
                 uint32_t _cw_flat_d = static_cast<uint32_t>(_cw_flat_st); \
                 ++_cw_flat_it; \
                 CW_COMPILER_BARRIER(); \
@@ -4118,14 +4928,16 @@ namespace cloakwork {
                         _dh ^= static_cast<uint32_t>(_cw_flat_it); \
                         _dh *= 0x01000193u; \
                         _dh ^= _dh >> 16; \
-                        _cw_flat_st = _CW_FLAT_DEAD(1); \
+                        _cw_flat_st = _CW_FLAT_DEAD(1) ^ \
+                            cloakwork::cfg_flatten::entangle::zero<(_cw_flat_seed >> 3) & 3u, _cw_flat_seed ^ 0x811C9DC5u>(static_cast<uint32_t>(_dh)); \
                         break; \
                     } \
                     case _CW_FLAT_DEAD(1): { \
                         volatile int _da = 0; \
-                        for (volatile int _di = 0; _di < 3; ++_di) \
+                        for (int _di = 0; _di < 3; ++_di) \
                             _da = _da * 31 + _di; \
-                        _cw_flat_st = _CW_FLAT_DEAD(2); \
+                        _cw_flat_st = _CW_FLAT_DEAD(2) ^ \
+                            cloakwork::cfg_flatten::entangle::zero<(_cw_flat_seed >> 5) & 3u, _cw_flat_seed ^ 0x01000193u>(static_cast<uint32_t>(static_cast<unsigned>(_da))); \
                         break; \
                     } \
                     case _CW_FLAT_DEAD(2): { \
@@ -4133,27 +4945,31 @@ namespace cloakwork {
                         _dx ^= _dx << 13; \
                         _dx ^= _dx >> 17; \
                         _dx ^= _dx << 5; \
-                        _cw_flat_st = _CW_FLAT_DEAD(3); \
+                        _cw_flat_st = _CW_FLAT_DEAD(3) ^ \
+                            cloakwork::cfg_flatten::entangle::zero<(_cw_flat_seed >> 7) & 3u, _cw_flat_seed ^ 0x119DE1F3u>(static_cast<uint32_t>(_dx)); \
                         break; \
                     } \
                     case _CW_FLAT_DEAD(3): { \
                         volatile int _dc = static_cast<int>(_cw_flat_it) & 0xFF; \
-                        if (_dc > 128) { _cw_flat_st = _CW_FLAT_DEAD(4); } \
-                        else { _cw_flat_st = _CW_FLAT_DEAD(0); } \
+                        uint32_t _de3 = cloakwork::cfg_flatten::entangle::zero<(_cw_flat_seed >> 9) & 3u, _cw_flat_seed ^ 0x27D4EB2Du>(static_cast<uint32_t>(static_cast<unsigned>(_dc))); \
+                        if (_dc > 128) { _cw_flat_st = _CW_FLAT_DEAD(4) ^ _de3; } \
+                        else { _cw_flat_st = _CW_FLAT_DEAD(0) ^ _de3; } \
                         break; \
                     } \
                     case _CW_FLAT_DEAD(4): { \
                         volatile int _ds; \
                         volatile uintptr_t _dp = reinterpret_cast<uintptr_t>(&_ds); \
                         _ds = static_cast<int>(_dp & 0xFFu); \
-                        _cw_flat_st = _CW_FLAT_DEAD(5); \
+                        _cw_flat_st = _CW_FLAT_DEAD(5) ^ \
+                            cloakwork::cfg_flatten::entangle::zero<(_cw_flat_seed >> 11) & 3u, _cw_flat_seed ^ 0x297A2D39u>(static_cast<uint32_t>(static_cast<unsigned>(_ds))); \
                         break; \
                     } \
                     case _CW_FLAT_DEAD(5): { \
                         volatile uint32_t _dm = _cw_flat_it * 0x45D9F3Bu; \
                         _dm ^= _dm >> 16; \
                         _dm += 0x119DE1F3u; \
-                        _cw_flat_st = _CW_FLAT_DEAD(0); \
+                        _cw_flat_st = _CW_FLAT_DEAD(0) ^ \
+                            cloakwork::cfg_flatten::entangle::zero<(_cw_flat_seed >> 13) & 3u, _cw_flat_seed ^ 0x45D9F3Bu>(static_cast<uint32_t>(_dm)); \
                         break; \
                     } \
                     case _CW_FLAT_STATE(0): { \
@@ -4222,59 +5038,6 @@ namespace cloakwork {
     #define _CW_FLAT_STATE(id) static_cast<uint32_t>(id)
     #define _CW_FLAT_DEAD(n) (0xFFFF0000u + static_cast<uint32_t>(n))
 
-    #define CW_FLAT_FUNC(ret_type) \
-        [&]() -> ret_type { \
-            ret_type _cw_flat_res{}; \
-            volatile bool _cw_flat_run = true; \
-            volatile uint32_t _cw_flat_it = 0; \
-            volatile uint32_t _cw_flat_st;
-
-    #define CW_FLAT_VOID \
-        [&]() { \
-            volatile bool _cw_flat_run = true; \
-            volatile uint32_t _cw_flat_it = 0; \
-            volatile uint32_t _cw_flat_st;
-
-    #define CW_FLAT_VARS(...) __VA_ARGS__
-    #define CW_FLAT_ENTRY(id) _cw_flat_st = _CW_FLAT_STATE(id);
-
-    #define CW_FLAT_BEGIN \
-        while (_cw_flat_run && _cw_flat_it++ < 16384u) { \
-            switch (static_cast<uint32_t>(_cw_flat_st)) { \
-                case _CW_FLAT_DEAD(0xFF): {
-
-    #define CW_FLAT_BLOCK(id) break; } case _CW_FLAT_STATE(id): {
-    #define CW_FLAT_GOTO(id) _cw_flat_st = _CW_FLAT_STATE(id); break;
-    #define CW_FLAT_GOTO_OBF(id) CW_FLAT_GOTO(id)
-    #define CW_FLAT_IF(cond, true_id, false_id) \
-        _cw_flat_st = (cond) ? _CW_FLAT_STATE(true_id) : _CW_FLAT_STATE(false_id); break;
-    #define CW_FLAT_IF_OBF(cond, true_id, false_id) CW_FLAT_IF(cond, true_id, false_id)
-    #define CW_FLAT_RETURN(val) _cw_flat_res = (val); _cw_flat_run = false; break;
-    #define CW_FLAT_EXIT() _cw_flat_run = false; break;
-    #define CW_FLAT_SWITCH2(expr, v0,b0, v1,b1, def) \
-        { auto _s=(expr); if(_s==(v0)) _cw_flat_st=_CW_FLAT_STATE(b0); \
-          else if(_s==(v1)) _cw_flat_st=_CW_FLAT_STATE(b1); \
-          else _cw_flat_st=_CW_FLAT_STATE(def); } break;
-    #define CW_FLAT_SWITCH3(expr, v0,b0, v1,b1, v2,b2, def) \
-        { auto _s=(expr); if(_s==(v0)) _cw_flat_st=_CW_FLAT_STATE(b0); \
-          else if(_s==(v1)) _cw_flat_st=_CW_FLAT_STATE(b1); \
-          else if(_s==(v2)) _cw_flat_st=_CW_FLAT_STATE(b2); \
-          else _cw_flat_st=_CW_FLAT_STATE(def); } break;
-    #define CW_FLAT_SWITCH4(expr, v0,b0, v1,b1, v2,b2, v3,b3, def) \
-        { auto _s=(expr); if(_s==(v0)) _cw_flat_st=_CW_FLAT_STATE(b0); \
-          else if(_s==(v1)) _cw_flat_st=_CW_FLAT_STATE(b1); \
-          else if(_s==(v2)) _cw_flat_st=_CW_FLAT_STATE(b2); \
-          else if(_s==(v3)) _cw_flat_st=_CW_FLAT_STATE(b3); \
-          else _cw_flat_st=_CW_FLAT_STATE(def); } break;
-
-    #define CW_FLAT_END \
-        break; } default: { _cw_flat_run = false; break; } \
-        } } return _cw_flat_res; }()
-
-    #define CW_FLAT_VOID_END \
-        break; } default: { _cw_flat_run = false; break; } \
-        } } }()
-
     #define CW_PROTECT(ret_type, ...) \
         [&]() -> ret_type { __VA_ARGS__ }()
 
@@ -4288,9 +5051,9 @@ namespace cloakwork {
     template<typename Func>
     class obfuscated_call {
     private:
-        // xtea-encrypted function pointer (reuses cipher from string_encrypt)
+        // runtime-keyed function pointer encryption
         uint8_t encrypted_addr[sizeof(uintptr_t)];
-        string_encrypt::xtea::key128 ptr_key;
+        uint32_t pk0, pk1, pk2, pk3;
 
         // decoy array with randomized size and position
         static constexpr size_t MAX_DECOYS = 16;
@@ -4301,13 +5064,13 @@ namespace cloakwork {
         CW_FORCEINLINE void encrypt_ptr(Func* ptr) {
             uintptr_t addr = reinterpret_cast<uintptr_t>(ptr);
             memcpy(encrypted_addr, &addr, sizeof(uintptr_t));
-            string_encrypt::xtea::encrypt_buffer(encrypted_addr, sizeof(uintptr_t), ptr_key);
+            string_encrypt::cipher::rt_encrypt(encrypted_addr, sizeof(uintptr_t), pk0, pk1, pk2, pk3);
         }
 
         CW_FORCEINLINE Func* decrypt_ptr() const {
             uint8_t temp[sizeof(uintptr_t)];
             memcpy(temp, encrypted_addr, sizeof(uintptr_t));
-            string_encrypt::xtea::decrypt_buffer(temp, sizeof(uintptr_t), ptr_key);
+            string_encrypt::cipher::rt_encrypt(temp, sizeof(uintptr_t), pk0, pk1, pk2, pk3);
             uintptr_t addr;
             memcpy(&addr, temp, sizeof(uintptr_t));
             return reinterpret_cast<Func*>(addr);
@@ -4315,10 +5078,11 @@ namespace cloakwork {
 
     public:
         obfuscated_call(Func* func) {
-            ptr_key.k[0] = static_cast<uint32_t>(CW_RANDOM_RT());
-            ptr_key.k[1] = static_cast<uint32_t>(CW_RANDOM_RT());
-            ptr_key.k[2] = static_cast<uint32_t>(CW_RANDOM_RT());
-            ptr_key.k[3] = static_cast<uint32_t>(CW_RANDOM_RT());
+            pk0 = static_cast<uint32_t>(CW_RANDOM_RT());
+            pk1 = static_cast<uint32_t>(CW_RANDOM_RT());
+            pk2 = static_cast<uint32_t>(CW_RANDOM_RT());
+            pk3 = static_cast<uint32_t>(CW_RANDOM_RT());
+
 
             encrypt_ptr(func);
 
@@ -4337,7 +5101,7 @@ namespace cloakwork {
         CW_FORCEINLINE auto operator()(Args&&... args) {
             static CW_ATOMIC(uint32_t) call_count{0};
             if ((++call_count % 100) == 0) {
-                CW_INLINE_CHECK();
+                cloakwork::anti_debug::inline_check();
             }
 
             Func* real_func = decrypt_ptr();
@@ -4361,7 +5125,7 @@ namespace cloakwork {
 #if CW_ENABLE_DATA_HIDING
     namespace data_hiding {
 
-        template<typename T, size_t Chunks = 8>
+        template<typename T, size_t Chunks = detail::default_scatter_chunks_v<T>>
         class scattered_value {
         private:
             static_assert(Chunks > 1 && Chunks <= 64, "Chunks must be between 2 and 64");
@@ -4465,6 +5229,9 @@ namespace cloakwork {
                                     uint16_t bits = std::bit_cast<uint16_t>(temp);
                                     bits = ~bits;
                                     value = std::bit_cast<T>(bits);
+                                    bits = std::bit_cast<uint16_t>(value);
+                                    bits = ~bits;
+                                    value = std::bit_cast<T>(bits);
                                 } else {
                                     value = temp;
                                 }
@@ -4477,7 +5244,14 @@ namespace cloakwork {
                             }
                             break;
                         case 2:
-                            if constexpr(Arithmetic<T>) {
+                            if constexpr(Integral<T>) {
+                                using U = std::make_unsigned_t<T>;
+                                U bits = static_cast<U>(temp);
+                                U key = static_cast<U>(mutation_count.load());
+                                bits += key;
+                                bits -= key;
+                                value = std::bit_cast<T>(bits);
+                            } else if constexpr(Arithmetic<T>) {
                                 T key = static_cast<T>(mutation_count.load());
                                 value = temp + key;
                                 value = value - key;
@@ -4508,7 +5282,7 @@ namespace cloakwork {
     }
 #else
     namespace data_hiding {
-        template<typename T, size_t Chunks = 8>
+        template<typename T, size_t Chunks = detail::default_scatter_chunks_v<T>>
         class scattered_value {
         private:
             T value;
@@ -4618,6 +5392,7 @@ namespace cloakwork {
 #if defined(_WIN64) && !CW_KERNEL_MODE
             static constexpr uint32_t REGEN_INTERVAL = 1000;
             mutable uint8_t* thunk = nullptr;
+            mutable uint8_t* retired_thunk = nullptr;  // deferred free, prevents use-after-free
             mutable CW_MUTEX mutex;
 #endif
 
@@ -4639,6 +5414,7 @@ namespace cloakwork {
             ~metamorphic_function() {
 #if defined(_WIN64) && !CW_KERNEL_MODE
                 thunk_gen::free_thunk(thunk);
+                thunk_gen::free_thunk(retired_thunk);
 #endif
             }
 
@@ -4649,7 +5425,9 @@ namespace cloakwork {
                 : real_func(other.real_func), call_count(other.call_count.load()) {
 #if defined(_WIN64) && !CW_KERNEL_MODE
                 thunk = other.thunk;
+                retired_thunk = other.retired_thunk;
                 other.thunk = nullptr;
+                other.retired_thunk = nullptr;
 #endif
             }
 
@@ -4659,13 +5437,15 @@ namespace cloakwork {
 
 #if defined(_WIN64) && !CW_KERNEL_MODE
                 // regenerate thunk every N calls - different machine code each time
+                // retired_thunk defers the free by one generation so any thread
+                // still executing on the old page finishes before it's released
                 if (thunk && (count % REGEN_INTERVAL) == 0) {
                     CW_LOCK_GUARD(mutex);
-                    uint8_t* old_thunk = thunk;
                     uint8_t* new_thunk = thunk_gen::generate_thunk(reinterpret_cast<void*>(real_func));
                     if (new_thunk) {
+                        thunk_gen::free_thunk(retired_thunk);
+                        retired_thunk = thunk;
                         const_cast<uint8_t*&>(thunk) = new_thunk;
-                        thunk_gen::free_thunk(old_thunk);
                     }
                 }
 
@@ -4673,6 +5453,8 @@ namespace cloakwork {
                     auto thunk_fn = reinterpret_cast<Func*>(thunk);
                     return thunk_fn(std::forward<Args>(args)...);
                 }
+#else
+                (void)count;
 #endif
 
                 return real_func(std::forward<Args>(args)...);
@@ -4698,6 +5480,8 @@ namespace cloakwork {
 
 #if CW_ENABLE_IMPORT_HIDING
     namespace imports {
+
+        CW_FORCEINLINE void* getProcAddress(void* module, uint32_t funcHash);
 
         namespace detail {
             // validate PE header structure with bounds checking
@@ -4731,27 +5515,35 @@ namespace cloakwork {
             }
 
             // parse "DllName.FunctionName" forwarded export string and resolve recursively
-            CW_FORCEINLINE void* resolve_forwarded_export(const char* forward_str) {
-                // find the dot separator
-                const char* dot = forward_str;
-                while (*dot && *dot != '.') ++dot;
-                if (!*dot) return nullptr;
+            CW_FORCEINLINE void* resolve_forwarded_export(const char* forward_str, size_t max_len) {
+                if (!forward_str || max_len == 0) return nullptr;
 
-                // build module name with ".dll" suffix
-                // forward_str is like "NTDLL.RtlInitUnicodeString"
+                size_t dot_pos = max_len;
+                size_t end_pos = max_len;
+                for (size_t i = 0; i < max_len; ++i) {
+                    char c = forward_str[i];
+                    if (c == '.' && dot_pos == max_len) dot_pos = i;
+                    if (c == '\0') {
+                        end_pos = i;
+                        break;
+                    }
+                }
+
+                if (dot_pos == max_len || end_pos == max_len || dot_pos == 0 || dot_pos + 1 >= end_pos)
+                    return nullptr;
+
                 char module_name[256];
-                size_t mod_len = static_cast<size_t>(dot - forward_str);
-                if (mod_len >= sizeof(module_name) - 5) return nullptr;
+                if (dot_pos >= sizeof(module_name) - 5) return nullptr;
 
-                for (size_t i = 0; i < mod_len; ++i)
+                for (size_t i = 0; i < dot_pos; ++i)
                     module_name[i] = forward_str[i];
-                module_name[mod_len] = '.';
-                module_name[mod_len + 1] = 'd';
-                module_name[mod_len + 2] = 'l';
-                module_name[mod_len + 3] = 'l';
-                module_name[mod_len + 4] = '\0';
+                module_name[dot_pos] = '.';
+                module_name[dot_pos + 1] = 'd';
+                module_name[dot_pos + 2] = 'l';
+                module_name[dot_pos + 3] = 'l';
+                module_name[dot_pos + 4] = '\0';
 
-                const char* func_name = dot + 1;
+                const char* func_name = forward_str + dot_pos + 1;
 
                 // resolve the forwarding target module and function
                 uint32_t mod_hash = hash::fnv1a_runtime_ci(module_name);
@@ -4784,39 +5576,7 @@ namespace cloakwork {
 #endif
                 if (!target_mod) return nullptr;
 
-                // now resolve the function in the target module (non-recursive getProcAddress inline)
-                IMAGE_NT_HEADERS* nt = nullptr;
-                uint32_t image_size = 0;
-                if (!validate_pe_header(target_mod, &nt, &image_size)) return nullptr;
-
-                auto& exp_dir = nt->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT];
-                if (exp_dir.VirtualAddress == 0) return nullptr;
-                if (!rva_in_bounds(exp_dir.VirtualAddress, exp_dir.Size, image_size)) return nullptr;
-
-                auto exports = reinterpret_cast<IMAGE_EXPORT_DIRECTORY*>(
-                    reinterpret_cast<uint8_t*>(target_mod) + exp_dir.VirtualAddress);
-
-                if (!rva_in_bounds(exports->AddressOfNames, exports->NumberOfNames * 4, image_size)) return nullptr;
-                if (!rva_in_bounds(exports->AddressOfNameOrdinals, exports->NumberOfNames * 2, image_size)) return nullptr;
-                if (!rva_in_bounds(exports->AddressOfFunctions, exports->NumberOfFunctions * 4, image_size)) return nullptr;
-
-                auto names = reinterpret_cast<uint32_t*>(reinterpret_cast<uint8_t*>(target_mod) + exports->AddressOfNames);
-                auto ordinals = reinterpret_cast<uint16_t*>(reinterpret_cast<uint8_t*>(target_mod) + exports->AddressOfNameOrdinals);
-                auto functions = reinterpret_cast<uint32_t*>(reinterpret_cast<uint8_t*>(target_mod) + exports->AddressOfFunctions);
-
-                for (uint32_t i = 0; i < exports->NumberOfNames; ++i) {
-                    if (!rva_in_bounds(names[i], 1, image_size)) continue;
-                    auto name = reinterpret_cast<const char*>(reinterpret_cast<uint8_t*>(target_mod) + names[i]);
-                    if (hash::fnv1a_runtime(name) == func_hash) {
-                        uint16_t ordinal = ordinals[i];
-                        if (ordinal >= exports->NumberOfFunctions) return nullptr;
-                        uint32_t func_rva = functions[ordinal];
-                        // don't follow another forward - one level is enough
-                        return reinterpret_cast<uint8_t*>(target_mod) + func_rva;
-                    }
-                }
-
-                return nullptr;
+                return getProcAddress(target_mod, func_hash);
             }
         }
 
@@ -4981,10 +5741,13 @@ namespace cloakwork {
                         return nullptr;
 #else
                         auto forward_str = reinterpret_cast<const char*>(base + func_rva);
-                        return detail::resolve_forwarded_export(forward_str);
+                        return detail::resolve_forwarded_export(
+                            forward_str,
+                            static_cast<size_t>(export_end - static_cast<uint64_t>(func_rva)));
 #endif
                     }
 
+                    if (!detail::rva_in_bounds(func_rva, 1, image_size)) return nullptr;
                     return base + func_rva;
                 }
             }
@@ -5012,12 +5775,16 @@ namespace cloakwork {
 
         template<uint32_t ModuleHash, uint32_t FuncHash>
         CW_FORCEINLINE void* getCachedImport() {
-            static void* cached = nullptr;
-            if (!cached) {
+            static CW_ATOMIC(uintptr_t) cached{0};
+            uintptr_t val = cached.load(CW_MO_ACQUIRE);
+            if (!val) {
                 void* mod = getModuleBase(ModuleHash);
-                if (mod) cached = getProcAddress(mod, FuncHash);
+                if (mod) {
+                    val = reinterpret_cast<uintptr_t>(getProcAddress(mod, FuncHash));
+                    if (val) cached.store(val, CW_MO_RELEASE);
+                }
             }
-            return cached;
+            return reinterpret_cast<void*>(val);
         }
     }
 
@@ -5027,7 +5794,7 @@ namespace cloakwork {
 
     #define CW_IMPORT_WIDE(mod, func) \
         reinterpret_cast<decltype(&func)>( \
-            cloakwork::imports::getCachedImport<CW_HASH_WIDE(mod), CW_HASH(#func)>())
+            cloakwork::imports::getCachedImport<CW_HASH_WIDE_CI(mod), CW_HASH(#func)>())
 #else
     namespace imports {
         inline void* getModuleBase(uint32_t) { return nullptr; }
@@ -5104,11 +5871,13 @@ namespace cloakwork {
 
         template<uint32_t FuncHash>
         CW_FORCEINLINE uint32_t getCachedSyscallNumber() {
-            static uint32_t cached = SYSCALL_ERROR;
-            if (cached == SYSCALL_ERROR) {
-                cached = getSyscallNumber(FuncHash);
+            static CW_ATOMIC(uint32_t) cached{SYSCALL_ERROR};
+            uint32_t val = cached.load(CW_MO_ACQUIRE);
+            if (val == SYSCALL_ERROR) {
+                val = getSyscallNumber(FuncHash);
+                if (val != SYSCALL_ERROR) cached.store(val, CW_MO_RELEASE);
             }
-            return cached;
+            return val;
         }
 
 #if defined(_WIN64) && !CW_KERNEL_MODE
@@ -5148,9 +5917,13 @@ namespace cloakwork {
         }
 
         CW_FORCEINLINE void* getCachedSyscallGadget() {
-            static void* gadget = nullptr;
-            if (!gadget) gadget = findSyscallGadget();
-            return gadget;
+            static CW_ATOMIC(uintptr_t) gadget{0};
+            uintptr_t val = gadget.load(CW_MO_ACQUIRE);
+            if (!val) {
+                val = reinterpret_cast<uintptr_t>(findSyscallGadget());
+                if (val) gadget.store(val, CW_MO_RELEASE);
+            }
+            return reinterpret_cast<void*>(val);
         }
 
         // indirect syscall invocation via intrinsics
@@ -5167,28 +5940,32 @@ namespace cloakwork {
             // we set up a function pointer to the gadget and call through it
             // the OS syscall dispatcher reads eax for the number
 
-            // for indirect syscall we need: mov r10, rcx; mov eax, number; jmp gadget
-            // since we can't inline asm, we use a shellcode thunk allocated once
-            static thread_local uint8_t thunk[32] = {};
-            static thread_local bool thunk_init = false;
+            static thread_local uint8_t* thunk = nullptr;
 
-            if (!thunk_init) {
-                // build: mov r10, rcx (4C 8B D1)
-                //        mov eax, imm32 (B8 XX XX XX XX)
-                //        jmp [rip+0] (FF 25 00 00 00 00) + 8-byte address
-                thunk[0] = 0x4C; thunk[1] = 0x8B; thunk[2] = 0xD1;  // mov r10, rcx
-                thunk[3] = 0xB8;  // mov eax, imm32
-                // imm32 filled below
+            if (!thunk) {
+                thunk = reinterpret_cast<uint8_t*>(
+                    VirtualAlloc(nullptr, 4096, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
+                if (!thunk) return static_cast<NTSTATUS>(0xC0000001);
+
+                // mov r10, rcx; mov eax, imm32; jmp [rip+0]; dq gadget
+                thunk[0] = 0x4C; thunk[1] = 0x8B; thunk[2] = 0xD1;
+                thunk[3] = 0xB8;
                 thunk[8] = 0xFF; thunk[9] = 0x25; thunk[10] = 0x00; thunk[11] = 0x00;
-                thunk[12] = 0x00; thunk[13] = 0x00;  // jmp [rip+0]
-                // 8-byte gadget address at offset 14
-                DWORD old_protect;
-                VirtualProtect(thunk, sizeof(thunk), PAGE_EXECUTE_READWRITE, &old_protect);
-                thunk_init = true;
+                thunk[12] = 0x00; thunk[13] = 0x00;
             }
 
-            *reinterpret_cast<uint32_t*>(thunk + 4) = number;
-            *reinterpret_cast<uint64_t*>(thunk + 14) = reinterpret_cast<uint64_t>(gadget);
+            DWORD old_protect = 0;
+            if (!VirtualProtect(thunk, 32, PAGE_READWRITE, &old_protect))
+                return static_cast<NTSTATUS>(0xC0000001);
+
+            uint64_t gadget_bits = reinterpret_cast<uint64_t>(gadget);
+            memcpy(thunk + 4, &number, sizeof(number));
+            memcpy(thunk + 14, &gadget_bits, sizeof(gadget_bits));
+
+            DWORD execute_protect = 0;
+            if (!VirtualProtect(thunk, 32, PAGE_EXECUTE_READ, &execute_protect))
+                return static_cast<NTSTATUS>(0xC0000001);
+            FlushInstructionCache(GetCurrentProcess(), thunk, 32);
             CW_COMPILER_BARRIER();
 
             using SyscallFn = NTSTATUS(__stdcall*)(Args...);
@@ -5249,10 +6026,14 @@ namespace cloakwork {
         template<typename T>
         CW_FORCEINLINE bool obfuscated_less(T a, T b) {
             if constexpr (std::is_integral_v<T> && std::is_signed_v<T>) {
-                // use subtraction and check sign bit
-                T diff = mba::sub_mba(a, b);
+                using U = std::make_unsigned_t<T>;
+                constexpr U sign_bit = U(1) << ((sizeof(T) * 8) - 1);
+                U ua = static_cast<U>(a);
+                U ub = static_cast<U>(b);
+                bool sign_diff = ((ua ^ ub) & sign_bit) != 0;
+                bool result = sign_diff ? ((ua & sign_bit) != 0) : (ua < ub);
                 CW_COMPILER_BARRIER();
-                return diff < 0;
+                return result;
             } else if constexpr (std::is_integral_v<T>) {
                 // unsigned comparison via subtraction with overflow check
                 CW_COMPILER_BARRIER();
@@ -5353,47 +6134,55 @@ namespace cloakwork {
 #if CW_ENABLE_CONTROL_FLOW
     namespace junk {
 
+        //
+        // Junk that looks like a hash table probe or string comparison.
+        // Touches the stack in patterns typical of real hash functions,
+        // with buffer init + accumulation + conditional store.
+        //
         template<int N = CW_RAND_CT(1, 1000)>
         CW_NOINLINE void junk_computation() {
-            volatile int x = N;
-            volatile int y = N * 2;
+            volatile uint32_t state = static_cast<uint32_t>(N);
+            volatile uint8_t buf[16];
             CW_COMPILER_BARRIER();
 
-            x = x ^ y;
-            y = y + x;
-            x = x - y;
-            y = ~y;
-            x = x & y;
+            // init buffer -- looks like setting up a key or small payload
+            for (int i = 0; i < 16; ++i)
+                buf[i] = static_cast<uint8_t>((state >> (i & 3)) ^ i);
 
-            CW_COMPILER_BARRIER();
-
-            if (control_flow::opaque_false<N>()) {
-                volatile int z = x * y;
-                z = z >> 3;
-                x = z ^ y;
+            // accumulate -- FNV-like hash over the buffer
+            volatile uint32_t h = state ^ 0x811C9DC5u;
+            for (int i = 0; i < 16; ++i) {
+                h ^= buf[i];
+                h *= 0x01000193u;
             }
+            CW_COMPILER_BARRIER();
+
+            // conditional store -- common pattern in real lookup code
+            if ((h & 0xFu) > 7u)
+                buf[0] = static_cast<uint8_t>(h >> 24);
+
+            CW_COMPILER_BARRIER();
         }
 
+        //
+        // Junk that mimics a retry loop with exponential backoff.
+        // Common real-world pattern for lock acquisition or network retry.
+        //
         template<int N = CW_RAND_CT(1, 1000)>
         CW_NOINLINE void junk_control_flow() {
-            volatile int state = N % 5;
+            volatile uint32_t attempts = 0;
+            volatile uint32_t backoff = static_cast<uint32_t>(N) & 0x3u;
             CW_COMPILER_BARRIER();
 
-            for (int i = 0; i < 3; ++i) {
-                switch (state) {
-                    case 0:
-                        state = (state + 1) % 5;
-                        break;
-                    case 1:
-                        state = (state * 2) % 5;
-                        break;
-                    case 2:
-                        state = (state - 1 + 5) % 5;
-                        break;
-                    default:
-                        state = 0;
-                        break;
+            while (attempts < 3u) {
+                volatile uint32_t result = (attempts * 0x45D9F3Bu) ^ backoff;
+                CW_COMPILER_BARRIER();
+
+                if (result & 0x8000u) {
+                    break; // "success" path
                 }
+                backoff = (backoff << 1) | 1u;
+                ++attempts;
                 CW_COMPILER_BARRIER();
             }
         }
@@ -5428,19 +6217,16 @@ namespace cloakwork {
                 if (!imports::detail::validate_pe_header(ntdll, &nt, &image_size)) return nullptr;
 
                 auto base = reinterpret_cast<uint8_t*>(ntdll);
-
                 auto section = IMAGE_FIRST_SECTION(nt);
                 for (uint16_t i = 0; i < nt->FileHeader.NumberOfSections; ++i, ++section) {
                     if (!(section->Characteristics & IMAGE_SCN_MEM_EXECUTE)) continue;
-
                     uint32_t sec_start = section->VirtualAddress;
                     uint32_t sec_size = section->Misc.VirtualSize;
                     if (!imports::detail::rva_in_bounds(sec_start, sec_size, image_size)) continue;
 
                     for (uint32_t j = 0; j < sec_size; ++j) {
-                        if (base[sec_start + j] == 0xC3) {
+                        if (base[sec_start + j] == 0xC3)
                             return base + sec_start + j;
-                        }
                     }
                 }
             }
@@ -5451,45 +6237,96 @@ namespace cloakwork {
             return nullptr;
         }
 
+        //
+        // Find a "jmp rbx" (FF E3) gadget in ntdll. This gives us a trampoline
+        // that makes the actual call appear to originate from within ntdll.
+        // The call chain becomes: our_code -> ntdll!<jmp_rbx> -> target_func
+        //
+        CW_FORCEINLINE void* findJmpRbxGadget() {
+#if defined(_WIN64) && !CW_KERNEL_MODE
+            __try {
+                void* ntdll = imports::getModuleBase(CW_HASH_CI("ntdll.dll"));
+                if (!ntdll) return nullptr;
+
+                IMAGE_NT_HEADERS* nt = nullptr;
+                uint32_t image_size = 0;
+                if (!imports::detail::validate_pe_header(ntdll, &nt, &image_size))
+                    return nullptr;
+
+                auto base = reinterpret_cast<uint8_t*>(ntdll);
+                auto section = IMAGE_FIRST_SECTION(nt);
+                for (uint16_t i = 0; i < nt->FileHeader.NumberOfSections; ++i, ++section) {
+                    if (!(section->Characteristics & IMAGE_SCN_MEM_EXECUTE)) continue;
+                    uint32_t start = section->VirtualAddress;
+                    uint32_t size = section->Misc.VirtualSize;
+                    if (!imports::detail::rva_in_bounds(start, size, image_size)) continue;
+
+                    for (uint32_t j = 0; j + 1 < size; ++j) {
+                        uint8_t* p = base + start + j;
+                        if (p[0] == 0xFF && p[1] == 0xE3) // jmp rbx
+                            return p;
+                    }
+                }
+            }
+            __except (EXCEPTION_EXECUTE_HANDLER) {}
+#endif
+            return nullptr;
+        }
+
         CW_FORCEINLINE void* getRetGadget() {
             static void* gadget = nullptr;
             if (!gadget) gadget = findRetGadget();
             return gadget;
         }
 
-        // return address spoofing using _AddressOfReturnAddress intrinsic
-        // overwrites our return address with a gadget address (ret in ntdll)
-        // so call stacks show ntdll instead of our module
+        CW_FORCEINLINE void* getJmpRbxGadget() {
+            static void* gadget = nullptr;
+            if (!gadget) gadget = findJmpRbxGadget();
+            return gadget;
+        }
+
+        //
+        // Return address spoofing via gadget chain.
+        //
+        // We overwrite our return address with a "ret" gadget in ntdll so
+        // the callee's stack frame shows ntdll as the caller. The jmp_rbx
+        // gadget is stored for potential future use as a full trampoline
+        // (which would require an executable thunk page).
+        //
+        // Stack layout we create before calling the target:
+        //   [rsp+0] = ret_gadget  (fake return addr seen by callee)
+        //   real_return saved in local, restored after callee returns
+        //
         template<typename Ret, typename... Args>
         class spoofed_call {
         private:
             using FuncPtr = Ret(*)(Args...);
             FuncPtr func;
-            void* gadget;
+            void* ret_gadget;
+            void* jmp_gadget;
 
         public:
-            spoofed_call(FuncPtr f) : func(f), gadget(getRetGadget()) {}
+            spoofed_call(FuncPtr f)
+                : func(f)
+                , ret_gadget(getRetGadget())
+                , jmp_gadget(getJmpRbxGadget()) {}
 
             CW_NOINLINE Ret operator()(Args... args) {
 #if defined(_WIN64)
-                if (gadget) {
-                    // get pointer to our return address on the stack
-                    void** ret_addr_ptr = reinterpret_cast<void**>(_AddressOfReturnAddress());
-                    void* real_return = *ret_addr_ptr;
+                if (ret_gadget) {
+                    void** ret_ptr = reinterpret_cast<void**>(_AddressOfReturnAddress());
+                    void* real_return = *ret_ptr;
 
-                    // overwrite with gadget (ret instruction in ntdll)
-                    // when the callee returns, the stack will show ntdll
-                    *ret_addr_ptr = gadget;
+                    // overwrite our return address so the callee sees ntdll
+                    *ret_ptr = ret_gadget;
                     CW_COMPILER_BARRIER();
 
                     if constexpr (std::is_void_v<Ret>) {
                         func(args...);
-                        // restore real return address
-                        *ret_addr_ptr = real_return;
+                        *ret_ptr = real_return;
                     } else {
                         Ret result = func(args...);
-                        // restore real return address so we can actually return
-                        *ret_addr_ptr = real_return;
+                        *ret_ptr = real_return;
                         return result;
                     }
                 } else
@@ -5711,7 +6548,10 @@ namespace cloakwork {
                     HANDLE debug_object = nullptr;
                     status = NtQueryInformationProcess(
                         GetCurrentProcess(), 0x1E, &debug_object, sizeof(debug_object), nullptr);
-                    if (status == 0) return true;  // STATUS_SUCCESS means debug object exists
+                    if (status == 0) {
+                        if (debug_object) CloseHandle(debug_object);
+                        return true;  // STATUS_SUCCESS means debug object exists
+                    }
 
                     // ProcessDebugFlags (0x1F) - 0 means debugger present
                     ULONG debug_flags = 1;
@@ -5759,11 +6599,11 @@ namespace cloakwork {
 #endif
 
     #if CW_ENABLE_VALUE_OBFUSCATION
-        #define CW_INT(x) (cloakwork::obfuscated_value<decltype(x)>{x})
-        #define CW_MBA(x) (cloakwork::mba_obfuscated<decltype(x)>{x})
+        #define CW_INT(x) (cloakwork::obfuscated_value<cloakwork::detail::clean_value_t<decltype(x)>>{x})
+        #define CW_MBA(x) (cloakwork::mba_obfuscated<cloakwork::detail::clean_value_t<decltype(x)>>{x})
 
-        // obfuscated XOR using MBA: a ^ b = (a | b) - (a & b) ... via MBA transforms
-        #define CW_XOR(a, b) (CW_SUB(CW_OR((a), (b)), CW_AND((a), (b))))
+        // obfuscated XOR using MBA while capturing operands once.
+        #define CW_XOR(a, b) (cloakwork::mba::xor_mba_once((a), (b)))
     #else
         #define CW_INT(x) (x)
         #define CW_MBA(x) (x)
@@ -5777,22 +6617,11 @@ namespace cloakwork {
     #endif
 
     #if CW_ENABLE_DATA_HIDING
-        #define CW_SCATTER(x) (cloakwork::data_hiding::scattered_value<decltype(x)>{x})
-        #define CW_POLY(x) (cloakwork::data_hiding::polymorphic_value<decltype(x)>{x})
+        #define CW_SCATTER(x) (cloakwork::data_hiding::scattered_value<cloakwork::detail::clean_value_t<decltype(x)>>{x})
+        #define CW_POLY(x) (cloakwork::data_hiding::polymorphic_value<cloakwork::detail::clean_value_t<decltype(x)>>{x})
     #else
         #define CW_SCATTER(x) (x)
         #define CW_POLY(x) (x)
-    #endif
-
-    #if CW_ENABLE_ANTI_DEBUG
-        #define CW_CHECK_ANALYSIS() \
-            do { \
-                if(cloakwork::anti_debug::comprehensive_check()) { \
-                    volatile int crash = *(int*)0; \
-                } \
-            } while(0)
-    #else
-        #define CW_CHECK_ANALYSIS() ((void)0)
     #endif
 
     #if CW_ENABLE_CONTROL_FLOW
@@ -5808,6 +6637,18 @@ namespace cloakwork {
     // that leak as signatures even when not used by our code (CRT linkage)
 
     namespace iat_scrub {
+
+        static BOOL WINAPI stub_is_debugger_present() {
+            return FALSE;
+        }
+
+        static BOOL WINAPI stub_check_remote_debugger_present(HANDLE, PBOOL present) {
+            if (present) *present = FALSE;
+            return TRUE;
+        }
+
+        static void WINAPI stub_output_debug_string_a(LPCSTR) {}
+        static void WINAPI stub_output_debug_string_w(LPCWSTR) {}
 
         CW_FORCEINLINE bool scrub_debug_imports() {
 #if defined(_WIN32) && !CW_KERNEL_MODE
@@ -5838,6 +6679,9 @@ namespace cloakwork {
                 };
 
                 for (; import_desc->Name; ++import_desc) {
+                    if (import_desc->OriginalFirstThunk == 0 || import_desc->FirstThunk == 0)
+                        continue;
+
                     auto thunk_ref = reinterpret_cast<IMAGE_THUNK_DATA*>(
                         base + import_desc->OriginalFirstThunk);
                     auto func_ref = reinterpret_cast<IMAGE_THUNK_DATA*>(
@@ -5853,13 +6697,23 @@ namespace cloakwork {
                             reinterpret_cast<const char*>(import_name->Name));
 
                         for (auto h : scrub_hashes) {
-                            if (name_hash == h) {
+                            ULONG_PTR replacement = 0;
+                            if (name_hash == CW_HASH("IsDebuggerPresent")) {
+                                replacement = reinterpret_cast<ULONG_PTR>(&stub_is_debugger_present);
+                            } else if (name_hash == CW_HASH("CheckRemoteDebuggerPresent")) {
+                                replacement = reinterpret_cast<ULONG_PTR>(&stub_check_remote_debugger_present);
+                            } else if (name_hash == CW_HASH("OutputDebugStringA")) {
+                                replacement = reinterpret_cast<ULONG_PTR>(&stub_output_debug_string_a);
+                            } else if (name_hash == CW_HASH("OutputDebugStringW")) {
+                                replacement = reinterpret_cast<ULONG_PTR>(&stub_output_debug_string_w);
+                            }
+
+                            if (name_hash == h && replacement) {
                                 DWORD old_protect;
                                 if (VirtualProtect(&func_ref->u1.Function,
                                     sizeof(func_ref->u1.Function),
                                     PAGE_READWRITE, &old_protect)) {
-                                    func_ref->u1.Function = reinterpret_cast<ULONG_PTR>(
-                                        static_cast<BOOL(WINAPI*)()>([]() -> BOOL { return FALSE; }));
+                                    func_ref->u1.Function = replacement;
                                     VirtualProtect(&func_ref->u1.Function,
                                         sizeof(func_ref->u1.Function),
                                         old_protect, &old_protect);
@@ -5883,10 +6737,8 @@ namespace cloakwork {
 
 #if CW_ENABLE_ANTI_DEBUG && defined(_WIN32) && !CW_KERNEL_MODE
     #define CW_HIDE_THREAD() (cloakwork::anti_debug::enhanced::hide_from_debugger())
-    #define CW_CHECK_DEBUG_PORT() (cloakwork::anti_debug::enhanced::check_debug_port())
 #else
     #define CW_HIDE_THREAD() ((void)0)
-    #define CW_CHECK_DEBUG_PORT() (false)
 #endif
 
 #if CW_ENABLE_VALUE_OBFUSCATION
@@ -5907,40 +6759,17 @@ namespace cloakwork {
     using rt_const = constants::runtime_constant<T>;
 
 #if CW_ENABLE_ANTI_DEBUG
-    #define CW_IS_DEBUGGED()             (cloakwork::anti_debug::is_debugger_present())
-    #define CW_HAS_HWBP()               (cloakwork::anti_debug::has_hardware_breakpoints())
     #define CW_CHECK_DEBUG()             (cloakwork::anti_debug::comprehensive_check())
-    #define CW_DETECT_HIDING()           (cloakwork::anti_debug::advanced::detect_hiding_tools())
-    #define CW_DETECT_PARENT()           (cloakwork::anti_debug::advanced::suspicious_parent_process())
-    #define CW_DETECT_KERNEL_DBG()       (cloakwork::anti_debug::advanced::kernel_debugger_present())
-    #define CW_TIMING_CHECK()            (cloakwork::anti_debug::advanced::advanced_timing_check())
-    #define CW_DETECT_DBG_ARTIFACTS()    (cloakwork::anti_debug::advanced::detect_debugger_artifacts())
 #else
-    #define CW_IS_DEBUGGED()             (false)
-    #define CW_HAS_HWBP()               (false)
     #define CW_CHECK_DEBUG()             (false)
-    #define CW_DETECT_HIDING()           (false)
-    #define CW_DETECT_PARENT()           (false)
-    #define CW_DETECT_KERNEL_DBG()       (false)
-    #define CW_TIMING_CHECK()            (false)
-    #define CW_DETECT_DBG_ARTIFACTS()    (false)
-#endif
-
-#if CW_ENABLE_ANTI_VM
-    #define CW_DETECT_HYPERVISOR()       (cloakwork::anti_debug::anti_vm::is_hypervisor_present())
-    #define CW_DETECT_VM_VENDOR()        (cloakwork::anti_debug::anti_vm::detect_vm_vendor())
-    #define CW_DETECT_LOW_RESOURCES()    (cloakwork::anti_debug::anti_vm::detect_low_resources())
-    #define CW_DETECT_SANDBOX_DLLS()     (cloakwork::anti_debug::anti_vm::detect_sandbox_dlls())
-#else
-    #define CW_DETECT_HYPERVISOR()       (false)
-    #define CW_DETECT_VM_VENDOR()        (false)
-    #define CW_DETECT_LOW_RESOURCES()    (false)
-    #define CW_DETECT_SANDBOX_DLLS()     (false)
 #endif
 
 #if CW_ENABLE_IMPORT_HIDING
     #define CW_GET_MODULE(name)          (cloakwork::imports::getModuleBase(CW_HASH_CI(name)))
     #define CW_GET_PROC(mod, func)       (cloakwork::imports::getProcAddress(mod, CW_HASH(func)))
+#else
+    #define CW_GET_MODULE(name)          (nullptr)
+    #define CW_GET_PROC(mod, func)       (nullptr)
 #endif
 
     #define CW_HASH_RT(str)              (cloakwork::hash::fnv1a_runtime(str))
@@ -5949,6 +6778,9 @@ namespace cloakwork {
 #if CW_ENABLE_INTEGRITY_CHECKS
     #define CW_COMPUTE_HASH(ptr, size)   (cloakwork::integrity::computeHash(ptr, size))
     #define CW_VERIFY_FUNCS(...)         (cloakwork::integrity::verifyFunctions(__VA_ARGS__))
+#else
+    #define CW_COMPUTE_HASH(ptr, size)   (0u)
+    #define CW_VERIFY_FUNCS(...)         (true)
 #endif
 
     #define CW_RET_GADGET()              (cloakwork::spoof::getRetGadget())
@@ -5966,4 +6798,8 @@ namespace cloakwork {
     #pragma warning(pop)
 #endif
 
-#endif // CLOAKWORK_H
+#ifdef __clang__
+    #pragma clang diagnostic pop
+#endif
+
+#endif // CLOAKWORK_H (why did you scroll down here...?)

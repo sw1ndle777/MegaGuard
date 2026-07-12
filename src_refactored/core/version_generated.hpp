@@ -1,8 +1,0 @@
-// Auto-generated — DO NOT EDIT
-#pragma once
-
-#define MG_VERSION_MAJOR 1
-#define MG_VERSION_MINOR 6
-#define MG_VERSION_PATCH 404
-#define MG_VERSION_DATEBUILD "20260301.000146"
-#define MG_VERSION_FULL "1.6.404+20260301.000146"
